@@ -29,9 +29,29 @@ export async function nayta(main) {
           <td>${esc(k.nimi || "")}${k.piikit ? ' <span class="merkki harmaa">piikit</span>' : ""}</td>
           <td class="pieni" style="white-space:normal;max-width:340px">${k.testit.filter((t) => tila.testi[t]).map((t) => esc(tila.testi[t].nimi)).join(", ")}</td>
           <td class="n">${lkm[k.id] || 0}</td>
-          <td class="n"><a class="btn" href="#/syota/${k.id}">Syötä</a> <a class="btn" href="#/kerta/${k.id}">Tulokset</a></td></tr>`).join("")}</tbody>
+          <td class="n"><a class="btn" href="#/syota/${k.id}">Syötä</a> <a class="btn" href="#/kerta/${k.id}">Tulokset</a>${voiPoistaa(k) ? ` <button class="btn vaara" data-poista="${k.id}">Poista</button>` : ""}</td></tr>`).join("")}</tbody>
       </table></div>`).join("") || `<p class="tyhja">Ei vielä testikertoja.</p>`}`;
   $("#uusi-nappi").onclick = () => uusiLomake($("#uusi"));
+  $$("[data-poista]").forEach((b) => (b.onclick = () => poistaKerta(b, b.dataset.poista, () => nayta(main))));
+}
+
+export const voiPoistaa = (k) => tila.admin || (tila.istunto && k.luoja === tila.istunto.user.email.toLowerCase());
+
+// Kaksivaiheinen poisto: ensimmäinen painallus kertoo mitä poistuu, toinen poistaa.
+export async function poistaKerta(nappi, id, valmis) {
+  if (nappi.dataset.vahvista !== "1") {
+    const { count } = await sb.from("tulokset").select("id", { count: "exact", head: true }).eq("testikerta_id", id);
+    nappi.dataset.vahvista = "1";
+    nappi.textContent = count ? `Poista myös ${count} tulosta?` : "Vahvista poisto";
+    setTimeout(() => { if (nappi.isConnected) { nappi.dataset.vahvista = ""; nappi.textContent = "Poista"; } }, 6000);
+    return;
+  }
+  nappi.disabled = true;
+  const { data, error } = await sb.from("testikerrat").delete().eq("id", id).select("id");
+  if (error || !data?.length) { nappi.disabled = false; return ilmoita(error ? "Poisto epäonnistui: " + error.message : "Sinulla ei ole oikeutta poistaa tätä testikertaa.", true); }
+  await lataaPerus();
+  ilmoita("Testikerta poistettu");
+  valmis();
 }
 
 function uusiLomake(el) {

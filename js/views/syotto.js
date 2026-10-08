@@ -1,7 +1,7 @@
 // Tulosten syöttö testikerralla: pelaajat riveinä, yritykset sarakkeina, tallennus heti.
 import { sb, tila, nimi, lataaTulokset, lataaKerranTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, paras, parannus, kuva, ilmoita } from "../util.js";
-import { PAKETIT } from "./kerrat.js";
+import { PAKETIT, voiPoistaa, poistaKerta } from "./kerrat.js";
 
 const NOPEUS = new Set(["10m", "30m", "nok_30m", "30m_takaperin", "ketteryysrata"]);
 const JONO_AVAIN = "kpl-testit-jono";
@@ -43,6 +43,7 @@ export async function nayta(main, id) {
         <label class="kentta" style="flex-direction:row">Enter siirtää
           <select id="suunta"><option value="alas">alas seuraavalle pelaajalle</option><option value="oikealle">oikealle seuraavaan sarakkeeseen</option></select></label>
         <a class="btn" href="#/kerta/${k.id}">Tulokset</a>
+        ${voiPoistaa(k) ? `<button class="btn vaara" id="poista-kerta">Poista</button>` : ""}
       </div>
     </div>
     <div class="testivalitsin" role="tablist">${valilehdet.map((v, i) => `<button class="chip" role="tab" data-i="${i}" aria-pressed="${i === aktiivinen}">${esc(v.nimi)}</button>`).join("")}</div>
@@ -51,6 +52,7 @@ export async function nayta(main, id) {
     <p class="vihje">Kirjoita tulos ja paina <kbd>Enter</kbd>. Desimaalin voi jättää pois: <b>412</b> tallentuu 4,12 sekunniksi. Lisää perään <b>h</b> (esim. <b>148h</b>), jos tulos on hylätty, esimerkiksi haamu tai lyönti alle. Tyhjennä solu poistaaksesi tuloksen. Tulokset tallentuvat heti; ilman verkkoa ne odottavat laitteella ja lähtevät, kun yhteys palaa.</p>
     <details class="paneeli" style="margin-top:20px"><summary><strong>Osallistujat ja järjestys</strong></summary><div id="osallistujat" style="margin-top:12px"></div></details>`;
 
+  $("#poista-kerta")?.addEventListener("click", (e) => poistaKerta(e.currentTarget, k.id, () => (location.hash = "#/kerrat")));
   $("#suunta").value = suunta;
   $("#suunta").onchange = (e) => { suunta = e.target.value; localStorage.setItem("kpl-suunta", suunta); };
   $$(".testivalitsin .chip").forEach((b) => (b.onclick = () => { aktiivinen = +b.dataset.i; $$(".testivalitsin .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); piirraRuudukko(); }));

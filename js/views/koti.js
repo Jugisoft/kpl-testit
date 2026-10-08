@@ -37,7 +37,7 @@ export async function nayta(main) {
 
     <h2>Testikerrat</h2>
     <div class="taulu-wrap"><table id="taulu"></table></div>
-    <p class="vihje">Luvut lasketaan jokaisen pelaajan parhaasta hyväksytystä yrityksestä. Ikäluokka näytetään vain, jos testissä oli vähintään kolme pelaajaa.</p>`;
+    <p class="vihje">Luvut lasketaan jokaisen pelaajan parhaasta hyväksytystä yrityksestä. Ikäluokka näytetään vain, jos testissä oli vähintään kolme pelaajaa. <a href="tietosuoja.html">Tietosuoja</a></p>`;
 
   $$(".chip[data-testi]", main).forEach((b) => (b.onclick = () => { valittu = b.dataset.testi; $$(".chip[data-testi]").forEach((x) => x.setAttribute("aria-pressed", x === b)); paivita(); }));
   paivita();

@@ -1,0 +1,169 @@
+:root {
+  --ink: #13233A;
+  --ink-2: #44546B;
+  --ink-3: #7A8698;
+  --paper: #F6F7F4;
+  --surface: #FFFFFF;
+  --line: #D8DDD6;
+  --line-2: #E9ECE7;
+  --red: #D62E2E;
+  --green: #1F6F5C;
+  --green-bg: #E3F1EC;
+  --amber: #B97A06;
+  --amber-bg: #FBF0D6;
+  --red-bg: #FBE4E2;
+  --focus: #2B6CB0;
+  --radius: 6px;
+  --num: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --text: "Barlow", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #E8ECF2; --ink-2: #B3BDCB; --ink-3: #8592A5;
+    --paper: #0F1724; --surface: #172235; --line: #2B3A52; --line-2: #22304A;
+    --red: #F0645E; --green: #4FC3A1; --green-bg: #173A33; --amber: #E8B44A; --amber-bg: #3A2F14; --red-bg: #3E1E22;
+    --focus: #7FB2F0; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 16px/1.5 var(--text); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.num, td.n, .iso { font-family: var(--num); font-variant-numeric: tabular-nums; }
+
+/* yläpalkki */
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 20px; padding: 10px 20px; background: var(--ink); color: var(--paper); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .topbar { background: #0A111C; color: var(--ink); } }
+.brand { display: flex; align-items: center; gap: 8px; text-decoration: none; font: 700 22px/1 var(--num); letter-spacing: .02em; }
+.brand svg { width: 26px; height: 26px; }
+#nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+#nav a { padding: 6px 10px; border-radius: var(--radius); text-decoration: none; font-weight: 500; white-space: nowrap; opacity: .8; }
+#nav a:hover { opacity: 1; }
+#nav a[aria-current="page"] { opacity: 1; background: rgba(255,255,255,.12); }
+.kayttaja { display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap; }
+.kayttaja .btn { background: transparent; color: inherit; border-color: rgba(255,255,255,.45); }
+.kayttaja button { background: none; border: 1px solid rgba(255,255,255,.35); border-radius: var(--radius); padding: 4px 10px; cursor: pointer; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
+main:focus { outline: none; }
+h1 { font: 700 44px/1.05 var(--num); margin: 0 0 6px; letter-spacing: .005em; }
+h2 { font: 600 28px/1.15 var(--num); margin: 36px 0 12px; }
+h3 { font: 600 20px/1.2 var(--num); margin: 20px 0 8px; }
+p.ingressi { color: var(--ink-2); max-width: 64ch; margin: 0 0 20px; font-size: 18px; }
+.lataa, .tyhja { color: var(--ink-3); }
+.pieni { font-size: 14px; color: var(--ink-2); }
+
+/* painikkeet ja lomakkeet */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-decoration: none; font-weight: 600; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.ensisij { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.vaara { color: var(--red); }
+.btn:disabled { opacity: .5; cursor: default; }
+.rivi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rivi.vali { justify-content: space-between; }
+label.kentta { display: grid; gap: 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+input[type=text], input[type=date], input[type=email], input[type=number], select, textarea {
+  padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); min-width: 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; font-size: 15px; }
+.chip[aria-pressed="true"], .chip:has(input:checked) { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chipit { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* paneelit */
+.paneeli { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+.ruudukko { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+/* taulukot */
+.taulu-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+th { font-weight: 600; color: var(--ink-2); font-size: 14px; background: var(--surface); position: sticky; top: 0; }
+td.n, th.n { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--line-2); }
+.pb { color: var(--green); font-weight: 700; }
+.huono { color: var(--red); }
+.merkki { display: inline-block; font: 600 12px/1 var(--text); padding: 3px 6px; border-radius: 4px; background: var(--green-bg); color: var(--green); vertical-align: middle; }
+.merkki.harmaa { background: var(--line-2); color: var(--ink-2); }
+
+/* pelaajakuvat */
+.kuva { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--line-2); flex: none; display: inline-grid; place-items: center; font: 600 14px/1 var(--num); color: var(--ink-2); overflow: hidden; }
+.kuva.iso { width: 96px; height: 96px; font-size: 34px; }
+.nimi { display: flex; align-items: center; gap: 10px; }
+
+/* ===== syöttö ===== */
+.syotto-paa { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; margin-bottom: 14px; }
+.testivalitsin { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+.testivalitsin .chip { white-space: nowrap; }
+.syotto { border-collapse: separate; border-spacing: 0; width: auto; }
+.syotto th, .syotto td { padding: 4px 6px; }
+.syotto td.pelaaja { position: sticky; left: 0; background: var(--surface); z-index: 1; padding-left: 10px; min-width: 150px; }
+.syotto th.pelaaja { position: sticky; left: 0; z-index: 3; }
+.syotto tr.valittu td { background: var(--line-2); }
+.syotto td.pelaaja .nm { font-weight: 600; line-height: 1.15; }
+.syotto td.pelaaja .sv { font-size: 12px; color: var(--ink-3); }
+.solu { position: relative; }
+.solu input { width: 78px; padding: 8px 6px; text-align: center; font: 600 22px/1 var(--num); font-variant-numeric: tabular-nums; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.solu input:focus { background: var(--surface); border-color: var(--focus); }
+.solu.tallentaa input { border-color: var(--amber); }
+.solu.tallennettu input { border-color: var(--green); }
+.solu.virhe input { border-color: var(--red); background: var(--red-bg); }
+.solu.jonossa input { border-style: dashed; border-color: var(--amber); }
+.solu.hylatty input { text-decoration: line-through; color: var(--ink-3); }
+.solu.ennatys input { background: var(--green-bg); }
+.solu.varoitus input { background: var(--amber-bg); }
+.solu .pari { display: block; font: 500 11px/1 var(--text); color: var(--ink-3); text-align: center; margin-top: 2px; height: 11px; }
+td.yht { font: 700 22px/1 var(--num); text-align: right; min-width: 64px; }
+td.vrt { font-size: 13px; color: var(--ink-2); text-align: right; line-height: 1.25; }
+.ryhma-otsikko th { font-size: 12px; color: var(--ink-3); padding-top: 10px; }
+.tila { font-size: 14px; color: var(--ink-2); display: flex; gap: 8px; align-items: center; }
+.tila .pallo { width: 10px; height: 10px; border-radius: 50%; background: var(--green); }
+.tila.offline .pallo { background: var(--amber); }
+.vihje { font-size: 13px; color: var(--ink-3); margin-top: 10px; max-width: 70ch; }
+kbd { font: 600 12px/1 var(--text); padding: 2px 5px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+
+/* osallistujat */
+.osallistujat { display: grid; gap: 4px; max-height: 420px; overflow: auto; }
+.osallistujat li { list-style: none; display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: var(--radius); }
+.osallistujat li:hover { background: var(--line-2); }
+.osallistujat .nappi { border: 1px solid var(--line); background: var(--surface); border-radius: 4px; width: 28px; height: 28px; cursor: pointer; }
+.osallistujat ol { margin: 0; padding: 0; }
+
+/* pelaajakortti */
+.kortti-paa { display: flex; gap: 20px; align-items: center; margin-bottom: 18px; }
+.lukemat { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.lukema { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.lukema .otsikko { font-size: 14px; color: var(--ink-2); font-weight: 600; }
+.lukema .arvo { font: 700 40px/1 var(--num); font-variant-numeric: tabular-nums; margin: 6px 0 2px; }
+.lukema .arvo small { font-size: 16px; font-weight: 500; color: var(--ink-3); margin-left: 3px; }
+.lukema .muutos { font-size: 13px; }
+.kaavio { position: relative; height: 300px; }
+.kaavio.matala { height: 220px; }
+
+/* julkinen etusivu */
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; margin: 4px 0 28px; }
+.hero h1 { font-size: clamp(44px, 7vw, 76px); }
+.taulukko-kello { font: 700 clamp(64px, 11vw, 132px)/0.9 var(--num); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.taulukko-kello .yks { font-size: .3em; font-weight: 600; color: var(--ink-3); margin-left: 6px; }
+.taulukko-kello + p { margin-top: 10px; color: var(--ink-2); max-width: 42ch; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+
+.ilmoitus { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 8px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: calc(100% - 32px); }
+.ilmoitus.nakyy { opacity: 1; }
+.ilmoitus.virhe { background: var(--red); color: #fff; }
+
+@media (max-width: 640px) {
+  .topbar { padding: 8px 12px; gap: 10px; flex-wrap: wrap; }
+  #nav { order: 3; flex-basis: 100%; }
+  main { padding: 18px 12px 80px; }
+  h1 { font-size: 34px; }
+  .solu input { width: 64px; font-size: 20px; }
+  .syotto td.pelaaja { min-width: 110px; }
+  .syotto td.pelaaja .kuva { display: none; }
+  .syotto .mob-pois { display: none; }
+  td.yht { font-size: 18px; min-width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

@@ -1,6 +1,6 @@
 // Pelaajakortti: ennätykset, profiili ikätovereihin verrattuna ja kehitys testeittäin.
 import { tila, nimi, lataaTulokset } from "../db.js";
-import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, kuva, mediaani, keskiarvo, hajonta, piirra, vari } from "../util.js";
+import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
 const PROFIILI = ["30m", "10m", "lentava20", "heitto_paikalta", "heitto_vauhti", "lyonti"];
 let valittu = "30m";
@@ -25,20 +25,37 @@ export async function nayta(main, id) {
   });
   const profiili = laskeProfiili(p, kaikki);
 
-  main.innerHTML = `
-    <div class="kortti-paa">${kuva(p, true)}<div>
-      <h1>${esc(nimi(p))}</h1>
-      <div class="pieni">${p.syntymavuosi ? `Syntynyt ${p.syntymavuosi}` : "Syntymävuosi puuttuu"}${joukkue ? ` · ${esc(joukkue)}` : ""}${p.aktiivinen ? "" : " · ei nykyisessä ryhmässä"}
-        ${p.pesistulokset_id ? ` · <a href="https://www.pesistulokset.fi/pelaaja/${p.pesistulokset_id}" target="_blank" rel="noopener">pesistulokset.fi</a>` : ""}</div>
-    </div></div>
+  const kerrat = new Set(omat.map((x) => x.kerta)).size;
+  // ruuduissa vain testit, joita on tehty viimeisen 18 kk aikana pelaajan viimeisimmästä testistä
+  const raja = omat.length ? new Date(new Date(omat.at(-1).pvm) - 550 * 864e5).toISOString().slice(0, 10) : "";
+  const tuore = (d) => d >= raja;
+  const indeksi = profiili ? Math.round(keskiarvo(profiili.rivit.map((r) => r.T))) : null;
+  const pct = (x) => (x.ikatov >= 2 ? Math.round((100 * x.ohi) / x.ikatov) : null);
 
-    <div class="lukemat">${kortit.filter((x) => tila.testi[x.t].ryhma !== "taito" || x.t === "napy_1raja").slice(0, 12).map((x) => `
-      <button class="lukema" data-t="${x.t}" style="text-align:left;cursor:pointer;${x.t === valittu ? "border-color:var(--ink)" : ""}">
-        <div class="otsikko">${esc(tila.testi[x.t].nimi)}</div>
-        <div class="arvo">${muotoile(x.pb, x.t)}<small>${tila.testi[x.t].yksikko} ennätys</small></div>
-        <div class="muutos pieni">Viimeisin ${muotoile(x.viim.arvo, x.t)} (${pvmLyhyt(x.viim.pvm)})${x.edel ? `, <span class="${parannus(x.t, x.viim.arvo, x.edel.arvo) > 0 ? "pb" : parannus(x.t, x.viim.arvo, x.edel.arvo) < 0 ? "huono" : ""}">${muotoileMuutos(x.viim.arvo - x.edel.arvo, x.t)}</span>` : ""}</div>
-        ${x.ikatov >= 2 ? `<div class="pieni">Parempi kuin ${x.ohi}/${x.ikatov} ikätoverista</div>` : ""}
-      </button>`).join("")}</div>
+  main.innerHTML = `
+    <div class="kortti-paa">${kuva(p, true)}<div style="flex:1">
+      <h1>${esc(nimi(p))}</h1>
+      <div class="tagit">
+        ${p.syntymavuosi ? `<span>Syntynyt<b>${p.syntymavuosi}</b></span>` : ""}
+        ${joukkue ? `<span>Ryhmä<b>${esc(joukkue)}</b></span>` : ""}
+        <span>Testikertoja<b>${kerrat}</b></span>
+        ${omat.length ? `<span>Ensimmäinen testi<b>${pvm(omat[0].pvm)}</b></span>` : ""}
+        ${p.pesistulokset_id ? `<span><a href="https://www.pesistulokset.fi/pelaaja/${p.pesistulokset_id}" target="_blank" rel="noopener">pesistulokset.fi</a></span>` : ""}
+        ${p.aktiivinen ? "" : "<span>Ei nykyisessä ryhmässä</span>"}
+      </div></div>
+      ${indeksi != null ? `<div style="text-align:center">${mittari(Math.max(0, Math.min(100, (indeksi - 20) * 100 / 60)), indeksi, "indeksi", 104)}<div class="pieni">Talvi ${profiili.kausi}</div></div>` : ""}
+    </div>
+
+    <div class="kpi-rivi" style="margin-top:16px">${kortit.filter((x) => (tila.testi[x.t].ryhma !== "taito" || x.t === "napy_1raja") && tuore(x.viim.pvm)).slice(0, 12).map((x) => {
+      const T = tila.testi[x.t], muutos = x.edel ? parannus(x.t, x.viim.arvo, x.edel.arvo) : null;
+      return `<button class="kpi lukema" data-t="${x.t}" aria-pressed="${x.t === valittu}" style="text-align:left;border:1px solid var(--line)">
+        <div class="otsikko">${esc(T.nimi)}</div>
+        <div><div class="arvo">${muotoile(x.pb, x.t)}<small>${T.yksikko}</small></div><div class="pieni">ennätys</div></div>
+        ${pct(x) != null ? mittari(pct(x), pct(x) + "%", "ikäluokka", 66) : ""}
+        <div class="ala">Viimeisin ${muotoile(x.viim.arvo, x.t)} <span class="pieni">${pvmLyhyt(x.viim.pvm)}</span>${muutos != null ? ` <span class="${muutos > 0 ? "pb" : muutos < 0 ? "huono" : ""}">${muotoileMuutos(x.viim.arvo - x.edel.arvo, x.t)}</span>` : ""}</div>
+        ${miniPylvaat(omat.filter((y) => y.testi === x.t).map((y) => y.arvo), T.pienempi_parempi)}
+      </button>`; }).join("")}</div>
+    <p class="vihje">Rengas kertoo, monenko prosentin ikätoverien tuloksen pelaaja ylitti viimeisimmällä testikerralla. Pylväät näyttävät kehityksen testikerroittain, viimeisin punaisella.</p>
 
     <h2>Kehitys</h2>
     <div class="chipit" style="margin-bottom:10px">${testit.map((t) => `<button class="chip" data-k="${t}" aria-pressed="${t === valittu}">${esc(tila.testi[t].nimi)}</button>`).join("")}</div>
@@ -57,7 +74,7 @@ export async function nayta(main, id) {
     <div class="taulu-wrap" style="margin-top:12px"><table><thead><tr><th>Päivä</th><th>Testi</th><th class="n">Paras</th><th class="n">Yrityksiä</th><th class="n">Ka</th></tr></thead>
       <tbody>${[...omat].reverse().map((x) => `<tr><td><a href="#/kerta/${x.kerta}">${pvm(x.pvm)}</a></td><td>${esc(tila.testi[x.testi].nimi)}</td><td class="n">${muotoile(x.arvo, x.testi)}</td><td class="n">${x.n}</td><td class="n">${x.n > 1 ? muotoile(x.ka, x.testi) : ""}</td></tr>`).join("")}</tbody></table></div></details>`;
 
-  const valitse = (t) => { valittu = t; $$("[data-k]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === t)); $$(".lukema[data-t]").forEach((b) => (b.style.borderColor = b.dataset.t === t ? "var(--ink)" : "")); kaavio(); };
+  const valitse = (t) => { valittu = t; $$("[data-k]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === t)); $$(".lukema[data-t]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.t === t)); kaavio(); };
   $$("[data-k]").forEach((b) => (b.onclick = () => valitse(b.dataset.k)));
   $$(".lukema[data-t]").forEach((b) => (b.onclick = () => { valitse(b.dataset.t); $("#kehitys").scrollIntoView({ behavior: "smooth", block: "center" }); }));
 
@@ -69,7 +86,7 @@ export async function nayta(main, id) {
     piirra($("#kehitys"), {
       type: "line",
       data: { labels: pvmt.map(pvmLyhyt), datasets: [
-        { label: nimi(p), data: pvmt.map((d) => a.find((x) => x.pvm === d).arvo), borderColor: vari("--red"), backgroundColor: vari("--red"), borderWidth: 3, pointRadius: 4, tension: .2 },
+        { label: nimi(p), data: pvmt.map((d) => a.find((x) => x.pvm === d).arvo), borderColor: vari("--cyan"), pointBackgroundColor: vari("--cyan"), backgroundColor: liukuvari(.28, 0), fill: T.pienempi_parempi ? "start" : "origin", borderWidth: 3, pointRadius: 4, tension: .3 },
         { label: `${p.syntymavuosi} syntyneiden mediaani`, data: ikaluokka, borderColor: vari("--ink-3"), borderDash: [6, 4], pointRadius: 0, spanGaps: true, tension: .2 },
       ] },
       options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
@@ -82,10 +99,10 @@ export async function nayta(main, id) {
   if (profiili) piirra($("#profiili"), {
     type: "radar",
     data: { labels: profiili.rivit.map((r) => tila.testi[r.t].nimi), datasets: [
-      { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--red"), backgroundColor: vari("--red") + "33", pointRadius: 3 },
+      { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--cyan"), backgroundColor: "rgba(56,214,255,.18)", pointBackgroundColor: vari("--cyan"), pointRadius: 3 },
       { label: "Keskitaso", data: profiili.rivit.map(() => 50), borderColor: vari("--ink-3"), borderDash: [4, 4], pointRadius: 0, backgroundColor: "transparent" },
     ] },
-    options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 20, suggestedMax: 80, ticks: { stepSize: 10, backdropColor: "transparent" } } } },
+    options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 20, suggestedMax: 80, grid: { color: "rgba(56,214,255,.12)" }, angleLines: { color: "rgba(56,214,255,.12)" }, pointLabels: { color: vari("--ink-2"), font: { size: 13 } }, ticks: { stepSize: 10, backdropColor: "transparent", color: vari("--ink-3") } } } },
   });
 }
 

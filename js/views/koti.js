@@ -1,5 +1,5 @@
 import { sb, tila } from "../db.js";
-import { $, $$, esc, muotoile, pvm, pvmLyhyt, kausi, piirra, SARJAVARIT, vari } from "../util.js";
+import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, piirra, SARJAVARIT, vari, miniPylvaat, mittari } from "../util.js";
 
 const PAATESTIT = ["30m", "10m", "heitto_paikalta", "heitto_vauhti", "lyonti", "nok_30m", "kuntopallo_taakse_2kg", "napy_1raja"];
 let data = [];
@@ -27,6 +27,7 @@ export async function nayta(main) {
         <p>30 metrin mediaaniaika ${pvm(hero.nytPvm)}. Talvella ${kausi(hero.ennenPvm)} sama porukka juoksi ${muotoile(hero.ennen, "30m")} sekuntia.</p>
       </div>` : ""}
     </section>
+    <div class="kpi-rivi">${kpiRuudut()}</div>
 
     <h2>Ikäluokat samassa iässä</h2>
     <div class="chipit" role="group" aria-label="Testi">${testit.map((t) => `<button class="chip" data-testi="${t}" aria-pressed="${t === valittu}">${esc(tila.testi[t]?.nimi || t)}</button>`).join("")}</div>
@@ -113,4 +114,26 @@ function piirraIka(t) {
       return `<tr><td>${ika} v</td>${solut.map((x) => x ? `<td class="n"><span class="${arvot.length > 1 && x.mediaani === paras ? "pb" : ""}" style="font:600 18px var(--num)">${muotoile(x.mediaani, t)}</span> <span class="pieni">${x.kausi} · ${x.n}</span></td>` : '<td class="n tyhja">–</td>').join("")}
         ${vuodet.length >= 2 ? `<td class="n">${arvot.length > 1 ? muotoile(Math.abs(huonoin - paras), t) + " " + T.yksikko : ""}</td>` : ""}</tr>`;
     }).join("")}</tbody>`;
+}
+
+// Ryhmän mediaani testikerroittain (ikäluokkien mediaanit painotettuna pelaajamäärällä)
+function ryhmanSarja(testi) {
+  const r = data.filter((x) => x.testi === testi && x.tarkenne === "");
+  const pvmt = [...new Set(r.map((x) => x.pvm))].sort();
+  return pvmt.map((p) => { const rr = r.filter((x) => x.pvm === p); const n = rr.reduce((a, x) => a + x.n, 0); return { pvm: p, n, arvo: rr.reduce((a, x) => a + x.mediaani * x.n, 0) / n }; }).filter((x) => x.n >= 5);
+}
+function kpiRuudut() {
+  const ruudut = ["30m", "10m", "lyonti", "heitto_vauhti"].map((t) => {
+    const T = tila.testi[t], sarja = ryhmanSarja(t);
+    if (sarja.length < 2) return "";
+    const viim = sarja.at(-1), eka = sarja[0];
+    const ero = viim.arvo - eka.arvo, parempi = T.pienempi_parempi ? ero < 0 : ero > 0;
+    return `<div class="kpi"><div class="otsikko">${esc(T.nimi)} · ryhmän mediaani</div>
+      <div class="arvo">${muotoile(viim.arvo, t)}<small>${T.yksikko}</small></div>
+      <div class="pieni" style="text-align:right"><span class="${parempi ? "pb" : "huono"}" style="font:700 18px var(--num)">${muotoileMuutos(ero, t)}</span><br>vrt. ${kausi(eka.pvm)}</div>
+      ${miniPylvaat(sarja.map((x) => x.arvo), T.pienempi_parempi)}
+      <div class="ala">${pvm(viim.pvm)} · ${viim.n} pelaajaa</div></div>`;
+  }).join("");
+  const kerrat = tila.kerrat.length, kaudet = new Set(tila.kerrat.map((k) => kausi(k.pvm))).size;
+  return ruudut + `<div class="kpi"><div class="otsikko">Testihistoria</div><div class="arvo">${kerrat}<small>testikertaa</small></div>${mittari(100, kaudet, "talvea", 66)}<div class="ala">${tila.testit.filter((x) => !x.johdettu).length} eri testiä</div></div>`;
 }

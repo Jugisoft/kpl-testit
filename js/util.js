@@ -81,14 +81,51 @@ export function ilmoita(teksti, virhe = false) {
 // Kaaviot (Chart.js)
 const kaaviot = new Map();
 export function vari(nimi) { return getComputedStyle(document.documentElement).getPropertyValue(nimi).trim(); }
-export const SARJAVARIT = ["#2B6CB0", "#D62E2E", "#1F6F5C", "#B97A06", "#7B4BB7", "#0F8A9D", "#A23B72", "#5B6B7F"];
+export const SARJAVARIT = ["#38D6FF", "#FF3B4E", "#2EE59D", "#FFC93C", "#A78BFA", "#2E7BFF", "#F472B6", "#94A3B8"];
+let hehkuRekisteroity = false;
 export function piirra(canvas, config) {
   if (!window.Chart) { setTimeout(() => piirra(canvas, config), 150); return; }
   kaaviot.get(canvas)?.destroy();
   const Chart = window.Chart;
   Chart.defaults.font.family = "Barlow, system-ui, sans-serif";
-  Chart.defaults.color = vari("--ink-2");
-  Chart.defaults.borderColor = vari("--line-2");
+  Chart.defaults.color = vari("--ink-3");
+  Chart.defaults.borderColor = "rgba(56,214,255,.07)";
+  Chart.defaults.plugins.tooltip.backgroundColor = "rgba(8,17,31,.95)";
+  Chart.defaults.plugins.tooltip.borderColor = "rgba(56,214,255,.35)";
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.padding = 10;
+  if (!hehkuRekisteroity) {
+    // viivoille hento hehku kuten kojelaudoissa
+    Chart.register({ id: "hehku",
+      beforeDatasetDraw(c, a) { const d = c.data.datasets[a.index]; if (c.config.type !== "line" || d.borderDash) return; c.ctx.save(); c.ctx.shadowColor = d.borderColor; c.ctx.shadowBlur = 10; },
+      afterDatasetDraw(c) { if (c.config.type === "line") c.ctx.restore(); } });
+    hehkuRekisteroity = true;
+  }
   kaaviot.set(canvas, new Chart(canvas, config));
+}
+// Pystyliukuväri pinta-alalle / pylväille
+export function liukuvari(alpha1 = .35, alpha2 = 0, rgb = "56,214,255") {
+  return (ctx) => { const { chart } = ctx; const a = chart.chartArea; if (!a) return `rgba(${rgb},${alpha1})`;
+    const g = chart.ctx.createLinearGradient(0, a.top, 0, a.bottom); g.addColorStop(0, `rgba(${rgb},${alpha1})`); g.addColorStop(1, `rgba(${rgb},${alpha2})`); return g; };
+}
+// Rengasmittari (0–100) SVG:nä
+export function mittari(pct, keski, ala = "", koko = 74) {
+  const r = 30, c = 2 * Math.PI * r, p = Math.max(0, Math.min(100, pct ?? 0));
+  const vari2 = p >= 67 ? "var(--cyan)" : p >= 34 ? "var(--yellow)" : "var(--red)";
+  return `<svg class="mittari" width="${koko}" height="${koko}" viewBox="0 0 80 80" aria-hidden="true">
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--line)" stroke-width="7"/>
+    <circle cx="40" cy="40" r="${r}" fill="none" stroke="${vari2}" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${(c * p) / 100} ${c}" transform="rotate(-90 40 40)" style="filter:drop-shadow(0 0 4px ${vari2})"/>
+    <text x="40" y="${ala ? 41 : 46}" text-anchor="middle" font-size="20" font-weight="700" fill="var(--ink)">${keski}</text>
+    ${ala ? `<text x="40" y="56" text-anchor="middle" font-size="10" fill="var(--ink-3)">${ala}</text>` : ""}</svg>`;
+}
+export const palkki = (pct) => `<div class="palkki" aria-hidden="true"><span style="width:${Math.max(2, Math.min(100, pct ?? 0))}%"></span></div>`;
+export function miniPylvaat(arvot, pienempiParempi) {
+  const v = arvot.filter((x) => x != null);
+  if (v.length < 3) return "";
+  const min = Math.min(...v), max = Math.max(...v), vali = max - min || 1;
+  return `<div class="mini-pylvaat" aria-hidden="true">${v.slice(-12).map((x, i, a) => {
+    const suhde = pienempiParempi ? (max - x) / vali : (x - min) / vali;
+    return `<span class="${i === a.length - 1 ? "viim" : ""}" style="height:${15 + 85 * suhde}%"></span>`; }).join("")}</div>`;
 }
 export function tuhoaKaaviot() { kaaviot.forEach((c) => c.destroy()); kaaviot.clear(); }

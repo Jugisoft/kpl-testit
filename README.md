@@ -4,6 +4,7 @@ KPL:n pesäpalloilijoiden talvitestien syöttö ja analyysi. Sivu: https://jugis
 
 - **Julkinen etusivu:** ikäluokkien kehitys ilman nimiä (`julkinen_yhteenveto()`, vähintään 3 pelaajaa / ryhmä).
 - **Valmentajille (kirjautuminen):** testikerrat ja tulosten syöttö, testikerran tulokset, pelaajakortit, ryhmäanalyysi, hallinta.
+- **Pelikirja (valmentajille, testivaihe):** `pelikirja.html` – ulkopelin fläppitaulu ja yhteinen kuviokirjasto. Kirjautuminen jaettu tämän sivun kanssa; data taulussa `pelikirja` (vain `valmentajat`), vikalista taulussa `pelikirja_vikalista` (valmentajat lukevat ja lisäävät, admin muuttaa tilaa).
 - **Tekniikka:** staattinen sivu (HTML + ES-moduulit, ei build-vaihetta), Supabase (Postgres + RLS + Auth), Chart.js.
 
 ## Rakenne

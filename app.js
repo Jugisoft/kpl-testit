@@ -32,7 +32,7 @@ function piirraNav(polku) {
     const href = Object.entries(navLinkit).find(([p]) => r.polku.test(p))?.[1] || "#/";
     const aktiivinen = r.polku.test(polku) || (r.nakyma === pelaajat && polku.startsWith("/pelaaja/")) || (r.nakyma === kerrat && /^\/(syota|kerta)\//.test(polku));
     return `<a href="${href}"${aktiivinen ? ' aria-current="page"' : ""}>${r.nav}</a>`;
-  }).join("");
+  }).join("") + (tila.valmentaja ? `<a href="pelikirja.html">Pelikirja</a>` : "");
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;

@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>KPL Pelikirja</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: kirjasto vasemmalla, kenttä (viisto kamerakuva) keskellä, kuvion tiedot kentän alla. Puhelimella pinoon. */
+:root{
+  --bg:#eef0ec; --panel:#ffffff; --ink:#1b211c; --muted:#5d675f; --line:#d5dad3;
+  --accent:#1f4fa8; --accent-ink:#ffffff; --opp:#d4572a; --chip:#e3e8e1;
+  --sky1:#9cc3e6; --sky2:#dfeaf2; --seam:#ffffff; --seamhot:#ffd23f; --turf:#3f7d45; --turf2:#48894e; --apron:#5f6b55; --chalk:#f6f6ef; --sand:#c9a777;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Barlow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141815; --panel:#1d231f; --ink:#e7ece6; --muted:#9aa59c; --line:#2f3832;
+  --accent:#6f9cf0; --accent-ink:#0d1420; --opp:#f08a5d; --chip:#28302a;
+  --sky1:#1d2b3d; --sky2:#3b4a5c; --seam:#ffffff; --seamhot:#ffd23f; --turf:#2f6436; --turf2:#376e3e; --apron:#3a4334; --chalk:#e9ebe2; --sand:#a88a60; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141815; --panel:#1d231f; --ink:#e7ece6; --muted:#9aa59c; --line:#2f3832;
+  --accent:#6f9cf0; --accent-ink:#0d1420; --opp:#f08a5d; --chip:#28302a;
+  --sky1:#1d2b3d; --sky2:#3b4a5c; --seam:#ffffff; --seamhot:#ffd23f; --turf:#2f6436; --turf2:#376e3e; --apron:#3a4334; --chalk:#e9ebe2; --sand:#a88a60; color-scheme:dark}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-inline:16px;padding-block:0 32px}
+*{box-sizing:border-box}
+header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-block:14px 10px}
+header h1{font:700 28px/1 var(--display);letter-spacing:.02em;margin:0;text-transform:uppercase}
+header .sub{color:var(--muted);font-size:13px}
+.wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.lib{order:2}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.lib{padding:12px;display:flex;flex-direction:column;gap:10px}
+.lib h2,.meta h2{font:600 15px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%}
+textarea{resize:vertical;min-height:84px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:600 14px/1 var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:8px 11px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.warn{color:var(--opp)}
+.group{display:flex;flex-direction:column;gap:4px}
+.group-h{font:600 16px/1.1 var(--display);letter-spacing:.03em;padding:6px 2px 2px;display:flex;justify-content:space-between}
+.group-h span{color:var(--muted);font:500 12px var(--body)}
+.item{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:center;padding:7px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent;text-align:left;background:none;width:100%;font-weight:400}
+.item:hover{background:var(--chip)}
+.item.on{border-color:var(--accent);background:var(--chip)}
+.var{grid-row:span 2;font:700 18px/1 var(--display);width:30px;height:30px;border-radius:6px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}
+.item b{font-weight:600;font-size:14px}
+.item small{color:var(--muted);font-size:12px}
+.tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:99px;background:var(--chip);color:var(--muted);margin-left:4px;vertical-align:1px}
+.libtools{display:flex;gap:6px;flex-wrap:wrap}
+.main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;border-radius:0;padding:8px 12px}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.bar label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bar input[type=range]{width:110px;padding:0}
+.bar input[type=checkbox]{width:auto}
+.spacer{flex:1}
+.fieldbox{position:relative;overflow:hidden;padding:0;background:var(--apron)}
+.titleplate{position:absolute;left:12px;top:10px;pointer-events:none;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.titleplate .k{font:700 26px/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.titleplate .s{font:500 13px var(--body);opacity:.9}
+.phasebadge{position:absolute;right:12px;top:12px;font:700 13px var(--display);letter-spacing:.1em;text-transform:uppercase;background:rgba(0,0,0,.45);color:#fff;padding:5px 9px;border-radius:5px;pointer-events:none}
+svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none;user-select:none;-webkit-user-select:none}
+.tok{cursor:grab}
+.tok:active{cursor:grabbing}
+.meta{padding:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}
+.meta .full{grid-column:1/-1}
+.meta .half{grid-column:span 2}
+@media (max-width:600px){.meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.meta label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500;min-width:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding:0 12px 10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.note{font-size:12px;color:var(--muted)}
+.confirm{display:flex;gap:6px;align-items:center;font-size:13px}
+.io{display:flex;flex-direction:column;gap:6px}
+.io textarea{font:12px/1.4 ui-monospace,Menlo,monospace;min-height:120px}
+.pat{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr) auto;gap:5px;align-items:center}
+.pat input{padding:5px 7px;font-size:13px}
+.pat button{padding:5px 8px}
+.pats{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+.btnrow button{font-size:13px;padding:7px 9px}
+.vikabtn{margin-left:auto;display:inline-flex;align-items:center;gap:7px}
+.vikabtn .cnt{background:var(--opp);color:#fff;border-radius:99px;font-size:12px;padding:1px 7px;min-width:20px;text-align:center}
+.vika{margin-block:0 14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.vika h2{font:600 15px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.vikaform{display:flex;flex-direction:column;gap:6px}
+.vikaform textarea{min-height:64px}
+.vikalist{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto}
+.vrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.vrow.done{opacity:.6}
+.vrow .chip{font:600 11px var(--body);padding:2px 8px;border-radius:99px;background:var(--opp);color:#fff;white-space:nowrap}
+.vrow.done .chip{background:var(--turf)}
+.vrow .txt{white-space:pre-wrap;word-break:break-word}
+.vrow .meta2{grid-column:2;font-size:12px;color:var(--muted)}
+.vrow .ans{grid-column:2;font-size:13px;border-left:3px solid var(--accent);padding-left:8px}
+.vrow .acts{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.vrow .acts button{font-size:12px;padding:5px 8px}
+.gate{max-width:560px;margin:8vh auto;padding:22px;display:flex;flex-direction:column;gap:12px}
+.gate h2{font:700 24px/1.1 var(--display);text-transform:uppercase;margin:0}
+.gate a.btnlink{align-self:flex-start;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;padding:9px 14px;border-radius:6px}
+.whoami{font-size:12px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+.whoami a{color:var(--muted)}
+.sync{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:7px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+
+
+<header>
+  <h1>KPL Pelikirja</h1>
+  <span class="sub">Ulkopelin kuviot vastustajan lyöjittäin · testiversio</span>
+  <span class="sync" id="sync"></span>
+  <span class="whoami" id="whoami"></span>
+  <button class="vikabtn" id="vikaopen" hidden aria-expanded="false" aria-controls="vikapanel">Vikalista <span class="cnt" id="vikacnt">–</span></button>
+</header>
+<section class="panel vika" id="vikapanel" hidden>
+  <h2>Vikalista ja huomiot</h2>
+  <p class="note" id="vikastate">Ladataan…</p>
+  <div class="vikaform" id="vikaform" hidden>
+    <label class="note" for="vikatext">Kirjoita huomio, virhe tai toive. Kerro mahdollisimman tarkasti, missä näkymässä ja mitä tapahtui.</label>
+    <textarea id="vikatext" placeholder="esim. Lyöjän silmin -näkymässä 3V jää kuvan ulkopuolelle, kun katse on keskellä"></textarea>
+    <div class="libtools"><button class="pri" id="vikaadd">Lisää huomio</button></div>
+  </div>
+  <div class="vikalist" id="vikalist"></div>
+</section>
+
+<section class="panel gate" id="gate">
+  <h2>KPL Pelikirja</h2>
+  <p id="gatemsg">Tarkistetaan kirjautumista…</p>
+  <a class="btnlink" id="gatelink" href="index.html#/kirjaudu" hidden>Kirjaudu valmentajatunnuksella</a>
+</section>
+<div class="wrap" id="app" hidden>
+  <aside class="lib panel">
+    <h2>Kirjasto</h2>
+    <input id="q" type="search" placeholder="Hae lyöjä, tilanne tai koodi…" aria-label="Hae kirjastosta">
+    <div id="list"></div>
+    <div class="libtools">
+      <button class="pri" id="new">+ Uusi kuvio</button>
+      <button id="dup">Kopioi</button>
+      <button id="del" class="warn">Poista</button>
+    </div>
+    <div id="delconfirm" class="confirm" hidden>Poistetaanko kuvio? <button class="warn" id="delyes">Poista</button><button id="delno">Peru</button></div>
+    <details>
+      <summary class="note">Vie / tuo kuviot (JSON)</summary>
+      <div class="io">
+        <textarea id="io" aria-label="Kuviot JSON-muodossa"></textarea>
+        <div class="libtools"><button id="exp">Kopioi kaikki</button><button id="imp">Tuo tekstistä</button></div>
+      </div>
+    </details>
+    <details id="patbox">
+      <summary class="note">Kuvioiden nimet (muokattava lista)</summary>
+      <div class="pats" id="pats"></div>
+      <div class="libtools" style="margin-top:6px"><button id="patadd">+ Lisää kuvio</button></div>
+      <p class="note">Joukkueen omat nimet ja selitteet, esim. Mike = Tahko 2. Kuviolle voi tallentaa pohja-asetelman kuvion tiedoista.</p>
+    </details>
+    <p class="note">Kuviot tallentuvat tähän selaimeen. Joukkueen yhteinen, kirjautumisella suojattu kirjasto tulee portaaliin seuraavassa vaiheessa.</p>
+  </aside>
+
+  <section class="main">
+    <div class="panel bar">
+      <div class="seg" role="tablist" aria-label="Vaihe">
+        <button id="phA" class="on">1 · Asetelma</button>
+        <button id="phB">2 · Syötöstä</button>
+      </div>
+      <button id="play">▶ Toista</button>
+      <button id="reset" title="Kopioi asetelman paikat liikevaiheeseen">Nollaa liikkeet</button>
+      <span class="spacer"></span>
+      <div class="seg" aria-label="Näkymä"><button id="vV" class="on">Viisto</button><button id="vL">Lyöjän silmin</button></div>
+      <label><span id="anglbl">Kulma</span> <input id="ang" type="range" min="12" max="89" value="64"></label>
+      <label><input id="seam" type="checkbox" checked> Saumat</label>
+      <label title="Etäisyys lähimpään sivurajaan ja polttolinjaan (2- ja 3-pesän välinen linja)"><input id="dims" type="checkbox"> Mitat</label>
+      <label title="Kuinka paljon pelaaja ehtii peittää sivusuunnassa. Vaikuttaa siihen, kuinka paljon lähempi pelaaja kaventaa saumaa.">Ulottuvuus <input id="reach" type="number" min="0" max="6" step="0.5" value="2" style="width:62px;padding:4px 6px"> m</label>
+      <label><input id="opp" type="checkbox" checked> Vastustaja</label>
+      <label><input id="ball" type="checkbox" checked> Pallo</label>
+    </div>
+
+    <div class="panel fieldbox">
+      <svg id="field" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="titleplate"><div class="k" id="tpk"></div><div class="s" id="tps"></div></div>
+      <div class="phasebadge" id="pbadge">Asetelma</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--accent)"></i>KPL ulkopeli</span>
+      <span><i style="background:var(--opp)"></i>Vastustaja (lyöjä, etenijät)</span>
+      <span><i style="background:#f3e36b"></i>Pallon suunta</span>
+      <span id="dimleg">Mitat (m): koti = kotipesästä (S ja 1V), raja = sivurajasta, PL = polttolinjasta (+ takana, − edessä)</span>
+      <span><i style="background:var(--seamhot)"></i>Sauma: avoin leveys lyöjän silmin, mitattuna syvemmän pelaajan linjalla</span>
+      <span>Raahaa pelaajia. Vaiheessa 2 raahaus piirtää liikenuolen.</span>
+    </div>
+
+    <div class="panel meta">
+      <h2 class="full">Kuvion tiedot</h2>
+      <label class="half">Vastustajan lyöjä<input id="f-lyoja"></label>
+      <label>Tilanne<select id="f-tilanne"></select></label>
+      <label>Variaatio<input id="f-var" maxlength="3"></label>
+      <label class="half">Ulkopelikuvio<select id="f-kuvio"></select></label>
+      <label class="half">Koodisana (kutsu kentällä)<input id="f-koodi"></label>
+      <label class="half">Vastustajan joukkue<input id="f-joukkue"></label>
+      <div class="half btnrow"><button id="tplload">Lataa kuvion asetelma</button><button id="tplsave">Päivitä kuvio</button><button class="pri" id="tplnew">Tallenna uutena kuviona…</button></div>
+      <div class="full btnrow" id="newpat" hidden>
+        <label style="flex:1;min-width:160px">Uuden kuvion nimi<input id="np-name" placeholder="esim. Mike, Tappi, Oulu"></label>
+        <label style="flex:2;min-width:180px">Selite (vapaaehtoinen)<input id="np-desc"></label>
+        <button class="pri" id="np-ok">Tallenna</button><button id="np-no">Peru</button>
+      </div>
+      <label class="full">Muistiinpanot<textarea id="f-notes"></textarea></label>
+      <p class="note full" id="stamp"></p>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Kentän geometria (metreinä), miesten kenttä OKM/SLA-kenttäkuvan mukaan.
+   x: vasen(-)/oikea(+) kotipesän takaa katsottuna, y: syvyys kotirajasta. */
+const FIELD = {
+  // pelikenttä: kotipesä → 2-pesän sivuraja → takaraja → 3-pesän sivuraja → 1-pesä
+  outline: [[0,0],[21,32],[21,96],[-21,96],[-21,32],[-11.3,16.5]],
+  runLane: [[0,0],[-6.7,0],[-21,20],[-21,32],[-11.3,16.5]],     // lähtö- ja kotipolun välinen alue
+  vara1:   [[-11.3,16.5],[-16.7,14.1],[-21,20],[-21,32]],        // 1-pesän vara-alue
+  vara2:   [[21,35.5],[31,35.5],[31,99],[21,99]],                 // 2-pesän vara-alue + jatke
+  vara3:   [[-21,35.5],[-31,35.5],[-31,99],[-21,99]],             // 3-pesän vara-alue + jatke
+  bases: { "1": [-11.3,16.5], "2": [21,38.5], "3": [-21,38.5] },
+  homeArc: 2.7, kotipesa: 5, suoja: 7
+};
+const ROLES = [
+  {id:"L", n:"Lukkari"},{id:"S",n:"Sieppari"},{id:"1V",n:"Ykkösvahti"},{id:"2V",n:"Kakkosvahti"},{id:"3V",n:"Kolmosvahti"},
+  {id:"2P",n:"Kakkospolttaja"},{id:"3P",n:"Kolmospolttaja"},{id:"3K",n:"3-koppari"},{id:"2K",n:"2-koppari"}
+];
+const TILANTEET = ["0-tilanne","1-tilanne","2-tilanne","3-tilanne","1–2-tilanne","1–3-tilanne","2–3-tilanne","Ajolähtö (1–2–3)","Kotiutus 3-pesältä"];
+
+/* ===== Esimerkkikuviot ===== */
+const P = (x,y)=>({x,y});
+function base(){ return {
+  L:P(0,1.3), S:P(14,43), "1V":P(-9.3,15.2), "2V":P(18.8,37.2), "3V":P(-18.8,37.2),
+  "2P":P(8,30), "3P":P(-9,34), "3K":P(-11,70), "2K":P(11,72)
+};}
+function mk(o){
+  const a = Object.assign(base(), o.a||{});
+  const b = {}; for(const k in a){ b[k] = Object.assign({}, a[k], (o.b||{})[k]||{}); }
+  return {
+    id: o.id || ("k"+Math.random().toString(36).slice(2,9)),
+    lyoja:o.lyoja, joukkue:o.joukkue||"", tilanne:o.tilanne, variaatio:o.variaatio, koodi:o.koodi, notes:o.notes||"",
+    esim: !!o.esim, muokattu:o.muokattu||new Date().toISOString(),
+    ulko:{a,b},
+    opp:o.opp||{ Ly:{a:P(1.5,-1.8),b:P(-10.4,15.6)}, E1:{a:P(-12.6,17.6),b:P(19.4,37.8)} },
+    pallo:o.pallo||P(-6,34)
+  };
+}
+const SAMPLES = [
+  mk({esim:true, lyoja:"Olli Heikkala", tilanne:"1-tilanne", variaatio:"A", koodi:"Sulku",
+     notes:"Esimerkkikuvio. Etukenttä tiivis, 3P peittää kakkosen kulman. Muokkaa joukkueen sovitun mukaan.",
+     a:{"3P":P(-6,30),"2P":P(10,28)}, b:{"2V":P(20,37.6),"3P":P(4,32),S:P(17,40),"1V":P(-11,16)}, pallo:P(4,30)}),
+  mk({esim:true, lyoja:"Olli Heikkala", tilanne:"1-tilanne", variaatio:"B", koodi:"Syvä vasen",
+     notes:"Esimerkkikuvio. Kopparit vasemmalle ja syvemmälle, 3V pysyy pesällä.",
+     a:{"3K":P(-14,76),"2K":P(2,74),"3P":P(-12,42)}, b:{"3K":P(-12,62),"3P":P(-16,46),"2K":P(-2,58),"3V":P(-20,38.5)}, pallo:P(-12,60)}),
+  mk({esim:true, lyoja:"Olli Heikkala", tilanne:"1-tilanne", variaatio:"C", koodi:"Kakkonen",
+     notes:"Esimerkkikuvio. Pelataan etenijä kakkoselle: sieppari ja 2V sulkevat oikean rajan.",
+     a:{S:P(15,40),"2P":P(12,26)}, b:{S:P(19,40.5),"2P":P(17,32),"2V":P(20.3,38)}, pallo:P(15,26)}),
+  mk({esim:true, lyoja:"Perusasetelma", tilanne:"0-tilanne", variaatio:"A", koodi:"Perus",
+     notes:"Esimerkki: oletusasetelma, josta muut kuviot kopioidaan.",
+     opp:{Ly:{a:P(1.5,-1.8),b:P(-10.4,15.6)}}, pallo:P(-8,44)})
+];
+
+/* ===== Ulkopelikuvioiden nimet (muokattava) ===== */
+const DEFAULT_PATS = [
+  {id:"mike",   name:"Mike",            desc:"Kouvolan nimi Tahko 2:lle (käännetty Tahko)"},
+  {id:"tappi",  name:"Tappi",           desc:"Lippo-/Jussi-kuvio, nokkakuvio"},
+  {id:"oulu",   name:"Oulu",            desc:""},
+  {id:"pertsa", name:"Pertsa",          desc:"Perinteinen 80-luvun kuvio"},
+  {id:"tahko",  name:"Tahko",           desc:"Tahko-kuvio"},
+  {id:"ktappi", name:"Käännetty tappi", desc:"Tapin peilikuva"},
+  {id:"risti",  name:"Ristivitonen",    desc:"1990-luvun lopun suosikki"},
+  {id:"syva",   name:"Syväkuvio",       desc:"”Kasari”, tappipelaaja siirtyy linjaan"}
+];
+const PKEY="kpl-kuviot-v1";
+let pats;
+if(!Array.isArray(pats)) pats=DEFAULT_PATS.map(p=>({...p}));
+function savePats(){ if(typeof cloudQueue==="function") cloudQueue(); }
+const patName=id=>(pats.find(p=>p.id===id)||{}).name||"";
+
+/* ===== Tila ===== */
+const KEY="kpl-pelikirja-v2";
+let plays, sel, phase="a", angle=64, view="viisto", yaw=0, showOpp=true, showBall=true, showSeams=true, showDims=false, reach=2, anim=null;
+const PREFS="kpl-pelikirja-gh-asetukset";
+try{ const s=JSON.parse(localStorage.getItem(PREFS)||"null"); if(s){ sel=s.sel; angle=s.angle||64; view=s.view||"viisto"; yaw=s.yaw||0; } }catch(e){}
+const PERUS=SAMPLES.find(p=>p.lyoja==="Perusasetelma");
+plays=[PERUS];
+if(!plays.find(p=>p.id===sel)) sel=plays[0].id;
+function migr(o){ if(!o) return; for(const [a,b] of [["VK","3K"],["OK","2K"]]) if(o[a]&&!o[b]){o[b]=o[a];delete o[a];} }
+function migrPlays(arr){ arr.forEach(p=>{migr(p.ulko?.a);migr(p.ulko?.b);}); }
+migrPlays(plays); pats.forEach(t=>{migr(t.pohja);migr(t.liike);});
+function save(){ try{ localStorage.setItem(PREFS, JSON.stringify({sel,angle,view,yaw})); }catch(e){} cloudQueue(); }
+const cur=()=>plays.find(p=>p.id===sel);
+
+/* ===== Kamera: viisto näkymä kotipesän takaa tai lyöjän silmin ===== */
+const K=1000, NEAR=0.4; let cam;
+function setCam(){
+  if(view==="lyoja"){
+    const ps=Math.atan2(1.75-0.3, 26), yw=yaw*Math.PI/180;   // katse hieman alaspäin polttolinjaan
+    const f=[Math.sin(yw)*Math.cos(ps), Math.cos(yw)*Math.cos(ps), -Math.sin(ps)];
+    const r=[Math.cos(yw), -Math.sin(yw), 0];
+    cam={p:[0,-0.6,1.75], f, r, u:cross(r,f)};
+  } else {
+    const ph=angle*Math.PI/180, D=122;
+    cam={p:[0,42-D*Math.cos(ph),D*Math.sin(ph)], f:[0,Math.cos(ph),-Math.sin(ph)], r:[1,0,0], u:[0,Math.sin(ph),Math.cos(ph)]};
+  }
+}
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];}
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function cs(x,y,z=0){const v=[x-cam.p[0],y-cam.p[1],z-cam.p[2]];return [dot(v,cam.r),dot(v,cam.u),dot(v,cam.f)];}
+function scr(c){return {X:K*c[0]/c[2], Y:-K*c[1]/c[2], s:K/c[2], zc:c[2]};}
+function pr(x,y,z=0){return scr(cs(x,y,z));}
+function unpr(X,Y){
+  const xc=X/K, yc=-Y/K, d=[0,1,2].map(i=>cam.f[i]+xc*cam.r[i]+yc*cam.u[i]);
+  if(d[2]>=-1e-4) return null;
+  const t=-cam.p[2]/d[2];
+  return {x:cam.p[0]+d[0]*t, y:cam.p[1]+d[1]*t};
+}
+// koko-kerroin: lyöjän näkymässä merkit pienemmiksi ja lähimmät rajataan
+const SZ=s=>view==="lyoja"?Math.min(s,30)*.6:s;
+const f1=n=>n.toFixed(1);
+function lerp3(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+// polku kameran etupuolelle leikattuna (Sutherland–Hodgman yhtä tasoa vasten)
+function polyD(arr, closed){
+  const P=arr.map(q=>cs(q[0],q[1],q[2]||0));
+  if(closed){
+    const out=[];
+    for(let i=0;i<P.length;i++){
+      const a=P[i], b=P[(i+1)%P.length], ia=a[2]>=NEAR, ib=b[2]>=NEAR;
+      if(ia) out.push(a);
+      if(ia!==ib) out.push(lerp3(a,b,(NEAR-a[2])/(b[2]-a[2])));
+    }
+    if(out.length<3) return "";
+    return "M"+out.map(c=>{const p=scr(c);return f1(p.X)+" "+f1(p.Y)}).join("L")+"Z";
+  }
+  let d="", pen=false;
+  for(let i=0;i<P.length;i++){
+    const a=P[i];
+    if(a[2]>=NEAR){
+      if(!pen){ if(i>0&&P[i-1][2]<NEAR){const c=lerp3(P[i-1],a,(NEAR-P[i-1][2])/(a[2]-P[i-1][2]));const p=scr(c);d+="M"+f1(p.X)+" "+f1(p.Y);pen=true;} }
+      const p=scr(a); d+=(pen?"L":"M")+f1(p.X)+" "+f1(p.Y); pen=true;
+    } else if(pen){ const c=lerp3(P[i-1],a,(NEAR-P[i-1][2])/(a[2]-P[i-1][2])); const p=scr(c); d+="L"+f1(p.X)+" "+f1(p.Y); pen=false; }
+  }
+  return d;
+}
+function circlePts(cx,cy,r,a0=0,a1=Math.PI*2,n=40){const o=[];for(let i=0;i<=n;i++){const t=a0+(a1-a0)*i/n;o.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}return o;}
+const poly=(arr,attrs)=>{const d=polyD(arr,true);return d?`<path d="${d}" ${attrs}/>`:"";};
+const line=(arr,attrs)=>{const d=polyD(arr,false);return d?`<path d="${d}" fill="none" ${attrs}/>`:"";};
+
+const svg=document.getElementById("field");
+let VB;
+function drawField(){
+  setCam();
+  if(view==="lyoja"){
+    const W=2*K*Math.tan(33*Math.PI/180), H=W*.46, hzY=-K*Math.tan(Math.atan2(1.45,26));
+    VB={x:-W/2,y:hzY-H*.36,w:W,h:H};
+  } else {
+    const X0=-33, X1=33, Y0=-10, Y1=106;
+    const c=[pr(X0,Y0),pr(X1,Y0),pr(X0,Y1),pr(X1,Y1)];
+    const minX=Math.min(...c.map(p=>p.X)), maxX=Math.max(...c.map(p=>p.X));
+    const minY=Math.min(...c.map(p=>p.Y)), maxY=Math.max(...c.map(p=>p.Y));
+    const pad=8; VB={x:minX-pad,y:minY-pad-34,w:maxX-minX+pad*2,h:maxY-minY+pad*2+34};
+  }
+  svg.setAttribute("viewBox",`${VB.x} ${VB.y} ${VB.w} ${VB.h}`);
+  const lw=view==="lyoja"?1.4:Math.max(1.2, VB.w/520);
+  const L=(arr,w=1,extra="")=>line(arr,`stroke="var(--chalk)" stroke-width="${lw*w}" stroke-linejoin="round" ${extra}`);
+  let h=`<defs><clipPath id="fc"><path d="${polyD(FIELD.outline,true)}"/></clipPath>
+   <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset="1" stop-color="var(--sky2)"/></linearGradient>
+   <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--chalk)"/></marker></defs>`;
+  h+=`<rect x="${VB.x}" y="${VB.y}" width="${VB.w}" height="${VB.h}" fill="var(--apron)"/>`;
+  // horisontti ja taivas (näkyy matalilla kulmilla)
+  const hz=scr(cs(cam.p[0]+cam.f[0]*1e5, cam.p[1]+cam.f[1]*1e5, 0));
+  if(hz.zc>0 && hz.Y>VB.y) h+=`<rect x="${VB.x}" y="${VB.y}" width="${VB.w}" height="${f1(Math.min(VB.h,hz.Y-VB.y))}" fill="url(#sky)"/>`;
+  h+=poly([[-60,-10],[60,-10],[60,140],[-60,140]],`fill="var(--apron)"`);
+  h+=poly([[-33,-10],[33,-10],[33,106],[-33,106]],`fill="var(--turf)" opacity=".5"`);
+  for(const v of ["vara2","vara3","vara1"]) h+=poly(FIELD[v],`fill="var(--sand)" opacity=".45"`);
+  h+=poly(FIELD.runLane,`fill="var(--turf2)" opacity=".8"`);
+  h+=`<g clip-path="url(#fc)">`+poly(FIELD.outline,`fill="var(--turf)"`);
+  for(let y=0;y<96;y+=16) h+=poly([[-22,y],[22,y],[22,y+8],[-22,y+8]],`fill="var(--turf2)"`);
+  h+=`</g>`;
+  // kotipesä ja suoja-alue (kotipuolella)
+  h+=poly(circlePts(0,0,FIELD.suoja,Math.PI,2*Math.PI),`fill="var(--sand)" opacity=".45"`);
+  h+=poly(circlePts(0,0,FIELD.kotipesa,Math.PI,2*Math.PI),`fill="var(--sand)" opacity=".85"`);
+  h+=L(circlePts(0,0,FIELD.suoja,Math.PI,2*Math.PI),.8)+L(circlePts(0,0,FIELD.kotipesa,Math.PI,2*Math.PI),.8);
+  h+=L(circlePts(0,0,FIELD.homeArc,0,Math.PI));
+  h+=poly(circlePts(0,0,.3),`fill="#e9dcc3" stroke="#6b5a3c" stroke-width="${lw*.6}"`);
+  // rajat ja polut
+  h+=L([[-6.7,0],[7,0]],1);
+  h+=L([[0,0],[21,32],[21,96],[-21,96],[-21,32]],1.4);
+  h+=L([[0,0],FIELD.bases["1"]],1);
+  h+=L([FIELD.bases["1"],[-21,32]],1);
+  h+=L([FIELD.bases["1"],FIELD.bases["2"]],.8,'stroke-opacity=".6"');
+  h+=L([FIELD.bases["2"],FIELD.bases["3"]],.8,'stroke-opacity=".6"');
+  h+=L([[-21,32],[-21,20],[-6.7,0]],1.2);
+  h+=L([[-21,35.5],[-31,35.5]],.7)+L([[21,35.5],[31,35.5]],.7);
+  const TXT=(p,size,txt,extra="")=>p.zc>NEAR?`<text x="${f1(p.X)}" y="${f1(p.Y)}" text-anchor="middle" font-size="${f1(SZ(size*p.s/8))}" ${extra}>${txt}</text>`:"";
+  for(const k in FIELD.bases){
+    const [bx,by]=FIELD.bases[k];
+    let half;
+    if(k==="1"){ const [x2,y2]=FIELD.bases["2"], a1=Math.atan2(y2-by,x2-bx), a2=Math.atan2(32-by,-21-bx); half=[[bx,by],...circlePts(bx,by,3,a1,a2,24)]; }
+    else half=circlePts(bx,by,3, bx>0?Math.PI/2:-Math.PI/2, bx>0?Math.PI*1.5:Math.PI/2);
+    h+=poly(half,`fill="var(--sand)" stroke="var(--chalk)" stroke-width="${lw}"`);
+  }
+  for(const m of [20,40,60,80]){
+    h+=L([[21,m],[23.5,m]],1,'stroke-opacity=".6"');
+    const t=pr(27,m); h+=TXT({...t,Y:t.Y+SZ(4*t.s/8)},11,m+" m",`font-family="Barlow,sans-serif" fill="var(--chalk)" fill-opacity=".75"`);
+  }
+  h+=`<g id="dyn"></g>`;
+  svg.innerHTML=h;
+  drawDyn();
+}
+
+/* ===== Pelaajat, nuolet, pallo, saumat ===== */
+function posOf(ent, ph, t){
+  if(t!=null){ return {x:ent.a.x+(ent.b.x-ent.a.x)*t, y:ent.a.y+(ent.b.y-ent.a.y)*t}; }
+  return ph==="a"?ent.a:ent.b;
+}
+function token(id,label,p,color,full){
+  const g=pr(p.x,p.y); if(g.zc<1.2) return "";
+  const s=SZ(g.s)*1.4, r=(13*s/8);
+  const head=pr(p.x,p.y,2.2);
+  return `<g class="tok" data-pid="${id}" tabindex="0" aria-label="${full}">
+    ${poly(circlePts(p.x,p.y,1.3,0,Math.PI*2,20),`fill="#000" opacity=".28"`)}
+    <line x1="${f1(g.X)}" y1="${f1(g.Y)}" x2="${f1(head.X)}" y2="${f1(head.Y)}" stroke="${color}" stroke-width="${f1(3*s/8)}"/>
+    <circle cx="${f1(head.X)}" cy="${f1(head.Y)}" r="${f1(r)}" fill="${color}" stroke="#fff" stroke-width="${f1(2*s/8)}"/>
+    <text x="${f1(head.X)}" y="${f1(head.Y+r*.36)}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(r*1.05)}" fill="#fff">${label}</text>
+    <title>${full}</title></g>`;
+}
+function arrow(a,b,col,marker,dash){
+  if(Math.hypot(b.x-a.x,b.y-a.y)<.8) return "";
+  const n=16, o=[];
+  for(let i=0;i<=n;i++){const t=i/n;o.push([a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t]);}
+  const s=SZ(pr(a.x,a.y).s);
+  return line(o,`stroke="${col}" stroke-width="${f1(2.6*s/8)}" stroke-linecap="round" ${dash?`stroke-dasharray="${f1(6*s/8)} ${f1(5*s/8)}"`:""} marker-end="url(#${marker})"`);
+}
+function ballArc(to){
+  const d=Math.hypot(to.x,to.y), H=Math.min(16,4+d*.18), o=[];
+  for(let i=0;i<=40;i++){const t=i/40; o.push([to.x*t,to.y*t,1+H*4*t*(1-t)]);}
+  const g=pr(to.x,to.y), s=SZ(g.s);
+  return line(o,`stroke="#f3e36b" stroke-width="${f1(2.2*s/8)}" stroke-dasharray="${f1(5*s/8)} ${f1(4*s/8)}"`)+
+   `<g class="tok" data-pid="pallo" aria-label="Pallon suunta">${poly(circlePts(to.x,to.y,2.4,0,Math.PI*2,28),`fill="#f3e36b" fill-opacity=".35" stroke="#f3e36b" stroke-width="${f1(1.6*s/8)}"`)}
+   <circle cx="${f1(g.X)}" cy="${f1(g.Y)}" r="${f1(5*s/8)}" fill="#f3e36b" stroke="#6b5a1c" stroke-width="1"/><title>Pallon suunta (raahaa)</title></g>`;
+}
+// Saumat: polttolinjan aukot kotipesältä katsottuna (1V voi peittää edestä)
+const SAUMA_ROLES=["3V","3P","S","2P","2V"];
+/* Sauma lyöjän silmin: jokainen pelaaja peittää kotipesältä katsottuna kulman atan(ulottuvuus / etäisyys),
+   joten lähempi pelaaja peittää enemmän. Sauma = peittämätön kulma kahden pelaajan välissä,
+   ilmoitettuna metreinä syvemmän pelaajan etäisyydellä. */
+const SAUMA_PEITTO=["3V","3P","S","2P","2V","1V"];   // nämä peittävät; saumat haetaan 3V–2V välistä
+function seams(pos){
+  const mk=k=>{const q=pos[k], d=Math.max(1,Math.hypot(q.x,q.y)); return {k,...q,ang:Math.atan2(q.x,q.y),d,h:Math.atan(reach/d)};};
+  const line=SAUMA_ROLES.map(mk), lo=Math.min(...line.map(q=>q.ang)), hi=Math.max(...line.map(q=>q.ang));
+  const iv=SAUMA_PEITTO.map(mk).map(q=>({q,s:q.ang-q.h,e:q.ang+q.h})).sort((x,y)=>x.s-y.s);
+  // yhdistetään päällekkäiset peittokaistat; reunapelaaja = se jonka kaista ulottuu pisimmälle
+  const merged=[];
+  for(const v of iv){ const m=merged[merged.length-1];
+    if(m&&v.s<=m.e){ if(v.e>m.e){m.e=v.e;m.right=v.q;} }
+    else merged.push({s:v.s,e:v.e,left:v.q,right:v.q}); }
+  const out=[];
+  for(let i=0;i<merged.length-1;i++){
+    const L=merged[i], R=merged[i+1], a0=L.e, a1=R.s;
+    if(a0<lo-1e-6||a1>hi+1e-6) continue;          // vain polttolinjan sisäiset saumat
+    const A=L.right, B=R.left, gap=a1-a0, D=Math.max(A.d,B.d);
+    out.push({A,B,a0,a1,gap,D,m:2*D*Math.tan(gap/2)});
+  }
+  return out;
+}
+function seamLayer(pos){
+  const S=seams(pos); if(!S.length) return "";
+  const maxM=Math.max(...S.map(s=>s.m));
+  let h="";
+  for(const s of S){
+    const ma=(s.a0+s.a1)/2, md=(s.A.d+s.B.d)/2;
+    if(s.m>0){
+      const r0=Math.min(9,Math.min(s.A.d,s.B.d)*.5), r1=s.D+5, n=24, pts=[];
+      for(let i=0;i<=n;i++){const a=s.a0+s.gap*i/n;pts.push([r1*Math.sin(a),r1*Math.cos(a)]);}
+      for(let i=n;i>=0;i--){const a=s.a0+s.gap*i/n;pts.push([r0*Math.sin(a),r0*Math.cos(a)]);}
+      const wide=s.m===maxM;
+      h+=poly(pts,`fill="${wide?"var(--seamhot)":"var(--seam)"}" fill-opacity="${wide?.32:.2}"`);
+    }
+    const q=pr(md*Math.sin(ma),md*Math.cos(ma),.4);
+    if(q.zc>NEAR){const fs=view==="lyoja"?26:SZ(14*q.s/8), txt=s.m>0?s.m.toFixed(1).replace(".",",")+" m":"kiinni";
+      h+=`<text x="${f1(q.X)}" y="${f1(q.Y)}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(s.m>0?fs:fs*.8)}" fill="#fff" fill-opacity="${s.m>0?1:.75}" stroke="rgba(0,0,0,.6)" stroke-width="${f1(fs*.18)}" paint-order="stroke">${txt}</text>`;}
+  }
+  return h;
+}
+/* Mitat: etäisyys oman puolen sivurajaan ja polttolinjaan (2–3-pesien linja, y = 38,5 m) */
+const PL_Y=FIELD.bases["2"][1];
+const SIDE_R=[[0,0],[21,32],[21,96]], SIDE_L=[[0,0],FIELD.bases["1"],[-21,32],[-21,96]];
+function nearestOn(poly,p){
+  let best=null;
+  for(let i=0;i<poly.length-1;i++){
+    const [ax,ay]=poly[i],[bx,by]=poly[i+1], dx=bx-ax, dy=by-ay;
+    const t=Math.max(0,Math.min(1,((p.x-ax)*dx+(p.y-ay)*dy)/(dx*dx+dy*dy)));
+    const q={x:ax+dx*t,y:ay+dy*t}, d=Math.hypot(p.x-q.x,p.y-q.y);
+    if(!best||d<best.d) best={d,q};
+  }
+  return best;
+}
+const fmt=n=>n.toFixed(1).replace(".",",").replace("-","−");
+function dimLayer(items){
+  let h="";
+  for(const it of items){
+    if(it.id==="u:L"||!it.id.startsWith("u:")) continue;
+    const p=it.p, side=nearestOn(p.x>=0?SIDE_R:SIDE_L,p), pl=p.y-PL_Y, koti=Math.hypot(p.x,p.y);
+    const role=it.id.slice(2), showKoti=role==="S"||role==="1V", showPL=true;
+    const g=pr(p.x,p.y); if(g.zc<1.2) continue;
+    if(drag&&drag.id===it.id){
+      h+=line([[p.x,p.y],[side.q.x,side.q.y]],`stroke="#fff" stroke-width="1.6" stroke-dasharray="5 4"`);
+      if(showPL){ h+=line([[p.x,p.y],[p.x,PL_Y]],`stroke="#fff" stroke-width="1.6" stroke-dasharray="5 4"`);
+        h+=line([[-21,PL_Y],[21,PL_Y]],`stroke="#fff" stroke-opacity=".5" stroke-width="1"`); }
+      if(showKoti) h+=line([[p.x,p.y],[0,0]],`stroke="#fff" stroke-width="1.6" stroke-dasharray="5 4"`);
+    }
+    const fs=Math.max(10,SZ(11*g.s/8)*1.3), y0=g.Y+fs*1.2;
+    const st=`font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="600" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.65)" stroke-width="${f1(fs*.2)}" paint-order="stroke"`;
+    const rows=[];
+    if(showKoti) rows.push("koti "+fmt(koti));
+    rows.push("raja "+fmt(side.d));
+    if(showPL) rows.push("PL "+(pl>0?"+":"")+fmt(pl));
+    rows.forEach((t,i)=>{ h+=`<text x="${f1(g.X)}" y="${f1(y0+i*fs*1.05)}" font-size="${f1(fs)}" ${st}>${t}</text>`; });
+  }
+  return h;
+}
+function drawDyn(){
+  const pl=cur(), dyn=document.getElementById("dyn"); if(!pl||!dyn) return;
+  const t=anim?anim.t:null, bat=view==="lyoja";
+  let h="", list=[];
+  for(const r of ROLES){ if(bat&&r.id==="L") continue; const e=pl.ulko; list.push({id:"u:"+r.id,label:r.id,full:r.n,ent:{a:e.a[r.id],b:e.b[r.id]},col:"var(--accent)"});}
+  if(showOpp) for(const k in pl.opp){ if(bat&&k==="Ly") continue; const e=pl.opp[k];list.push({id:"o:"+k,label:k,full:k==="Ly"?"Vastustajan lyöjä":"Etenijä "+k.slice(1)+"-pesällä",ent:e,col:"var(--opp)"});}
+  if(showSeams){ const pos={}; for(const r of ROLES){const e={a:pl.ulko.a[r.id],b:pl.ulko.b[r.id]}; pos[r.id]=posOf(e,phase,t);} h+=seamLayer(pos); }
+  if(phase==="b"||anim) for(const it of list){ h+=arrow(it.ent.a,it.ent.b,"var(--chalk)","ah",it.id.startsWith("o:")); }
+  if(phase==="b"&&!anim) for(const it of list){ if(Math.hypot(it.ent.b.x-it.ent.a.x,it.ent.b.y-it.ent.a.y)>.8){const g=pr(it.ent.a.x,it.ent.a.y); if(g.zc>NEAR) h+=`<circle cx="${f1(g.X)}" cy="${f1(g.Y)}" r="${f1(SZ(5*g.s/8))}" fill="none" stroke="var(--chalk)" stroke-opacity=".7" stroke-width="1.5"/>`;} }
+  if(showBall) h+=ballArc(pl.pallo);
+  list=list.map(it=>{const p=posOf(it.ent,phase,t);return {...it,p,z:pr(p.x,p.y).zc};}).sort((a,b)=>b.z-a.z);
+  for(const it of list) h+=token(it.id,it.label,it.p,it.col,it.full);
+  if(showDims&&!bat) h+=dimLayer(list);
+  dyn.innerHTML=h;
+}
+
+/* ===== Raahaus ===== */
+let drag=null;
+function svgPt(e){const m=svg.getScreenCTM().inverse();const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m);return p;}
+svg.addEventListener("pointerdown",e=>{
+  const g=e.target.closest("[data-pid]"); if(!g||anim) return;
+  const id=g.dataset.pid, pl=cur(); let cp;
+  if(id==="pallo") cp=pl.pallo; else { const [kind,k]=id.split(":"); const ent=kind==="u"?{a:pl.ulko.a[k],b:pl.ulko.b[k]}:pl.opp[k]; cp=phase==="a"?ent.a:ent.b; }
+  const s=svgPt(e), w=unpr(s.x,s.y); if(!w) return;
+  drag={id,dx:cp.x-w.x,dy:cp.y-w.y}; svg.setPointerCapture(e.pointerId); e.preventDefault();
+});
+svg.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  const s=svgPt(e), w=unpr(s.x,s.y); if(!w) return; w.x+=drag.dx; w.y+=drag.dy;
+  w.x=Math.max(-30,Math.min(30,w.x)); w.y=Math.max(-7,Math.min(104,w.y));
+  const pl=cur(); const r={x:+w.x.toFixed(1),y:+w.y.toFixed(1)};
+  if(drag.id==="pallo"){pl.pallo=r;}
+  else{
+    const [kind,k]=drag.id.split(":");
+    if(kind==="u"){ if(phase==="a"){ const moved=Math.hypot(pl.ulko.b[k].x-pl.ulko.a[k].x,pl.ulko.b[k].y-pl.ulko.a[k].y)>.8; pl.ulko.a[k]=r; if(!moved) pl.ulko.b[k]={...r}; } else pl.ulko.b[k]=r; }
+    else { const o=pl.opp[k]; if(phase==="a"){ o.a=r; } else o.b=r; }
+  }
+  drawDyn();
+});
+svg.addEventListener("pointerup",e=>{ if(drag){drag=null; touch(); drawDyn(); } });
+svg.addEventListener("pointercancel",()=>{drag=null;});
+
+/* ===== Animaatio ===== */
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function play(){
+  if(anim) return;
+  if(reduce){ setPhase("b"); return; }
+  const t0=performance.now(), dur=1700;
+  anim={t:0}; setPhase("a",true);
+  const step=now=>{ let t=Math.min(1,(now-t0)/dur); t=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; anim.t=t; drawDyn();
+    if(t<1) requestAnimationFrame(step); else { anim=null; setPhase("b"); } };
+  requestAnimationFrame(step);
+}
+
+/* ===== Kirjasto ja lomake ===== */
+const $=id=>document.getElementById(id);
+const sel_t=$("f-tilanne"); TILANTEET.forEach(t=>{const o=document.createElement("option");o.textContent=t;sel_t.appendChild(o);});
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function renderList(){
+  const q=$("q").value.trim().toLowerCase();
+  const f=plays.filter(p=>!q||[p.lyoja,p.tilanne,p.koodi,p.joukkue,p.notes,patName(p.kuvio)].join(" ").toLowerCase().includes(q));
+  const groups={}; f.forEach(p=>{(groups[p.lyoja||"Nimetön"]??=[]).push(p);});
+  let h="";
+  Object.keys(groups).sort((a,b)=>a.localeCompare(b,"fi")).forEach(g=>{
+    const arr=groups[g].sort((a,b)=>(a.tilanne+a.variaatio).localeCompare(b.tilanne+b.variaatio,"fi"));
+    h+=`<div class="group"><div class="group-h">${esc(g)}<span>${arr.length} kuviota</span></div>`;
+    arr.forEach(p=>{h+=`<button class="item ${p.id===sel?"on":""}" data-id="${p.id}"><span class="var">${esc(p.variaatio||"–")}</span><b>${esc(p.tilanne)}${p.esim?'<span class="tag">esimerkki</span>':""}</b><small>${patName(p.kuvio)?esc(patName(p.kuvio))+" · ":""}”${esc(p.koodi||"ei koodia")}”</small></button>`;});
+    h+="</div>";
+  });
+  $("list").innerHTML=h||'<p class="note">Ei hakutuloksia.</p>';
+}
+$("list").addEventListener("click",e=>{const b=e.target.closest("[data-id]");if(!b)return;sel=b.dataset.id;$("delconfirm").hidden=true;loadForm();renderList();drawDyn();save();});
+$("q").addEventListener("input",renderList);
+function loadForm(){
+  const p=cur();
+  $("f-lyoja").value=p.lyoja||""; $("f-tilanne").value=p.tilanne; $("f-var").value=p.variaatio||"";
+  fillKuvio(); $("f-kuvio").value=p.kuvio||"";
+  $("f-koodi").value=p.koodi||""; $("f-joukkue").value=p.joukkue||""; $("f-notes").value=p.notes||"";
+  updatePlate();
+}
+function updatePlate(){
+  const p=cur();
+  $("tpk").textContent=`${p.lyoja||"Nimetön"} · ${p.variaatio||"–"}`;
+  $("tps").textContent=`${p.tilanne}${patName(p.kuvio)?" · "+patName(p.kuvio):""} · koodi ”${p.koodi||"–"}”`;
+  $("stamp").textContent="Muokattu "+new Date(p.muokattu).toLocaleString("fi-FI",{dateStyle:"short",timeStyle:"short"})+(p.esim?" · esimerkkikuvio":"");
+}
+function touch(){const p=cur();p.muokattu=new Date().toISOString();p.esim=false;save();updatePlate();renderList();}
+[["f-lyoja","lyoja"],["f-tilanne","tilanne"],["f-var","variaatio"],["f-koodi","koodi"],["f-kuvio","kuvio"],["f-joukkue","joukkue"],["f-notes","notes"]].forEach(([id,k])=>{
+  $(id).addEventListener("input",()=>{cur()[k]=$(id).value;touch();});
+});
+$("new").onclick=()=>{
+  const src=plays.find(p=>p.lyoja==="Perusasetelma")||cur();
+  const n=JSON.parse(JSON.stringify(src)); n.id="k"+Math.random().toString(36).slice(2,9);
+  Object.assign(n,{lyoja:"Uusi lyöjä",variaatio:"A",koodi:"",notes:"",esim:false,muokattu:new Date().toISOString()});
+  plays.push(n); sel=n.id; save(); loadForm(); renderList(); drawDyn(); $("f-lyoja").focus(); $("f-lyoja").select();
+};
+$("dup").onclick=()=>{
+  const n=JSON.parse(JSON.stringify(cur())); n.id="k"+Math.random().toString(36).slice(2,9);
+  const used=plays.filter(p=>p.lyoja===n.lyoja&&p.tilanne===n.tilanne).map(p=>p.variaatio);
+  let v="A"; while(used.includes(v)) v=String.fromCharCode(v.charCodeAt(0)+1);
+  Object.assign(n,{variaatio:v,koodi:"",esim:false,muokattu:new Date().toISOString()});
+  plays.push(n); sel=n.id; save(); loadForm(); renderList(); drawDyn(); toast("Kopioitu variaatioksi "+v);
+};
+$("del").onclick=()=>{ if(plays.length<2){toast("Kirjastoon jää vähintään yksi kuvio");return;} $("delconfirm").hidden=false; };
+$("delno").onclick=()=>{$("delconfirm").hidden=true;};
+$("delyes").onclick=()=>{ plays=plays.filter(p=>p.id!==sel); sel=plays[0].id; $("delconfirm").hidden=true; save(); loadForm(); renderList(); drawDyn(); toast("Kuvio poistettu"); };
+$("exp").onclick=async()=>{ const t=JSON.stringify({kuviot:pats,pelikirja:plays},null,1); $("io").value=t; try{await navigator.clipboard.writeText(t);toast("Kuviot kopioitu leikepöydälle");}catch(e){$("io").select();toast("Valitse teksti ja kopioi");} };
+$("imp").onclick=()=>{ try{ const d=JSON.parse($("io").value); const a=Array.isArray(d)?d:d.pelikirja; if(!Array.isArray(a)||!a[0]?.ulko) throw 0; if(Array.isArray(d.kuviot)){ for(const t of d.kuviot){ const i=pats.findIndex(x=>x.id===t.id); if(i>=0) pats[i]=t; else pats.push(t); } renderPats(); fillKuvio(); }
+  migrPlays(a); for(const p of a){ const i=plays.findIndex(x=>x.id===p.id); if(i>=0) plays[i]=p; else plays.push(p); } sel=a[0].id; save(); loadForm(); renderList(); drawDyn(); toast(`Tuotu ${a.length} kuviota`);}catch(e){toast("Teksti ei ole pelikirjan JSON-vientiä");} };
+
+/* ===== Työkalurivi ===== */
+function setPhase(p,silent){ phase=p; $("phA").classList.toggle("on",p==="a"); $("phB").classList.toggle("on",p==="b"); $("pbadge").textContent=p==="a"?"Asetelma":"Syötöstä"; if(!silent) drawDyn(); }
+$("phA").onclick=()=>setPhase("a"); $("phB").onclick=()=>setPhase("b");
+$("play").onclick=play;
+$("reset").onclick=()=>{const p=cur(); for(const k in p.ulko.a) p.ulko.b[k]={...p.ulko.a[k]}; for(const k in p.opp) p.opp[k].b={...p.opp[k].a}; touch(); drawDyn(); toast("Liikkeet nollattu");};
+function setView(v){ view=v; $("vV").classList.toggle("on",v==="viisto"); $("vL").classList.toggle("on",v==="lyoja");
+  const r=$("ang"); if(v==="lyoja"){ $("anglbl").textContent="Katse"; r.min=-45; r.max=45; r.value=yaw; } else { $("anglbl").textContent="Kulma"; r.min=12; r.max=89; r.value=angle; }
+  drawField(); save(); }
+$("vV").onclick=()=>setView("viisto"); $("vL").onclick=()=>setView("lyoja");
+$("ang").addEventListener("input",e=>{ if(view==="lyoja") yaw=+e.target.value; else angle=+e.target.value; drawField(); save(); });
+$("seam").onchange=e=>{showSeams=e.target.checked;drawDyn();};
+$("dims").onchange=e=>{showDims=e.target.checked;drawDyn();};
+$("reach").addEventListener("input",e=>{const v=parseFloat(e.target.value); if(!isNaN(v)){reach=Math.max(0,Math.min(6,v)); drawDyn();}});
+$("opp").onchange=e=>{showOpp=e.target.checked;drawDyn();};
+$("ball").onchange=e=>{showBall=e.target.checked;drawDyn();};
+let tt; function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1800);}
+
+function fillKuvio(){
+  const el=$("f-kuvio"), v=el.value;
+  el.innerHTML='<option value="">– ei valittu –</option>'+pats.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}${p.desc?" – "+esc(p.desc):""}</option>`).join("");
+  el.value=v;
+}
+function renderPats(){
+  $("pats").innerHTML=pats.map((p,i)=>`<div class="pat" data-i="${i}">
+    <input id="pn-${esc(p.id)}" value="${esc(p.name)}" data-k="name" aria-label="Kuvion nimi">
+    <input id="pd-${esc(p.id)}" value="${esc(p.desc)}" data-k="desc" placeholder="Selite" aria-label="Selite">
+    <button class="warn" data-del="${i}" title="Poista nimi">✕</button></div>${p.pohja?"":""}`).join("");
+}
+$("pats").addEventListener("input",e=>{const r=e.target.closest(".pat");if(!r)return;pats[+r.dataset.i][e.target.dataset.k]=e.target.value;savePats();fillKuvio();$("f-kuvio").value=cur().kuvio||"";updatePlate();renderList();});
+$("pats").addEventListener("click",e=>{const i=e.target.dataset.del;if(i==null)return;const p=pats[+i];
+  const used=plays.filter(x=>x.kuvio===p.id).length;
+  if(used&&e.target.dataset.sure!=="1"){e.target.dataset.sure="1";e.target.textContent="Varmasti?";toast(`${used} kuviota käyttää nimeä ${p.name}`);return;}
+  pats.splice(+i,1);savePats();renderPats();fillKuvio();loadForm();renderList();});
+$("patadd").onclick=()=>{const id="p"+Math.random().toString(36).slice(2,8);pats.push({id,name:"Uusi kuvio",desc:""});savePats();renderPats();fillKuvio();const el=document.getElementById("pn-"+id);el.focus();el.select();};
+function snapshot(p){ return {pohja:JSON.parse(JSON.stringify(p.ulko.a)), liike:JSON.parse(JSON.stringify(p.ulko.b))}; }
+$("tplsave").onclick=()=>{const p=cur(), t=pats.find(x=>x.id===p.kuvio); if(!t){toast("Valitse ensin ulkopelikuvio tai tallenna uutena");return;}
+  Object.assign(t,snapshot(p)); savePats(); toast(`Kuvio ${t.name} päivitetty tällä asetelmalla`);};
+$("tplload").onclick=()=>{const p=cur(), t=pats.find(x=>x.id===p.kuvio); if(!t){toast("Valitse ensin ulkopelikuvio");return;}
+  if(!t.pohja){toast(`Kuviolle ${t.name} ei ole vielä tallennettu asetelmaa`);return;}
+  for(const k in t.pohja){p.ulko.a[k]={...t.pohja[k]}; p.ulko.b[k]={...((t.liike||t.pohja)[k]||t.pohja[k])};} touch(); setPhase("a"); toast(`Ladattu kuvion ${t.name} asetelma`);};
+$("tplnew").onclick=()=>{ $("newpat").hidden=false; $("np-name").value=""; $("np-desc").value=""; $("np-name").focus(); };
+$("np-no").onclick=()=>{ $("newpat").hidden=true; };
+function saveNewPat(){
+  const name=$("np-name").value.trim(); if(!name){toast("Anna kuviolle nimi");$("np-name").focus();return;}
+  if(pats.some(x=>x.name.toLowerCase()===name.toLowerCase())){toast(`Nimi ${name} on jo käytössä – valitse se ja paina Päivitä kuvio`);return;}
+  const id="p"+Math.random().toString(36).slice(2,8);
+  pats.push({id,name,desc:$("np-desc").value.trim(),...snapshot(cur())}); savePats(); renderPats();
+  cur().kuvio=id; touch(); fillKuvio(); $("f-kuvio").value=id; updatePlate(); $("newpat").hidden=true;
+  toast(`Kuvio ${name} tallennettu`);
+}
+$("np-ok").onclick=saveNewPat;
+$("np-name").addEventListener("keydown",e=>{if(e.key==="Enter")saveNewPat();});
+
+renderPats(); setView(view); loadForm(); renderList();
+
+/* ===== Pilvi: Supabase (kirjautuminen jaettu KPL testit -sivun kanssa) ===== */
+const SB_URL="https://xytpwmzcghixulnzdakv.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dHB3bXpjZ2hpeHVsbnpkYWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NjMyNTgsImV4cCI6MjEwNzAzOTI1OH0.d3eiBFma8eT3nq-NhPmH2lurROo7XC0MXMkqDXVm3rs"; // julkinen anon-avain, oikeudet hoitaa RLS (vain valmentajat)
+var sb=null, CLOUD=false, ADMIN=false, ME="", qT=null, flushing=false, again=false;  // var: save() voi kutsua ennen tätä riviä
+const synced={};          // id -> JSON viimeksi pilveen tallennetusta / pilvestä tulleesta
+const NIMET_ID="kuvionimet";
+function syncMsg(t){ $("sync").textContent=t; }
+function cloudQueue(){ if(!CLOUD) return; syncMsg("Tallentamattomia muutoksia…"); clearTimeout(qT); qT=setTimeout(cloudFlush,700); }
+async function cloudFlush(){
+  if(!CLOUD) return;
+  if(flushing){ again=true; return; }
+  flushing=true;
+  try{
+    const now=new Date().toISOString(), rows=[];
+    for(const p of plays){ const j=JSON.stringify(p); if(synced[p.id]!==j) rows.push({id:p.id,tyyppi:"kuvio",data:p,muokattu:now}); }
+    const pj=JSON.stringify(pats); if(synced[NIMET_ID]!==pj) rows.push({id:NIMET_ID,tyyppi:"nimet",data:pats,muokattu:now});
+    const ids=new Set(plays.map(p=>p.id)); ids.add(NIMET_ID);
+    const gone=Object.keys(synced).filter(id=>!ids.has(id));
+    if(rows.length){ const {error}=await sb.from("pelikirja").upsert(rows); if(error) throw error;
+      for(const r of rows) synced[r.id]=JSON.stringify(r.data); }
+    if(gone.length){ const {error}=await sb.from("pelikirja").delete().in("id",gone); if(error) throw error;
+      for(const id of gone) delete synced[id]; }
+    syncMsg("Tallennettu yhteiseen kirjastoon");
+  }catch(e){ console.error(e); syncMsg("Tallennus epäonnistui – yritetään uudelleen"); clearTimeout(qT); qT=setTimeout(cloudFlush,5000); }
+  flushing=false;
+  if(again){ again=false; cloudFlush(); }
+}
+function applyRemote(row, deleted){
+  if(deleted){
+    if(row.id===NIMET_ID) return;
+    delete synced[row.id];
+    if(!plays.some(p=>p.id===row.id)) return;
+    plays=plays.filter(p=>p.id!==row.id);
+    if(!plays.length) plays=[JSON.parse(JSON.stringify(PERUS))];
+    if(sel===row.id){ sel=plays[0].id; loadForm(); drawDyn(); }
+    renderList(); return;
+  }
+  const j=JSON.stringify(row.data);
+  if(row.tyyppi==="nimet"){
+    if(JSON.stringify(pats)===j){ synced[NIMET_ID]=j; return; }
+    pats=row.data; synced[NIMET_ID]=j;
+    if(!document.activeElement||!document.activeElement.closest("#pats")) renderPats();
+    fillKuvio(); $("f-kuvio").value=cur().kuvio||""; updatePlate(); renderList(); return;
+  }
+  const i=plays.findIndex(p=>p.id===row.id);
+  if(i>=0&&JSON.stringify(plays[i])===j){ synced[row.id]=j; return; }
+  if(drag&&row.id===sel) return;                   // ei keskeytetä omaa raahausta
+  migrPlays([row.data]);
+  if(i>=0) plays[i]=row.data; else plays.push(row.data);
+  synced[row.id]=j;
+  renderList();
+  if(row.id===sel){
+    const ae=document.activeElement, keep=ae&&ae.id&&ae.closest(".meta")?{id:ae.id,v:ae.value,s:ae.selectionStart,e:ae.selectionEnd}:null;
+    loadForm();                                     // kenttä, jota juuri kirjoitat, säilyy
+    if(keep){ const el=$(keep.id); el.value=keep.v; el.focus(); try{ el.setSelectionRange(keep.s,keep.e); }catch(e){} }
+    drawDyn(); }
+}
+
+/* ===== Vikalista (valmentajille, Supabase-taulu pelikirja_vikalista) ===== */
+let vitems=[];
+$("vikaopen").onclick=()=>{ const p=$("vikapanel"); p.hidden=!p.hidden; $("vikaopen").setAttribute("aria-expanded",String(!p.hidden)); if(!p.hidden){ loadVika(); $("vikatext").focus(); } };
+function renderVika(){
+  $("vikacnt").textContent=vitems.filter(v=>v.tila!=="korjattu").length;
+  const L=$("vikalist"); L.innerHTML="";
+  if(!vitems.length){ L.innerHTML='<p class="note">Ei vielä huomioita. Ensimmäinen huomio lisätään yllä olevasta kentästä.</p>'; return; }
+  const sorted=[...vitems].sort((a,b)=>(a.tila==="korjattu")-(b.tila==="korjattu")||String(b.luotu).localeCompare(String(a.luotu)));
+  for(const v of sorted){
+    const r=document.createElement("div"); r.className="vrow"+(v.tila==="korjattu"?" done":"");
+    const chip=document.createElement("span"); chip.className="chip"; chip.textContent=v.tila==="korjattu"?"Korjattu":"Avoin";
+    const txt=document.createElement("div"); txt.className="txt"; txt.textContent=v.teksti||"";
+    const acts=document.createElement("div"); acts.className="acts";
+    if(ADMIN){ const t=document.createElement("button"); t.textContent=v.tila==="korjattu"?"Avaa uudelleen":"Merkitse korjatuksi";
+      t.onclick=async()=>{ t.disabled=true; const {error}=await sb.from("pelikirja_vikalista").update({tila:v.tila==="korjattu"?"avoin":"korjattu"}).eq("id",v.id); if(error){toast("Tallennus ei onnistunut");t.disabled=false;} else loadVika(); };
+      acts.appendChild(t); }
+    const meta=document.createElement("div"); meta.className="meta2";
+    meta.textContent=(v.nimi||"Nimetön")+" · "+(v.luotu?new Date(v.luotu).toLocaleString("fi-FI",{dateStyle:"short",timeStyle:"short"}):"");
+    r.append(chip,txt,acts,meta);
+    if(v.vastaus){ const a=document.createElement("div"); a.className="ans"; a.textContent="Vastaus: "+v.vastaus; r.appendChild(a); }
+    L.appendChild(r);
+  }
+}
+async function loadVika(){
+  const {data,error}=await sb.from("pelikirja_vikalista").select("*").order("luotu",{ascending:false}).limit(500);
+  if(error){ $("vikastate").textContent="Vikalistaa ei saatu ladattua. Yritä uudelleen."; return; }
+  vitems=data; $("vikaform").hidden=false;
+  $("vikastate").textContent="Huomiot näkyvät kaikille valmentajille. Jarvis käy ne läpi ja merkitsee korjatuiksi.";
+  renderVika();
+}
+$("vikaadd").onclick=async()=>{
+  const t=$("vikatext").value.trim(); if(!t){ toast("Kirjoita huomio ensin"); return; }
+  $("vikaadd").disabled=true;
+  const {error}=await sb.from("pelikirja_vikalista").insert({teksti:t.slice(0,4000), nimi:ME.split("@")[0].slice(0,80)});
+  if(error) toast("Huomion tallennus ei onnistunut. Yritä uudelleen."); else { $("vikatext").value=""; toast("Huomio lisätty, kiitos!"); await loadVika(); }
+  $("vikaadd").disabled=false;
+};
+
+/* ===== Käynnistys: kirjautuminen → kirjasto pilvestä → realtime ===== */
+function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!login; $("gate").hidden=false; $("app").hidden=true; }
+(async()=>{
+  try{
+    const {createClient}=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm");
+    sb=createClient(SB_URL,SB_KEY,{auth:{flowType:"pkce",detectSessionInUrl:false,persistSession:true}});
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ gate("Pelikirja on KPL:n valmentajien käytössä. Kirjaudu ensin KPL testit -sivulla, ja palaa sitten tälle sivulle.",true); return; }
+    ME=session.user.email||"";
+    const [v,a]=await Promise.all([sb.rpc("on_valmentaja"),sb.rpc("on_admin")]);
+    if(!v.data){ gate("Olet kirjautunut osoitteella "+ME+", mutta sillä ei ole valmentajan oikeuksia. Pyydä ylläpitäjää lisäämään osoite valmentajiin.",false); return; }
+    ADMIN=!!a.data;
+    const {data:rows,error}=await sb.from("pelikirja").select("id,tyyppi,data");
+    if(error) throw error;
+    const kuviot=rows.filter(r=>r.tyyppi==="kuvio").map(r=>r.data), nimet=rows.find(r=>r.id===NIMET_ID);
+    for(const r of rows) synced[r.id]=JSON.stringify(r.data);
+    if(nimet) pats=nimet.data;
+    plays=kuviot.length?kuviot:[JSON.parse(JSON.stringify(PERUS))];
+    migrPlays(plays);
+    if(!plays.find(p=>p.id===sel)) sel=plays[0].id;
+    $("whoami").innerHTML=""; const w=document.createElement("span"); w.textContent=ME.split("@")[0]; const back=document.createElement("a"); back.href="index.html#/"; back.textContent="KPL testit";
+    $("whoami").append(w,back);
+    $("gate").hidden=true; $("app").hidden=false; $("vikaopen").hidden=false;
+    CLOUD=true;
+    renderPats(); setView(view); loadForm(); renderList();
+    syncMsg("Yhteinen kirjasto · "+plays.length+" kuviota");
+    if(!kuviot.length||!nimet) cloudQueue();      // ensimmäinen käyttökerta: tallennetaan perusasetelma ja nimilista
+    sb.channel("pelikirja").on("postgres_changes",{event:"*",schema:"public",table:"pelikirja"},
+      ev=>{ if(ev.eventType==="DELETE") applyRemote(ev.old,true); else applyRemote(ev.new,false); }).subscribe();
+    loadVika();
+    window.addEventListener("beforeunload",e=>{ if(qT&&$("sync").textContent.startsWith("Tallentamattomia")){ cloudFlush(); } });
+  }catch(e){ console.error(e); gate("Yhteys tietokantaan epäonnistui. Lataa sivu uudelleen.",false); }
+})();
+</script>
+
+</body>
+</html>

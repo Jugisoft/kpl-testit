@@ -200,7 +200,7 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
       <span><i style="background:var(--ball)"></i>Pallon suunta</span>
       <span id="dimleg">Mitat (m): koti = kotipesästä (S ja 1V), raja = sivurajasta, PL = polttolinjasta (+ takana, − edessä)</span>
       <span><i style="background:var(--seamhot)"></i>Sauma: avoin leveys lyöjän silmin, mitattuna syvemmän pelaajan linjalla</span>
-      <span>Raahaa pelaajia. Vaiheessa 2 raahaus piirtää liikenuolen.</span>
+      <span>Raahaa pelaajia; vaiheessa 2 raahaus piirtää liikenuolen. Klikattu pelaaja liikkuu myös nuolinäppäimillä (0,5 m, Shift 2 m). Lyöjän silmin -näkymässä raahaus siirtää vain sivuttain, syvyys ↑↓-näppäimillä.</span>
     </div>
 
     <div class="panel meta">
@@ -477,6 +477,7 @@ function token(id,label,p,color,full,ink){
     ${poly(circlePts(p.x,p.y,1.3,0,Math.PI*2,20),`fill="#000" opacity=".28"`)}
     <line x1="${f1(g.X)}" y1="${f1(g.Y)}" x2="${f1(head.X)}" y2="${f1(head.Y)}" stroke="${color}" stroke-width="${f1(3*s/8)}"/>
     <circle cx="${f1(head.X)}" cy="${f1(head.Y)}" r="${f1(r)}" fill="${color}" stroke="#121110" stroke-width="${f1(2.2*s/8)}"/>
+    ${id===valittuPid?`<circle cx="${f1(head.X)}" cy="${f1(head.Y)}" r="${f1(r*1.38)}" fill="none" stroke="#fff" stroke-width="${f1(Math.max(1.5,1.6*s/8))}" stroke-dasharray="${f1(r*.5)} ${f1(r*.3)}"/>`:""}
     <text x="${f1(head.X)}" y="${f1(head.Y+r*.36)}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(r*1.05)}" fill="${ink||"#121110"}">${label}</text>
     <title>${full}</title></g>`;
 }
@@ -591,31 +592,45 @@ function drawDyn(){
   dyn.innerHTML=h;
 }
 
-/* ===== Raahaus ===== */
-let drag=null;
+/* ===== Raahaus ja nuolinäppäimet ===== */
+let drag=null, valittuPid=null;
 function svgPt(e){const m=svg.getScreenCTM().inverse();const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m);return p;}
+function getPos(id){ const pl=cur(); if(id==="pallo") return pl.pallo; const [kind,k]=id.split(":"); const ent=kind==="u"?{a:pl.ulko.a[k],b:pl.ulko.b[k]}:pl.opp[k]; return ent?(phase==="a"?ent.a:ent.b):null; }
+function setPos(id,w){
+  w={x:+Math.max(-30,Math.min(30,w.x)).toFixed(1), y:+Math.max(-7,Math.min(104,w.y)).toFixed(1)};
+  const pl=cur();
+  if(id==="pallo"){pl.pallo=w; return;}
+  const [kind,k]=id.split(":");
+  if(kind==="u"){ if(phase==="a"){ const moved=Math.hypot(pl.ulko.b[k].x-pl.ulko.a[k].x,pl.ulko.b[k].y-pl.ulko.a[k].y)>.8; pl.ulko.a[k]=w; if(!moved) pl.ulko.b[k]={...w}; } else pl.ulko.b[k]=w; }
+  else { const o=pl.opp[k]; if(phase==="a") o.a=w; else o.b=w; }
+}
 svg.addEventListener("pointerdown",e=>{
   const g=e.target.closest("[data-pid]"); if(!g||anim) return;
-  const id=g.dataset.pid, pl=cur(); let cp;
-  if(id==="pallo") cp=pl.pallo; else { const [kind,k]=id.split(":"); const ent=kind==="u"?{a:pl.ulko.a[k],b:pl.ulko.b[k]}:pl.opp[k]; cp=phase==="a"?ent.a:ent.b; }
-  const s=svgPt(e), w=unpr(s.x,s.y); if(!w) return;
-  drag={id,dx:cp.x-w.x,dy:cp.y-w.y}; svg.setPointerCapture(e.pointerId); e.preventDefault();
+  const id=g.dataset.pid, cp=getPos(id); if(!cp) return;
+  valittuPid=id;
+  // Lyöjän silmin: raahaus vain sivuttain (syvyys pysyy) – litteässä kuvassa pystyliike heittäisi pelaajan kauas
+  const gY=view==="lyoja"?pr(cp.x,cp.y).Y:null;
+  const s=svgPt(e), w=unpr(s.x,gY??s.y); if(!w) return;
+  drag={id,dx:cp.x-w.x,dy:cp.y-w.y,gY}; svg.setPointerCapture(e.pointerId); e.preventDefault(); drawDyn();
 });
 svg.addEventListener("pointermove",e=>{
   if(!drag) return;
-  const s=svgPt(e), w=unpr(s.x,s.y); if(!w) return; w.x+=drag.dx; w.y+=drag.dy;
-  w.x=Math.max(-30,Math.min(30,w.x)); w.y=Math.max(-7,Math.min(104,w.y));
-  const pl=cur(); const r={x:+w.x.toFixed(1),y:+w.y.toFixed(1)};
-  if(drag.id==="pallo"){pl.pallo=r;}
-  else{
-    const [kind,k]=drag.id.split(":");
-    if(kind==="u"){ if(phase==="a"){ const moved=Math.hypot(pl.ulko.b[k].x-pl.ulko.a[k].x,pl.ulko.b[k].y-pl.ulko.a[k].y)>.8; pl.ulko.a[k]=r; if(!moved) pl.ulko.b[k]={...r}; } else pl.ulko.b[k]=r; }
-    else { const o=pl.opp[k]; if(phase==="a"){ o.a=r; } else o.b=r; }
-  }
-  drawDyn();
+  const s=svgPt(e), w=unpr(s.x,drag.gY??s.y); if(!w) return;
+  setPos(drag.id,{x:w.x+drag.dx,y:w.y+drag.dy}); drawDyn();
 });
 svg.addEventListener("pointerup",e=>{ if(drag){drag=null; touch(); drawDyn(); } });
 svg.addEventListener("pointercancel",()=>{drag=null;});
+// Valittu pelaaja: ←→ sivuttain, ↑↓ syvyys katsojasta poispäin, Shift = isompi askel, Esc poistaa valinnan
+document.addEventListener("keydown",e=>{
+  if(!valittuPid||anim||e.target.closest("input,textarea,select")) return;
+  if(e.key==="Escape"){ valittuPid=null; drawDyn(); return; }
+  const k={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,1],ArrowDown:[0,-1]}[e.key]; if(!k) return;
+  const cp=getPos(valittuPid); if(!cp) return;
+  e.preventDefault();
+  const st=e.shiftKey?2:.5, fl=Math.hypot(cam.f[0],cam.f[1])||1, fx=cam.f[0]/fl, fy=cam.f[1]/fl, rx=cam.r[0], ry=cam.r[1];
+  setPos(valittuPid,{x:cp.x+st*(k[0]*rx+k[1]*fx), y:cp.y+st*(k[0]*ry+k[1]*fy)});
+  drawDyn(); clearTimeout(drawDyn.kt); drawDyn.kt=setTimeout(touch,400);
+});
 
 /* ===== Animaatio ===== */
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;

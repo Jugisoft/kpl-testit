@@ -3,18 +3,20 @@ import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, kausi, paras, parannus, parhaatTulokset, pelaajaLinkki, mediaani, piirra, vari, SARJAVARIT } from "../util.js";
 
 const TESTIT = ["30m", "10m", "lentava20", "nok_30m", "heitto_paikalta", "heitto_vauhti", "lyonti", "kuntopallo_taakse_2kg", "kuntopallo_eteen_2kg", "rinnalleveto_kg", "leuat_toistot", "tasatassut"];
-let asetus = { testi: "30m", vuosi: "", vainNykyiset: true, korostus: new Set() };
+let asetus = { testi: "30m", vuosi: "", joukkue: null, vainNykyiset: true, korostus: new Set() };
 
 export async function nayta(main) {
   const kaikki = parhaatTulokset(await lataaTulokset());
   const testit = TESTIT.filter((t) => kaikki.some((x) => x.testi === t));
-  const vuodet = [...new Set(tila.pelaajat.map((p) => p.syntymavuosi).filter(Boolean))].sort();
+  if (asetus.joukkue == null) asetus.joukkue = String(tila.joukkueet.find((j) => j.julkinen !== false)?.id ?? "");
+  const vuodet = [...new Set(tila.pelaajat.filter((p) => !asetus.joukkue || String(p.joukkue_id) === asetus.joukkue).map((p) => p.syntymavuosi).filter(Boolean))].sort();
 
   main.innerHTML = `
     <h1>Ryhmäanalyysi</h1>
     <p class="ingressi">Kauden paras tulos jokaiselta pelaajalta ja muutos edelliseen talveen. Valitse pelaajia taulukosta korostaaksesi heidät kaaviossa.</p>
     <div class="rivi" style="margin-bottom:14px">
       <select id="testi">${testit.map((t) => `<option value="${t}">${esc(tila.testi[t].nimi)}</option>`).join("")}</select>
+      <select id="joukkue"><option value="">Kaikki ryhmät</option>${tila.joukkueet.map((j) => `<option value="${j.id}">${esc(j.nimi)}</option>`).join("")}</select>
       <select id="vuosi"><option value="">Kaikki ikäluokat</option>${vuodet.map((v) => `<option>${v}</option>`).join("")}</select>
       <label class="chip"><input type="checkbox" id="nyk" ${asetus.vainNykyiset ? "checked" : ""}>Vain nykyiset pelaajat</label>
     </div>
@@ -26,6 +28,8 @@ export async function nayta(main) {
     <div class="ruudukko" id="ikaennatykset"></div>`;
   $("#testi").value = testit.includes(asetus.testi) ? asetus.testi : testit[0];
   $("#vuosi").value = asetus.vuosi;
+  $("#joukkue").value = asetus.joukkue;
+  $("#joukkue").onchange = (e) => { asetus.joukkue = e.target.value; asetus.vuosi = ""; nayta(main); };
   $("#testi").onchange = (e) => { asetus.testi = e.target.value; piirraKaikki(); };
   $("#vuosi").onchange = (e) => { asetus.vuosi = e.target.value; piirraKaikki(); };
   $("#nyk").onchange = (e) => { asetus.vainNykyiset = e.target.checked; piirraKaikki(); };
@@ -33,7 +37,7 @@ export async function nayta(main) {
   function piirraKaikki() {
     const t = $("#testi").value, T = tila.testi[t];
     asetus.testi = t;
-    const pelaajat = tila.pelaajat.filter((p) => (!asetus.vuosi || String(p.syntymavuosi) === asetus.vuosi) && (!asetus.vainNykyiset || p.aktiivinen));
+    const pelaajat = tila.pelaajat.filter((p) => (!asetus.joukkue || String(p.joukkue_id) === asetus.joukkue) && (!asetus.vuosi || String(p.syntymavuosi) === asetus.vuosi) && (!asetus.vainNykyiset || p.aktiivinen));
     const pid = new Set(pelaajat.map((p) => p.id));
     const rivit = kaikki.filter((x) => x.testi === t && pid.has(x.pelaaja));
     const kaudet = [...new Set(rivit.map((x) => kausi(x.pvm)))].sort();

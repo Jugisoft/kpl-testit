@@ -9,6 +9,7 @@ import * as pelaajat from "./js/views/pelaajat.js";
 import * as pelaaja from "./js/views/pelaaja.js";
 import * as ryhma from "./js/views/ryhma.js";
 import * as hallinta from "./js/views/hallinta.js";
+import * as superpesis from "./js/views/superpesis.js";
 
 const reitit = [
   { polku: /^\/?$/, nakyma: koti, julkinen: true, nav: "Tilastot" },
@@ -19,9 +20,10 @@ const reitit = [
   { polku: /^\/pelaajat$/, nakyma: pelaajat, nav: "Pelaajat" },
   { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja },
   { polku: /^\/ryhma$/, nakyma: ryhma, nav: "Ryhmäanalyysi" },
+  { polku: /^\/superpesis$/, nakyma: superpesis, nav: "Superpesis" },
   { polku: /^\/hallinta$/, nakyma: hallinta, nav: "Hallinta", admin: true },
 ];
-const navLinkit = { "/": "#/", "/kerrat": "#/kerrat", "/pelaajat": "#/pelaajat", "/ryhma": "#/ryhma", "/hallinta": "#/hallinta" };
+const navLinkit = { "/": "#/", "/kerrat": "#/kerrat", "/pelaajat": "#/pelaajat", "/ryhma": "#/ryhma", "/superpesis": "#/superpesis", "/hallinta": "#/hallinta" };
 
 let nykyinen = null;
 let navId = 0;

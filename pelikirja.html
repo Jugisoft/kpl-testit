@@ -12,26 +12,25 @@
 <style>
 /* Layout: kirjasto vasemmalla, kenttä (viisto kamerakuva) keskellä, kuvion tiedot kentän alla. Puhelimella pinoon. */
 :root{
-  --bg:#eef0ec; --panel:#ffffff; --ink:#1b211c; --muted:#5d675f; --line:#d5dad3;
-  --accent:#1f4fa8; --accent-ink:#ffffff; --opp:#d4572a; --chip:#e3e8e1;
-  --sky1:#9cc3e6; --sky2:#dfeaf2; --seam:#ffffff; --seamhot:#ffd23f; --turf:#3f7d45; --turf2:#48894e; --apron:#5f6b55; --chalk:#f6f6ef; --sand:#c9a777;
+  /* KPL / KSS Energia Areena: musta + KPL-keltaoranssi, kentän punaruskea pinta */
+  --bg:#0f0e0d; --panel:#1a1816; --ink:#f3efe8; --muted:#a8a095; --line:#2f2b27;
+  --accent:#f5a800; --accent-ink:#121110; --opp:#46b9e6; --opp-ink:#071d27; --chip:#262320;
+  --sky1:#5d8cc2; --sky2:#d7e5ef; --seam:#ffffff; --seamhot:#7fe6ff;
+  --turf:#c9765b; --turf2:#c06d53; --track:#a35f47; --vara:#b9694f; --apron:#2a221d; --chalk:#fbf7f0; --sand:#dc9a7c;
+  --stand:#141312; --standside:#1f1d1b; --seat:#f5a800; --seat2:#ef7d1a; --ball:#fff07a;
   --display:"Barlow Condensed","Arial Narrow",sans-serif;
   --body:"Barlow",system-ui,sans-serif;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#141815; --panel:#1d231f; --ink:#e7ece6; --muted:#9aa59c; --line:#2f3832;
-  --accent:#6f9cf0; --accent-ink:#0d1420; --opp:#f08a5d; --chip:#28302a;
-  --sky1:#1d2b3d; --sky2:#3b4a5c; --seam:#ffffff; --seamhot:#ffd23f; --turf:#2f6436; --turf2:#376e3e; --apron:#3a4334; --chalk:#e9ebe2; --sand:#a88a60; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#141815; --panel:#1d231f; --ink:#e7ece6; --muted:#9aa59c; --line:#2f3832;
-  --accent:#6f9cf0; --accent-ink:#0d1420; --opp:#f08a5d; --chip:#28302a;
-  --sky1:#1d2b3d; --sky2:#3b4a5c; --seam:#ffffff; --seamhot:#ffd23f; --turf:#2f6436; --turf2:#376e3e; --apron:#3a4334; --chalk:#e9ebe2; --sand:#a88a60; color-scheme:dark}
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);padding-inline:16px;padding-block:0 32px}
 *{box-sizing:border-box}
-header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-block:14px 10px}
-header h1{font:700 28px/1 var(--display);letter-spacing:.02em;margin:0;text-transform:uppercase}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:14px 12px;border-bottom:3px solid var(--accent);margin-bottom:14px}
+.logo{width:44px;height:44px;flex:none}
+.brandtxt{display:flex;flex-direction:column;gap:2px}
+.arena{font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+header h1{font:700 30px/1 var(--display);letter-spacing:.03em;margin:0;text-transform:uppercase}
 header .sub{color:var(--muted);font-size:13px}
 .wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.lib{order:2}}
@@ -44,7 +43,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 button{font:600 14px/1 var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:8px 11px;cursor:pointer}
 button:hover{border-color:var(--muted)}
 button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-button.warn{color:var(--opp)}
+button.warn{color:#ff7a59}
 .group{display:flex;flex-direction:column;gap:4px}
 .group-h{font:600 16px/1.1 var(--display);letter-spacing:.03em;padding:6px 2px 2px;display:flex;justify-content:space-between}
 .group-h span{color:var(--muted);font:500 12px var(--body)}
@@ -91,7 +90,7 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
 .btnrow{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
 .btnrow button{font-size:13px;padding:7px 9px}
 .vikabtn{margin-left:auto;display:inline-flex;align-items:center;gap:7px}
-.vikabtn .cnt{background:var(--opp);color:#fff;border-radius:99px;font-size:12px;padding:1px 7px;min-width:20px;text-align:center}
+.vikabtn .cnt{background:var(--accent);color:var(--accent-ink);border-radius:99px;font-size:12px;padding:1px 7px;min-width:20px;text-align:center}
 .vika{margin-block:0 14px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .vika h2{font:600 15px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
 .vikaform{display:flex;flex-direction:column;gap:6px}
@@ -99,8 +98,8 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
 .vikalist{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto}
 .vrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
 .vrow.done{opacity:.6}
-.vrow .chip{font:600 11px var(--body);padding:2px 8px;border-radius:99px;background:var(--opp);color:#fff;white-space:nowrap}
-.vrow.done .chip{background:var(--turf)}
+.vrow .chip{font:600 11px var(--body);padding:2px 8px;border-radius:99px;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
+.vrow.done .chip{background:#3c3732}
 .vrow .txt{white-space:pre-wrap;word-break:break-word}
 .vrow .meta2{grid-column:2;font-size:12px;color:var(--muted)}
 .vrow .ans{grid-column:2;font-size:13px;border-left:3px solid var(--accent);padding-left:8px}
@@ -121,7 +120,9 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
 
 
 <header>
-  <h1>KPL Pelikirja</h1>
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#121110" stroke="var(--accent)" stroke-width="3.5"/><text x="24" y="30.5" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="17" fill="var(--accent)" transform="rotate(-8 24 24)">KPL</text></svg>
+  <div class="brandtxt"><span class="arena">KSS Energia Areena · Kouvola</span>
+  <h1>KPL Pelikirja</h1></div>
   <span class="sub">Ulkopelin kuviot vastustajan lyöjittäin · testiversio</span>
   <span class="sync" id="sync"></span>
   <span class="whoami" id="whoami"></span>
@@ -196,7 +197,7 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
     <div class="legend">
       <span><i style="background:var(--accent)"></i>KPL ulkopeli</span>
       <span><i style="background:var(--opp)"></i>Vastustaja (lyöjä, etenijät)</span>
-      <span><i style="background:#f3e36b"></i>Pallon suunta</span>
+      <span><i style="background:var(--ball)"></i>Pallon suunta</span>
       <span id="dimleg">Mitat (m): koti = kotipesästä (S ja 1V), raja = sivurajasta, PL = polttolinjasta (+ takana, − edessä)</span>
       <span><i style="background:var(--seamhot)"></i>Sauma: avoin leveys lyöjän silmin, mitattuna syvemmän pelaajan linjalla</span>
       <span>Raahaa pelaajia. Vaiheessa 2 raahaus piirtää liikenuolen.</span>
@@ -386,11 +387,12 @@ function drawField(){
   const hz=scr(cs(cam.p[0]+cam.f[0]*1e5, cam.p[1]+cam.f[1]*1e5, 0));
   if(hz.zc>0 && hz.Y>VB.y) h+=`<rect x="${VB.x}" y="${VB.y}" width="${VB.w}" height="${f1(Math.min(VB.h,hz.Y-VB.y))}" fill="url(#sky)"/>`;
   h+=poly([[-60,-10],[60,-10],[60,140],[-60,140]],`fill="var(--apron)"`);
-  h+=poly([[-33,-10],[33,-10],[33,106],[-33,106]],`fill="var(--turf)" opacity=".5"`);
-  for(const v of ["vara2","vara3","vara1"]) h+=poly(FIELD[v],`fill="var(--sand)" opacity=".45"`);
-  h+=poly(FIELD.runLane,`fill="var(--turf2)" opacity=".8"`);
+  h+=poly([[-33,-10],[33,-10],[33,106],[-33,106]],`fill="var(--track)"`);
+  h+=standsLayer(lw);
+  for(const v of ["vara2","vara3","vara1"]) h+=poly(FIELD[v],`fill="var(--vara)"`);
+  h+=poly(FIELD.runLane,`fill="var(--turf)"`);
   h+=`<g clip-path="url(#fc)">`+poly(FIELD.outline,`fill="var(--turf)"`);
-  for(let y=0;y<96;y+=16) h+=poly([[-22,y],[22,y],[22,y+8],[-22,y+8]],`fill="var(--turf2)"`);
+  for(let y=0;y<96;y+=12) h+=poly([[-22,y],[22,y],[22,y+6],[-22,y+6]],`fill="var(--turf2)" opacity=".55"`);
   h+=`</g>`;
   // kotipesä ja suoja-alue (kotipuolella)
   h+=poly(circlePts(0,0,FIELD.suoja,Math.PI,2*Math.PI),`fill="var(--sand)" opacity=".45"`);
@@ -424,20 +426,58 @@ function drawField(){
   drawDyn();
 }
 
+/* ===== Katsomot: KSS Energia Areenan lohkokartta (px → m: 8,1 px/m, kotipesä (475,270)) ===== */
+const MAP=(pts)=>pts.map(([px,py])=>[-(px-475)/8.1,(py-270)/8.1]);
+const STANDS=[
+  {n:"A2",h:7,ghost:true, p:MAP([[268,135],[330,62],[420,28],[432,128],[355,190]])},
+  {n:"KLUBI",h:9,ghost:true,p:MAP([[432,84],[520,84],[516,130],[436,130]])},
+  {n:"A1",h:7,ghost:true, p:MAP([[536,33],[640,100],[676,136],[596,190],[518,130]])},
+  {n:"B1",h:5,ghost:true, p:MAP([[640,168],[690,132],[735,240],[632,270]])},
+  {n:"C1",h:6,p:MAP([[210,250],[262,138],[300,185],[340,215],[300,305]])},
+  {n:"C2",h:6,p:MAP([[140,400],[205,262],[300,305],[258,400],[205,395]])},
+  {n:"C3",h:5,p:MAP([[137,402],[242,430],[242,520],[137,520]])},
+  {n:"D1",h:5,p:MAP([[815,352],[912,352],[912,447],[815,447]])},
+  {n:"D2",h:5,p:MAP([[815,450],[912,450],[912,520],[815,520]])},
+  {n:"D3",h:5,p:MAP([[815,523],[912,523],[912,617],[815,617]])},
+  {n:"D4",h:4,p:MAP([[850,620],[912,620],[912,665],[850,665]])},
+  {n:"D5",h:5,p:MAP([[815,667],[912,667],[912,775],[815,775]])}
+];
+function standsLayer(lw){
+  let h="";
+  const dist=q=>{const c=cs(q[0],q[1],0);return c[2];};
+  const order=[...STANDS].sort((a,b)=>Math.max(...b.p.map(dist))-Math.max(...a.p.map(dist)));
+  for(const st of order){
+    const op=st.ghost&&view!=="lyoja"?.22:1;
+    const sides=[];
+    for(let i=0;i<st.p.length;i++){const a=st.p[i],b=st.p[(i+1)%st.p.length];
+      sides.push({d:(dist(a)+dist(b))/2,q:[[a[0],a[1],0],[b[0],b[1],0],[b[0],b[1],st.h],[a[0],a[1],st.h]]});}
+    sides.sort((x,y)=>y.d-x.d);
+    let g="";
+    for(const sd of sides) g+=poly(sd.q,`fill="var(--standside)" stroke="#000" stroke-opacity=".5" stroke-width="${lw*.5}"`);
+    const top=st.p.map(q=>[q[0],q[1],st.h]);
+    g+=poly(top,`fill="var(--stand)" stroke="var(--seat)" stroke-width="${lw*.7}"`);
+    const cx=st.p.reduce((a,q)=>a+q[0],0)/st.p.length, cy=st.p.reduce((a,q)=>a+q[1],0)/st.p.length;
+    const lp=pr(cx,cy,st.h+.2);
+    if(lp.zc>NEAR) g+=`<text x="${f1(lp.X)}" y="${f1(lp.Y+SZ(5*lp.s/8))}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(SZ(14*lp.s/8))}" fill="var(--seat)">${st.n==="KLUBI"?"KOPLA":st.n}</text>`;
+    h+=`<g opacity="${op}">${g}</g>`;
+  }
+  return h;
+}
+
 /* ===== Pelaajat, nuolet, pallo, saumat ===== */
 function posOf(ent, ph, t){
   if(t!=null){ return {x:ent.a.x+(ent.b.x-ent.a.x)*t, y:ent.a.y+(ent.b.y-ent.a.y)*t}; }
   return ph==="a"?ent.a:ent.b;
 }
-function token(id,label,p,color,full){
+function token(id,label,p,color,full,ink){
   const g=pr(p.x,p.y); if(g.zc<1.2) return "";
   const s=SZ(g.s)*1.4, r=(13*s/8);
   const head=pr(p.x,p.y,2.2);
   return `<g class="tok" data-pid="${id}" tabindex="0" aria-label="${full}">
     ${poly(circlePts(p.x,p.y,1.3,0,Math.PI*2,20),`fill="#000" opacity=".28"`)}
     <line x1="${f1(g.X)}" y1="${f1(g.Y)}" x2="${f1(head.X)}" y2="${f1(head.Y)}" stroke="${color}" stroke-width="${f1(3*s/8)}"/>
-    <circle cx="${f1(head.X)}" cy="${f1(head.Y)}" r="${f1(r)}" fill="${color}" stroke="#fff" stroke-width="${f1(2*s/8)}"/>
-    <text x="${f1(head.X)}" y="${f1(head.Y+r*.36)}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(r*1.05)}" fill="#fff">${label}</text>
+    <circle cx="${f1(head.X)}" cy="${f1(head.Y)}" r="${f1(r)}" fill="${color}" stroke="#121110" stroke-width="${f1(2.2*s/8)}"/>
+    <text x="${f1(head.X)}" y="${f1(head.Y+r*.36)}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${f1(r*1.05)}" fill="${ink||"#121110"}">${label}</text>
     <title>${full}</title></g>`;
 }
 function arrow(a,b,col,marker,dash){
@@ -451,9 +491,9 @@ function ballArc(to){
   const d=Math.hypot(to.x,to.y), H=Math.min(16,4+d*.18), o=[];
   for(let i=0;i<=40;i++){const t=i/40; o.push([to.x*t,to.y*t,1+H*4*t*(1-t)]);}
   const g=pr(to.x,to.y), s=SZ(g.s);
-  return line(o,`stroke="#f3e36b" stroke-width="${f1(2.2*s/8)}" stroke-dasharray="${f1(5*s/8)} ${f1(4*s/8)}"`)+
-   `<g class="tok" data-pid="pallo" aria-label="Pallon suunta">${poly(circlePts(to.x,to.y,2.4,0,Math.PI*2,28),`fill="#f3e36b" fill-opacity=".35" stroke="#f3e36b" stroke-width="${f1(1.6*s/8)}"`)}
-   <circle cx="${f1(g.X)}" cy="${f1(g.Y)}" r="${f1(5*s/8)}" fill="#f3e36b" stroke="#6b5a1c" stroke-width="1"/><title>Pallon suunta (raahaa)</title></g>`;
+  return line(o,`stroke="var(--ball)" stroke-width="${f1(2.2*s/8)}" stroke-dasharray="${f1(5*s/8)} ${f1(4*s/8)}"`)+
+   `<g class="tok" data-pid="pallo" aria-label="Pallon suunta">${poly(circlePts(to.x,to.y,2.4,0,Math.PI*2,28),`fill="var(--ball)" fill-opacity=".35" stroke="var(--ball)" stroke-width="${f1(1.6*s/8)}"`)}
+   <circle cx="${f1(g.X)}" cy="${f1(g.Y)}" r="${f1(5*s/8)}" fill="var(--ball)" stroke="#5a4a10" stroke-width="1"/><title>Pallon suunta (raahaa)</title></g>`;
 }
 // Saumat: polttolinjan aukot kotipesältä katsottuna (1V voi peittää edestä)
 const SAUMA_ROLES=["3V","3P","S","2P","2V"];
@@ -490,7 +530,7 @@ function seamLayer(pos){
       for(let i=0;i<=n;i++){const a=s.a0+s.gap*i/n;pts.push([r1*Math.sin(a),r1*Math.cos(a)]);}
       for(let i=n;i>=0;i--){const a=s.a0+s.gap*i/n;pts.push([r0*Math.sin(a),r0*Math.cos(a)]);}
       const wide=s.m===maxM;
-      h+=poly(pts,`fill="${wide?"var(--seamhot)":"var(--seam)"}" fill-opacity="${wide?.32:.2}"`);
+      h+=poly(pts,`fill="${wide?"var(--seamhot)":"var(--seam)"}" fill-opacity="${wide?.45:.2}"`);
     }
     const q=pr(md*Math.sin(ma),md*Math.cos(ma),.4);
     if(q.zc>NEAR){const fs=view==="lyoja"?26:SZ(14*q.s/8), txt=s.m>0?s.m.toFixed(1).replace(".",",")+" m":"kiinni";
@@ -546,7 +586,7 @@ function drawDyn(){
   if(phase==="b"&&!anim) for(const it of list){ if(Math.hypot(it.ent.b.x-it.ent.a.x,it.ent.b.y-it.ent.a.y)>.8){const g=pr(it.ent.a.x,it.ent.a.y); if(g.zc>NEAR) h+=`<circle cx="${f1(g.X)}" cy="${f1(g.Y)}" r="${f1(SZ(5*g.s/8))}" fill="none" stroke="var(--chalk)" stroke-opacity=".7" stroke-width="1.5"/>`;} }
   if(showBall) h+=ballArc(pl.pallo);
   list=list.map(it=>{const p=posOf(it.ent,phase,t);return {...it,p,z:pr(p.x,p.y).zc};}).sort((a,b)=>b.z-a.z);
-  for(const it of list) h+=token(it.id,it.label,it.p,it.col,it.full);
+  for(const it of list) h+=token(it.id,it.label,it.p,it.col,it.full,it.id.startsWith("o:")?"var(--opp-ink)":"var(--accent-ink)");
   if(showDims&&!bat) h+=dimLayer(list);
   dyn.innerHTML=h;
 }
@@ -801,8 +841,12 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
 (async()=>{
   try{
     const {createClient}=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm");
-    sb=createClient(SB_URL,SB_KEY,{auth:{flowType:"pkce",detectSessionInUrl:false,persistSession:true}});
-    const {data:{session}}=await sb.auth.getSession();
+    // lock: ei lukita kirjautumista välilehtien välillä (estää jumin, kun KPL testit on auki toisessa välilehdessä)
+    sb=createClient(SB_URL,SB_KEY,{auth:{flowType:"pkce",detectSessionInUrl:false,persistSession:true,lock:async(_n,_t,fn)=>await fn()}});
+    const aika=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error("aikaraja")),ms));
+    let session;
+    try{ ({data:{session}}=await Promise.race([sb.auth.getSession(),aika(10000)])); }
+    catch(e){ gate("Kirjautumisen tarkistus ei vastannut. Sulje muut KPL testit -välilehdet ja lataa tämä sivu uudelleen.",false); return; }
     if(!session){ gate("Pelikirja on KPL:n valmentajien käytössä. Kirjaudu ensin KPL testit -sivulla, ja palaa sitten tälle sivulle.",true); return; }
     ME=session.user.email||"";
     const [v,a]=await Promise.all([sb.rpc("on_valmentaja"),sb.rpc("on_admin")]);

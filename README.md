@@ -3,7 +3,9 @@
 Kouvolan Pallonlyöjien valmennuksen keskus: muistio, siirtomarkkinat, analyysi, testit ja pelikirja. Sivu: https://jugisoft.github.io/kpl-testit/
 
 - **Keskus (valmentajille, etusivu kirjautuneena):** pikakirjaus, viimeisimmät muistiinpanot, siirtomarkkinat, testit.
-- **Muistio (`#/muistio/:osio`, `#/huomio/:id`):** OneNote-tyyliset muistiinpanot osioittain (aiheet ja vastustajat), ensimmäinen rivi = otsikko. Taulut `huomiot`, `huomio_kommentit`, `koosteet`. Koosteet ja Jarvis-kommentit (`ai = true`) kirjoittaa Jarvis Supabase-yhteyden kautta Jugin pyynnöstä; portaalissa ei ole omaa AI-kutsua.
+- **Muistio (`#/muistio/:osio[/:välilehti]`, `#/huomio/:id`):** OneNote-tyyliset muistiinpanot osioittain (aiheet ja joukkueet), ensimmäinen rivi = otsikko. Joukkueosiossa välilehdet muistiinpanot, pelaajat ja ottelumuistiot. Taulut `huomiot` (tyyppi: muistiinpano / lyonti / ulkopeli / ottelumuistio, `pelaaja_id`, `tiedot` jsonb, `ottelu_pvm`), `huomio_kommentit`, `koosteet`. Koosteet ja Jarvis-kommentit (`ai = true`) kirjoittaa Jarvis pyynnöstä.
+- **Pelaajasivu (`#/vp/:id[/lyonnit|ulkopeli|muistiinpanot]`):** taulu `vastustajapelaajat` (kokoonpanot 2027 tuotu siirtomarkkinoista). Lyönnit tilanteittain kentälle (x/y metreinä, kenttä Pelikirjan mitoista `js/kentta.js`), ulkopelin painon suunta, muistiinpanot.
+- **Liitteet:** yksityinen Storage-bucket `liitteet` (max 25 Mt/tiedosto), taulu `liitteet`; vain valmentajat, linkit allekirjoitettuina (1 h).
 - **Siirtomarkkinat (`#/siirtomarkkinat`):** taulu `siirtomarkkinat` (yksi jsonb-rivi). Jarvis vie datan vaultista skriptillä `vie_portaaliin.py` → edge function `keskus-vienti` (avaimen sha256 taulussa `vientiavaimet`).
 - **Analyysi (`#/analyysi`):** KPL sarjan rinnalla 2026, tietopankki, linkit YDIN 2027 -analytiikkaan.
 

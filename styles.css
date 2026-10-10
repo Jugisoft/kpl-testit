@@ -416,3 +416,78 @@ tr.oma td { background: rgba(56,214,255,.06); }
   .tuore { grid-template-columns: 1fr; gap: 2px; }
   .tuore strong { white-space: normal; }
 }
+
+/* ===== Joukkueet, pelaajat, kenttä, liitteet ===== */
+.osio-sisalto .valilehdet { margin-top: 0; }
+a.valilehti { text-decoration: none; }
+.pvm-kentta { max-width: 220px; }
+.tiedostot { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.liita { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius); border: 1px dashed var(--ink-3); cursor: pointer; font-size: 14px; color: var(--ink-2); }
+.liita:hover { border-color: var(--cyan); color: var(--ink); }
+.liita input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.liita:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+form.pudota { outline: 2px dashed var(--cyan); outline-offset: 4px; }
+.liitteet { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.liitteet li { display: flex; align-items: center; gap: 6px; }
+.liitteet a { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; background: var(--paper); border: 1px solid var(--line); text-decoration: none; max-width: 340px; }
+.liitteet a:hover { border-color: var(--cyan); }
+.liitteet .kuvaliite a { flex-direction: column; align-items: flex-start; padding: 6px; }
+.liitteet img { width: 220px; max-height: 160px; object-fit: cover; border-radius: 5px; background: var(--line-2); min-height: 60px; }
+.liitteet .paate { font: 700 12px/1 var(--num); color: #04111F; background: var(--cyan); border-radius: 4px; padding: 4px 5px; }
+.l-nimi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; font-size: 14px; }
+.tyyppimerkki { font-size: 13px; font-weight: 600; color: var(--yellow); }
+.pelaajamerkki { font-size: 13px; font-weight: 600; color: var(--cyan); text-decoration: none; }
+.muistiinpano.tyyppi-ottelumuistio { border-left: 3px solid var(--yellow); }
+
+.pelaajaruudukko { list-style: none; padding: 0; margin: 10px 0 16px; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.pelaajakortti { display: grid; gap: 3px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; height: 100%; }
+.pelaajakortti:hover { border-color: rgba(56,214,255,.5); }
+.pk-nimi { font-weight: 600; }
+.pk-nimi .num { color: var(--ink-3); }
+.pk-kuvaus { font-size: 14px; color: var(--ink-2); }
+.pk-maarat { font-size: 13px; color: var(--ink-3); }
+.pk-maarat.on { color: var(--cyan); }
+.muut-pelaajat summary { cursor: pointer; color: var(--ink-2); margin: 8px 0; }
+.uusi-pelaaja input { width: min(300px, 100%); }
+
+.pelaaja-paa h1 { margin-bottom: 8px; }
+.pelaaja-tiedot { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+.pelaaja-tiedot label.pieni { display: grid; gap: 4px; }
+.pelaaja-tiedot .laaja { flex: 1; min-width: 240px; }
+.pelaaja-tiedot .laaja input { width: 100%; }
+.kirjaus-ruudukko { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.kirjauslomake { display: grid; gap: 12px; position: sticky; top: 70px; }
+.kirjauslomake h2 { margin: 0; font-size: 22px; }
+.lomakeosa { display: grid; gap: 6px; }
+.lomakeosa.kaksi { grid-template-columns: 1fr 1fr; gap: 10px; }
+.osa-nimi { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.pieni-chipit { gap: 5px; }
+.pieni-chipit .chip { padding: 4px 10px; font-size: 14px; }
+.pallura { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+.kentta-kehys { display: flex; justify-content: center; }
+.kentta-kehys .kenttakuva { width: 100%; max-width: 260px; }
+.kentta-kehys.iso .kenttakuva { max-width: 380px; }
+.kenttakuva { display: block; height: auto; }
+.kenttakuva.aktiivinen { cursor: crosshair; }
+.kp-kentta { fill: #12301F; stroke: #E6EEF8; stroke-width: .35; }
+.kp-vara { fill: #0E2418; stroke: rgba(230,238,248,.25); stroke-width: .2; }
+.kp-kaista { fill: rgba(214,190,140,.18); stroke: rgba(230,238,248,.4); stroke-width: .2; }
+.kp-koti { fill: rgba(214,190,140,.55); stroke: #E6EEF8; stroke-width: .25; }
+.kp-pesa { fill: #E6EEF8; }
+.kp-apu { stroke: rgba(230,238,248,.12); stroke-width: .2; stroke-dasharray: 1 1; }
+.kp-mitta { font: 2.2px var(--text); fill: rgba(230,238,248,.35); }
+.kp-teksti { font: 600 2.6px var(--text); fill: rgba(230,238,248,.75); }
+.kp-piste { stroke: #060B14; stroke-width: .3; opacity: .92; }
+.kp-valittu circle:first-child { fill: none; stroke: var(--yellow); stroke-width: .5; }
+.kp-valittu circle:last-child { fill: var(--yellow); }
+.selite { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--ink-2); justify-content: center; }
+.yhteenveto { margin: 12px 0; }
+.yhteenveto summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+.kirjaustaulu td { vertical-align: top; }
+.harmaa { color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .kirjaus-ruudukko { grid-template-columns: 1fr; }
+  .kirjauslomake { position: static; }
+}
+.kirjaus-ruudukko > *, .keskus-ruudukko > *, .muistio > * { min-width: 0; }

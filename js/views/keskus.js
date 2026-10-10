@@ -8,13 +8,14 @@ let valittuOsio = "idea";
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } }
 
 const rivi = (h) => `<li><a class="tuore" href="#/huomio/${h.id}">
-  <span class="t-osio">${esc(osioNimi(huomionOsio(h)))}</span>
+  <span class="t-osio">${esc(osioNimi(huomionOsio(h)))}${h.tyyppi === "ottelumuistio" ? " · muistio" : ""}</span>
   <strong>${esc(h.otsikko)}</strong>
   <span class="pieni">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></a></li>`;
 
 export async function nayta(main) {
   await lataaNimet();
-  const [huomiot, sm] = await Promise.all([haeHuomiot(), haeSiirtomarkkinat().catch(() => null)]);
+  const [kaikki, sm] = await Promise.all([haeHuomiot(), haeSiirtomarkkinat().catch(() => null)]);
+  const huomiot = kaikki.filter((h) => h.tyyppi !== "lyonti" && h.tyyppi !== "ulkopeli");
   const spJoukkue = tila.joukkueet.find((j) => /superpesis/i.test(j.nimi));
   const spKerrat = tila.kerrat.filter((k) => spJoukkue && k.joukkue_id === spJoukkue.id);
   const kpl = sm?.vaikutus?.find((v) => v.Joukkue === "KPL");
@@ -83,7 +84,7 @@ export async function nayta(main) {
   poistu();
   kanava = sb.channel("keskus-huomiot")
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "huomiot" }, (m) => {
-      if (huomiot.some((x) => x.id === m.new.id)) return;
+      if (huomiot.some((x) => x.id === m.new.id) || m.new.tyyppi === "lyonti" || m.new.tyyppi === "ulkopeli") return;
       huomiot.unshift(m.new);
       $("#tuoreet").innerHTML = huomiot.slice(0, 8).map(rivi).join("");
     }).subscribe();

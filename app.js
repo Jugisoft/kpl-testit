@@ -12,6 +12,7 @@ import * as hallinta from "./js/views/hallinta.js";
 import * as superpesis from "./js/views/superpesis.js";
 import * as keskus from "./js/views/keskus.js";
 import * as muistio from "./js/views/muistio.js";
+import * as vpelaaja from "./js/views/vpelaaja.js";
 import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
 import * as analyysi from "./js/views/analyysi.js";
 
@@ -22,7 +23,8 @@ const reitit = [
   { polku: /^\/?$/, nakyma: etusivu, julkinen: true },
   { polku: /^\/tilastot$/, nakyma: koti, julkinen: true, osio: "testit" },
   { polku: /^\/kirjaudu$/, nakyma: kirjaudu, julkinen: true },
-  { polku: /^\/muistio(?:\/([^/]+))?$/, nakyma: muistio },
+  { polku: /^\/muistio(?:\/([^/]+))?(?:\/([^/]+))?$/, nakyma: muistio },
+  { polku: /^\/vp\/([\w-]+)(?:\/([a-z]+))?$/, nakyma: vpelaaja },
   { polku: /^\/huomio\/([\w-]+)$/, nakyma: { nayta: muistio.naytaYksi, poistu: muistio.poistu } },
   { polku: /^\/huomiot$/, nakyma: { nayta: () => location.replace("#/muistio") } },
   { polku: /^\/siirtomarkkinat$/, nakyma: siirtomarkkinat },
@@ -40,7 +42,7 @@ const reitit = [
 // Päävalikko: [teksti, osoite, aktiivinen kun polku täsmää]
 const PAAVALIKKO = [
   ["Keskus", "#/", (p) => p === "/"],
-  ["Muistio", "#/muistio", (p) => /^\/(muistio|huomio)/.test(p)],
+  ["Muistio", "#/muistio", (p) => /^\/(muistio|huomio|vp\/)/.test(p)],
   ["Siirtomarkkinat", "#/siirtomarkkinat", (p) => p === "/siirtomarkkinat"],
   ["Analyysi", "#/analyysi", (p) => p === "/analyysi"],
   ["Testit", "#/superpesis", (p, r) => r?.osio === "testit"],

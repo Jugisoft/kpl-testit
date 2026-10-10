@@ -10,7 +10,7 @@ export const LUOKAT = {
   muu: "Muut",
   vastustaja: "Vastustaja",
 };
-export const JOUKKUEET = ["IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"];
+export const JOUKKUEET = ["KPL", "IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"];
 // Osiot muistiossa: aiheet ja vastustajat. Avain: aihe (idea, oma_peli...) tai joukkueen lyhenne.
 export const AIHEOSIOT = ["idea", "oma_peli", "merkkipeli", "pelaaja", "muu"];
 export const osioNimi = (o) => (o === "kaikki" ? "Kaikki" : LUOKAT[o] || o);
@@ -48,12 +48,13 @@ export async function kommenttimaarat() {
 }
 
 // Tallentaa muistiinpanon osioon. Ensimmäinen rivi = otsikko, loput = teksti.
-export async function tallennaMuistiinpano(teksti, osio) {
-  const rivit = teksti.trim().split("\n");
+export async function tallennaMuistiinpano(teksti, osio, lisa = {}) {
+  const rivit = (teksti.trim() || lisa.otsikko || "").split("\n");
   let otsikko = rivit[0].replace(/^#+\s*/, "").trim();
   let runko = rivit.slice(1).join("\n").trim();
   if (otsikko.length > 160) { runko = (otsikko + "\n" + runko).trim(); otsikko = otsikko.slice(0, 120).replace(/\s+\S*$/, "") + "…"; }
-  const { data, error } = await sb.from("huomiot").insert({ otsikko, teksti: runko, ...osioKentat(osio) }).select().single();
+  const { otsikko: _o, ...muut } = lisa;
+  const { data, error } = await sb.from("huomiot").insert({ otsikko, teksti: runko, ...osioKentat(osio), ...muut }).select().single();
   if (error) throw error;
   return data;
 }
@@ -120,3 +121,14 @@ export function md(teksti) {
 
 export const luokkaMerkki = (h) =>
   `<a class="luokka l-${esc(h.luokka)}" href="#/muistio/${esc(huomionOsio(h))}">${esc(h.luokka === "vastustaja" ? h.vastustaja || "Vastustaja" : LUOKAT[h.luokka] || h.luokka)}</a>`;
+
+let pelaajaValimuisti = null;
+export async function haePelaajat(pakota = false) {
+  if (pelaajaValimuisti && !pakota) return pelaajaValimuisti;
+  const { data, error } = await sb.from("vastustajapelaajat").select("*").order("nimi");
+  if (error) throw error;
+  pelaajaValimuisti = new Map(data.map((p) => [p.id, p]));
+  return pelaajaValimuisti;
+}
+export const sukunimiJarjestys = (a, b) => (a.nimi.split(" ").at(-1) + a.nimi).localeCompare(b.nimi.split(" ").at(-1) + b.nimi, "fi");
+export const pvmFi = (s) => (s ? new Date(s + "T12:00:00").toLocaleDateString("fi-FI") : "");

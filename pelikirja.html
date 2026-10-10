@@ -186,6 +186,7 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
       <label title="Etäisyys lähimpään sivurajaan ja polttolinjaan (2- ja 3-pesän välinen linja)"><input id="dims" type="checkbox"> Mitat</label>
       <label title="Kuinka paljon pelaaja ehtii peittää sivusuunnassa. Vaikuttaa siihen, kuinka paljon lähempi pelaaja kaventaa saumaa.">Ulottuvuus <input id="reach" type="number" min="0" max="6" step="0.5" value="2" style="width:62px;padding:4px 6px"> m</label>
       <label title="Lyöjän silmin -näkymässä ulkopelaajat näytetään 175 cm pituisina pelaajafiguureina"><input id="figs" type="checkbox" checked> Figuurit</label>
+      <label id="figkokolbl" title="Figuurien koko. 100 % = oikea 175 cm pituus, isompi näkyy paremmin takakentällä.">Koko <input id="figkoko" type="range" min="1" max="2.5" step="0.1" value="1.5" style="width:90px"> <span id="figkokoarvo">150 %</span></label>
       <label><input id="opp" type="checkbox" checked> Vastustaja</label>
       <label><input id="ball" type="checkbox" checked> Pallo</label>
     </div>
@@ -297,16 +298,16 @@ const patName=id=>(pats.find(p=>p.id===id)||{}).name||"";
 
 /* ===== Tila ===== */
 const KEY="kpl-pelikirja-v2";
-let plays, sel, phase="a", angle=64, view="viisto", yaw=0, showOpp=true, showBall=true, showSeams=true, showDims=false, reach=2, anim=null, figuurit=true, FIG=null;
+let plays, sel, phase="a", angle=64, view="viisto", yaw=0, showOpp=true, showBall=true, showSeams=true, showDims=false, reach=2, anim=null, figuurit=true, figKoko=1.5, FIG=null;
 const PREFS="kpl-pelikirja-gh-asetukset";
-try{ const s=JSON.parse(localStorage.getItem(PREFS)||"null"); if(s){ sel=s.sel; angle=s.angle||64; view=s.view||"viisto"; yaw=s.yaw||0; if(s.figuurit===false) figuurit=false; } }catch(e){}
+try{ const s=JSON.parse(localStorage.getItem(PREFS)||"null"); if(s){ sel=s.sel; angle=s.angle||64; view=s.view||"viisto"; yaw=s.yaw||0; if(s.figuurit===false) figuurit=false; if(s.figKoko) figKoko=s.figKoko; } }catch(e){}
 const PERUS=SAMPLES.find(p=>p.lyoja==="Perusasetelma");
 plays=[PERUS];
 if(!plays.find(p=>p.id===sel)) sel=plays[0].id;
 function migr(o){ if(!o) return; for(const [a,b] of [["VK","3K"],["OK","2K"]]) if(o[a]&&!o[b]){o[b]=o[a];delete o[a];} }
 function migrPlays(arr){ arr.forEach(p=>{migr(p.ulko?.a);migr(p.ulko?.b);}); }
 migrPlays(plays); pats.forEach(t=>{migr(t.pohja);migr(t.liike);});
-function save(){ try{ localStorage.setItem(PREFS, JSON.stringify({sel,angle,view,yaw,figuurit})); }catch(e){} cloudQueue(); }
+function save(){ try{ localStorage.setItem(PREFS, JSON.stringify({sel,angle,view,yaw,figuurit,figKoko})); }catch(e){} cloudQueue(); }
 const cur=()=>plays.find(p=>p.id===sel);
 
 /* ===== Kamera: viisto näkymä kotipesän takaa tai lyöjän silmin ===== */
@@ -471,12 +472,12 @@ function posOf(ent, ph, t){
   if(t!=null){ return {x:ent.a.x+(ent.b.x-ent.a.x)*t, y:ent.a.y+(ent.b.y-ent.a.y)*t}; }
   return ph==="a"?ent.a:ent.b;
 }
-/* Pelaajafiguuri lyöjän silmin: kuva (pelikirja_kuvat), pituus 175 cm, jalat maassa pelaajan kohdalla.
+/* Pelaajafiguuri lyöjän silmin: kuva (pelikirja_kuvat), pituus 175 cm × kokosäädin (figKoko), jalat maassa pelaajan kohdalla.
    Vasemman puolen pelaajat peilataan, jotta katse kääntyy kentän keskelle. */
 const FIG_PITUUS=1.75, FIG_SUHDE=212/280, FIG_JALAT=.53;
 function figuuri(id,label,p,full){
   const g=pr(p.x,p.y); if(g.zc<1.2) return "";
-  const yla=pr(p.x,p.y,FIG_PITUUS), h=g.Y-yla.Y, w=h*FIG_SUHDE, x=g.X-w*FIG_JALAT;
+  const yla=pr(p.x,p.y,FIG_PITUUS*figKoko), h=g.Y-yla.Y, w=h*FIG_SUHDE, x=g.X-w*FIG_JALAT;
   const peili=p.x<0?` transform="translate(${f1(2*g.X)},0) scale(-1,1)"`:"";
   const fs=Math.max(10,Math.min(18,h*.17)), bw=fs*(label.length*.62+.9), by=yla.Y-fs*1.5;
   const valittu=id===valittuPid;
@@ -736,7 +737,10 @@ $("vV").onclick=()=>setView("viisto"); $("vL").onclick=()=>setView("lyoja");
 $("ang").addEventListener("input",e=>{ if(view==="lyoja") yaw=+e.target.value; else angle=+e.target.value; drawField(); save(); });
 $("seam").onchange=e=>{showSeams=e.target.checked;drawDyn();};
 $("dims").onchange=e=>{showDims=e.target.checked;drawDyn();};
-$("figs").checked=figuurit; $("figs").onchange=e=>{figuurit=e.target.checked;save();drawDyn();};
+$("figs").checked=figuurit; $("figs").onchange=e=>{figuurit=e.target.checked;$("figkokolbl").hidden=!figuurit;save();drawDyn();};
+$("figkoko").value=figKoko; $("figkokoarvo").textContent=Math.round(figKoko*100)+" %"; $("figkokolbl").hidden=!figuurit;
+$("figkoko").oninput=e=>{figKoko=+e.target.value;$("figkokoarvo").textContent=Math.round(figKoko*100)+" %";drawDyn();};
+$("figkoko").onchange=()=>save();
 $("reach").addEventListener("input",e=>{const v=parseFloat(e.target.value); if(!isNaN(v)){reach=Math.max(0,Math.min(6,v)); drawDyn();}});
 $("opp").onchange=e=>{showOpp=e.target.checked;drawDyn();};
 $("ball").onchange=e=>{showBall=e.target.checked;drawDyn();};

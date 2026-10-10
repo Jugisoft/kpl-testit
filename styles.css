@@ -210,3 +210,158 @@ input[type=text], input[type=date], input[type=email], input[type=number], selec
 .tagit b { color: var(--cyan); font-weight: 700; margin-left: 4px; }
 .lukema { cursor: pointer; }
 .lukema[aria-pressed="true"] { border-color: var(--cyan) !important; box-shadow: 0 0 0 1px var(--cyan), 0 0 24px -6px rgba(56,214,255,.6); }
+
+/* ===== KPL Keskus ===== */
+.alinav { display: flex; gap: 4px; padding: 6px 20px; border-bottom: 1px solid var(--line-2); background: rgba(12,23,41,.7); overflow-x: auto; scrollbar-width: none; }
+.alinav a { padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 15px; color: var(--ink-2); white-space: nowrap; }
+.alinav a:hover { color: var(--ink); }
+.alinav a[aria-current="page"] { color: var(--cyan); background: rgba(56,214,255,.08); }
+
+.sivu-paa { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+.sivu-paa .ingressi { max-width: 68ch; }
+.murupolku { margin: 0 0 6px; font-size: 15px; }
+.murupolku a { color: var(--ink-3); }
+
+/* pikakirjaus: Keskuksen tärkein elementti */
+.kirjaus { margin: 6px 0 34px; padding: 22px 24px 20px; border-radius: 14px; background: linear-gradient(135deg, rgba(56,214,255,.10), rgba(46,123,255,.04) 45%, transparent), var(--surface); border: 1px solid rgba(56,214,255,.28); box-shadow: var(--glow); }
+.kirjaus h1 { font: 700 clamp(40px, 6vw, 64px)/0.95 var(--num); letter-spacing: -.01em; margin: 0 0 14px; }
+.pikakirjaus [name=otsikko] { font: 600 22px/1.3 var(--text); padding: 12px 14px; }
+.pikakirjaus textarea { min-height: 92px; }
+.huomiolomake, .pikakirjaus { display: grid; gap: 12px; }
+.huomiolomake { margin: 16px 0 24px; }
+.lomake-rivi { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.lomake-rivi .laaja { grid-column: 1 / -1; }
+label.kentta textarea, label.kentta input, label.kentta select { width: 100%; }
+textarea { resize: vertical; line-height: 1.5; }
+
+/* välilehdet */
+.valilehdet { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 22px 0 16px; overflow-x: auto; scrollbar-width: none; }
+.valilehti { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; cursor: pointer; color: var(--ink-2); font-weight: 600; white-space: nowrap; margin-bottom: -1px; }
+.valilehti[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--cyan); }
+.lkm { font: 600 13px/1 var(--num); color: var(--ink-3); margin-left: 4px; }
+.suodattimet { margin: 0 0 14px; }
+.suodattimet input[type=search] { min-width: 220px; }
+
+/* huomiolista */
+.huomiolista { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.huomio-rivi { display: grid; gap: 4px; padding: 12px 16px; border-radius: 10px; text-decoration: none; background: var(--surface); border: 1px solid var(--line); }
+.huomio-rivi:hover { border-color: rgba(56,214,255,.45); }
+.huomio-rivi.tila-arkisto { opacity: .6; }
+.h-paa { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.h-otsikko { font-size: 17px; line-height: 1.35; }
+.h-ote { color: var(--ink-2); font-size: 15px; }
+.h-meta { color: var(--ink-3); font-size: 14px; display: flex; gap: 12px; flex-wrap: wrap; }
+.h-kommentit { color: var(--cyan); }
+.h-kommentit.odottaa { color: var(--yellow); }
+.luokka { font: 600 13px/1 var(--text); padding: 4px 8px; border-radius: 5px; background: var(--line-2); color: var(--ink-2); }
+.l-vastustaja { background: var(--red-bg); color: #FF8A96; }
+.l-oma_peli { background: rgba(46,123,255,.18); color: #8DB6FF; }
+.l-merkkipeli { background: rgba(167,139,250,.18); color: #C4B5FD; }
+.l-idea { background: var(--amber-bg); color: var(--yellow); }
+.l-pelaaja { background: var(--green-bg); color: var(--green); }
+.tilamerkki { font-size: 13px; color: var(--ink-3); border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; }
+
+/* avattu huomio ja keskustelu */
+.huomio-auki { max-width: 760px; }
+.huomio-auki .h-paa { justify-content: space-between; }
+.h-iso { font-size: clamp(28px, 4vw, 40px); line-height: 1.1; margin: 10px 0 6px; }
+.tilavalinta { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink-3); }
+.h-teksti { font-size: 17px; }
+.md p { margin: 0 0 .7em; }
+.md ul, .md ol { margin: 0 0 .8em; padding-left: 1.3em; }
+.md li { margin: .2em 0; }
+.md h4 { font: 700 18px/1.2 var(--num); margin: 1em 0 .4em; color: var(--cyan); }
+.md h4:first-child { margin-top: 0; }
+.md code { font-size: .9em; background: var(--line-2); padding: 1px 5px; border-radius: 4px; }
+.md a { color: var(--cyan); }
+.md-inline p { margin: 0; }
+.pieni-nappi { padding: 5px 12px; font-size: 14px; }
+.linkkinappi { background: none; border: 0; padding: 0; color: var(--ink-3); text-decoration: underline; cursor: pointer; font-size: 13px; }
+.keskustelu { max-width: 760px; margin-top: 30px; }
+.kommentit { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
+.kommentti { padding: 12px 16px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+.kommentti.ai { background: linear-gradient(90deg, rgba(56,214,255,.08), transparent 60%), var(--surface); border-color: rgba(56,214,255,.3); border-left: 3px solid var(--cyan); }
+.kommentti.jarjestelma { background: none; border-style: dashed; }
+.k-kuka { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+.k-kuka .linkkinappi { margin-left: auto; }
+.ai-merkki { font: 700 12px/1 var(--num); color: #04111F; background: var(--cyan); border-radius: 4px; padding: 3px 5px; }
+.ajattelee { margin: 0; color: var(--ink-2); }
+.ajattelee::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: pisteet 1.4s steps(4) infinite; }
+@keyframes pisteet { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+.kommentti-lomake { display: grid; gap: 10px; }
+.kooste { margin-top: 28px; max-width: 760px; }
+.kooste summary { cursor: pointer; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; list-style: none; }
+.kooste summary::-webkit-details-marker { display: none; }
+.k-otsikko { font: 700 20px/1.2 var(--num); }
+.kooste[open] summary { margin-bottom: 12px; }
+.koosteet { display: grid; gap: 12px; }
+.koosteet .kooste { margin-top: 0; max-width: none; }
+.tyhja-iso { max-width: 640px; }
+.tyhja-iso h2 { margin-top: 0; }
+
+/* keskus */
+.keskus-ruudukko { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.k-sivu { display: grid; gap: 14px; }
+.k-sivu h2 { margin: 0; font-size: 22px; }
+.osio-paa { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.osio-paa h2 { margin: 0; }
+.osio-paa a { font-size: 14px; color: var(--cyan); }
+.kpl-netto { font-size: 15px; color: var(--ink-2); margin: 8px 0; }
+.kpl-netto .num { font-size: 30px; font-weight: 700; color: var(--ink); margin-right: 2px; }
+.kpl-netto .num { margin-left: 8px; }
+.uutislista ul { padding-left: 1.1em; }
+.uutislista li { margin: .45em 0; }
+.uutislista.tiivis { font-size: 14px; }
+.uutislista.hiljainen { color: var(--ink-2); font-size: 15px; }
+.kaksi-saraketta { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: start; }
+.paivitys { margin: 8px 0 0; }
+
+/* siirtomarkkinat */
+.vaikutus { display: grid; gap: 4px; }
+.v-rivi { display: grid; grid-template-columns: 64px minmax(120px, 1fr) 64px 110px; gap: 4px 12px; align-items: center; padding: 8px 10px; border-radius: 8px; }
+.v-rivi.oma { background: rgba(56,214,255,.07); outline: 1px solid rgba(56,214,255,.25); }
+.v-nimi { font: 700 18px/1 var(--num); }
+.v-palkki { position: relative; height: 14px; background: linear-gradient(90deg, transparent calc(50% - .5px), var(--ink-3) calc(50% - .5px), var(--ink-3) calc(50% + .5px), transparent calc(50% + .5px)); }
+.v-palkki span { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.v-palkki .miinus { background: var(--red); }
+.v-palkki .plus { background: var(--green); }
+.v-luku { text-align: right; font-size: 18px; font-weight: 600; }
+.v-arvio { font-size: 14px; color: var(--ink-2); }
+.v-tiedot { grid-column: 2 / -1; }
+tr.oma td { background: rgba(56,214,255,.06); }
+.varmuus { font-size: 13px; padding: 2px 7px; border-radius: 5px; white-space: nowrap; }
+.varmuus.vahva { background: var(--green-bg); color: var(--green); }
+.varmuus.koonti { background: rgba(46,123,255,.16); color: #8DB6FF; }
+.varmuus.yksi { background: var(--amber-bg); color: var(--yellow); }
+.varmuus.huhu { background: var(--red-bg); color: #FF8A96; }
+.kokoonpano { list-style: none; padding: 0; margin: 0 0 12px; }
+.kokoonpano li { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line-2); }
+.kokoonpano li span:first-child { flex: 1; }
+.kokoonpano li.uusi span:first-child { color: var(--cyan); font-weight: 600; }
+
+/* analyysi */
+.pylvaat { display: grid; gap: 4px; margin-top: 10px; }
+.pylvas-rivi { display: grid; grid-template-columns: 56px 1fr 48px; gap: 10px; align-items: center; font-size: 15px; }
+.pylvas-rivi .num { text-align: right; }
+.pylvas { height: 10px; background: var(--line-2); border-radius: 3px; overflow: hidden; }
+.pylvas span { display: block; height: 100%; background: var(--ink-3); }
+.pylvas-rivi.oma { color: var(--cyan); font-weight: 700; }
+.pylvas-rivi.oma .pylvas span { background: var(--cyan); }
+.linkkilista { list-style: none; padding: 0; display: grid; gap: 6px; max-width: 720px; }
+.linkkilista li { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--line-2); }
+.linkkilista a { color: var(--cyan); font-weight: 600; }
+.tulossa { max-width: 720px; padding-left: 1.2em; color: var(--ink-2); }
+.tulossa li { margin: .6em 0; }
+.tulossa strong { color: var(--ink); }
+
+@media (max-width: 860px) {
+  .keskus-ruudukko { grid-template-columns: 1fr; }
+  .v-rivi { grid-template-columns: 52px 1fr 60px; }
+  .v-arvio { grid-column: 2 / -1; }
+}
+@media (max-width: 640px) {
+  .kirjaus { padding: 16px; }
+  .alinav { padding: 6px 12px; }
+  .suodattimet input[type=search] { min-width: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .ajattelee::after { animation: none; content: "…"; } }

@@ -861,8 +861,8 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
     const aika=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error("aikaraja")),ms));
     let session;
     try{ ({data:{session}}=await Promise.race([sb.auth.getSession(),aika(10000)])); }
-    catch(e){ gate("Kirjautumisen tarkistus ei vastannut. Sulje muut KPL testit -välilehdet ja lataa tämä sivu uudelleen.",false); return; }
-    if(!session){ gate("Pelikirja on KPL:n valmentajien käytössä. Kirjaudu ensin KPL testit -sivulla, ja palaa sitten tälle sivulle.",true); return; }
+    catch(e){ gate("Kirjautumisen tarkistus ei vastannut. Sulje muut KPL Keskus -välilehdet ja lataa tämä sivu uudelleen.",false); return; }
+    if(!session){ gate("Pelikirja on KPL:n valmentajien käytössä. Kirjaudu ensin KPL Keskukseen, ja palaa sitten tälle sivulle.",true); return; }
     ME=session.user.email||"";
     const [v,a]=await Promise.all([sb.rpc("on_valmentaja"),sb.rpc("on_admin")]);
     if(!v.data){ gate("Olet kirjautunut osoitteella "+ME+", mutta sillä ei ole valmentajan oikeuksia. Pyydä ylläpitäjää lisäämään osoite valmentajiin.",false); return; }
@@ -875,7 +875,7 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
     plays=kuviot.length?kuviot:[JSON.parse(JSON.stringify(PERUS))];
     migrPlays(plays);
     if(!plays.find(p=>p.id===sel)) sel=plays[0].id;
-    $("whoami").innerHTML=""; const w=document.createElement("span"); w.textContent=ME.split("@")[0]; const back=document.createElement("a"); back.href="index.html#/"; back.textContent="KPL testit";
+    $("whoami").innerHTML=""; const w=document.createElement("span"); w.textContent=ME.split("@")[0]; const back=document.createElement("a"); back.href="index.html#/"; back.textContent="KPL Keskus";
     $("whoami").append(w,back);
     $("gate").hidden=true; $("app").hidden=false; $("vikaopen").hidden=false;
     CLOUD=true;

@@ -10,31 +10,62 @@ import * as pelaaja from "./js/views/pelaaja.js";
 import * as ryhma from "./js/views/ryhma.js";
 import * as hallinta from "./js/views/hallinta.js";
 import * as superpesis from "./js/views/superpesis.js";
+import * as keskus from "./js/views/keskus.js";
+import * as huomiot from "./js/views/huomiot.js";
+import * as huomio from "./js/views/huomio.js";
+import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
+import * as analyysi from "./js/views/analyysi.js";
+
+// Valmentajalle etusivu on Keskus, muille julkiset tilastot.
+const etusivu = { nayta: (main, ...a) => (tila.valmentaja ? keskus : koti).nayta(main, ...a), poistu: () => keskus.poistu?.() };
 
 const reitit = [
-  { polku: /^\/?$/, nakyma: koti, julkinen: true, nav: "Tilastot" },
+  { polku: /^\/?$/, nakyma: etusivu, julkinen: true },
+  { polku: /^\/tilastot$/, nakyma: koti, julkinen: true, osio: "testit" },
   { polku: /^\/kirjaudu$/, nakyma: kirjaudu, julkinen: true },
-  { polku: /^\/kerrat$/, nakyma: kerrat, nav: "Testikerrat" },
-  { polku: /^\/syota\/([\w-]+)$/, nakyma: syotto },
-  { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta },
-  { polku: /^\/pelaajat$/, nakyma: pelaajat, nav: "Pelaajat" },
-  { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja },
-  { polku: /^\/ryhma$/, nakyma: ryhma, nav: "Ryhmäanalyysi" },
-  { polku: /^\/superpesis$/, nakyma: superpesis, nav: "Superpesis" },
-  { polku: /^\/hallinta$/, nakyma: hallinta, nav: "Hallinta", admin: true },
+  { polku: /^\/huomiot$/, nakyma: huomiot },
+  { polku: /^\/huomio\/([\w-]+)$/, nakyma: huomio },
+  { polku: /^\/siirtomarkkinat$/, nakyma: siirtomarkkinat },
+  { polku: /^\/analyysi$/, nakyma: analyysi },
+  { polku: /^\/kerrat$/, nakyma: kerrat, osio: "testit" },
+  { polku: /^\/syota\/([\w-]+)$/, nakyma: syotto, osio: "testit" },
+  { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta, osio: "testit" },
+  { polku: /^\/pelaajat$/, nakyma: pelaajat, osio: "testit" },
+  { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja, osio: "testit" },
+  { polku: /^\/ryhma$/, nakyma: ryhma, osio: "testit" },
+  { polku: /^\/superpesis$/, nakyma: superpesis, osio: "testit" },
+  { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
 ];
-const navLinkit = { "/": "#/", "/kerrat": "#/kerrat", "/pelaajat": "#/pelaajat", "/ryhma": "#/ryhma", "/superpesis": "#/superpesis", "/hallinta": "#/hallinta" };
+
+// Päävalikko: [teksti, osoite, aktiivinen kun polku täsmää]
+const PAAVALIKKO = [
+  ["Keskus", "#/", (p) => p === "/"],
+  ["Huomiot", "#/huomiot", (p) => /^\/huomio/.test(p)],
+  ["Siirtomarkkinat", "#/siirtomarkkinat", (p) => p === "/siirtomarkkinat"],
+  ["Analyysi", "#/analyysi", (p) => p === "/analyysi"],
+  ["Testit", "#/superpesis", (p, r) => r?.osio === "testit"],
+];
+const TESTIVALIKKO = [
+  ["Edustus", "#/superpesis", (p) => p === "/superpesis"],
+  ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
+  ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
+  ["Ryhmäanalyysi", "#/ryhma", (p) => p === "/ryhma"],
+  ["Julkiset tilastot", "#/tilastot", (p) => p === "/tilastot"],
+];
 
 let nykyinen = null;
 let navId = 0;
 
-function piirraNav(polku) {
-  const linkit = reitit.filter((r) => r.nav && (r.julkinen || tila.valmentaja) && (!r.admin || tila.admin));
-  $("#nav").innerHTML = linkit.map((r) => {
-    const href = Object.entries(navLinkit).find(([p]) => r.polku.test(p))?.[1] || "#/";
-    const aktiivinen = r.polku.test(polku) || (r.nakyma === pelaajat && polku.startsWith("/pelaaja/")) || (r.nakyma === kerrat && /^\/(syota|kerta)\//.test(polku));
-    return `<a href="${href}"${aktiivinen ? ' aria-current="page"' : ""}>${r.nav}</a>`;
-  }).join("") + (tila.valmentaja ? `<a href="pelikirja.html">Pelikirja</a>` : "");
+function piirraNav(polku, r) {
+  const linkki = ([teksti, href, aktiivinen]) => `<a href="${href}"${aktiivinen(polku, r) ? ' aria-current="page"' : ""}>${teksti}</a>`;
+  if (tila.valmentaja) {
+    $("#nav").innerHTML = PAAVALIKKO.map(linkki).join("") + `<a href="pelikirja.html">Pelikirja</a>` + (tila.admin ? linkki(["Hallinta", "#/hallinta", (p) => p === "/hallinta"]) : "");
+  } else {
+    $("#nav").innerHTML = linkki(["Tilastot", "#/", (p) => p === "/" || p === "/tilastot"]);
+  }
+  const ali = $("#alinav");
+  ali.hidden = !(tila.valmentaja && r?.osio === "testit");
+  ali.innerHTML = ali.hidden ? "" : TESTIVALIKKO.map(linkki).join("");
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;
@@ -49,7 +80,7 @@ async function reititä() {
   const polku = location.hash.replace(/^#/, "") || "/";
   const r = reitit.find((x) => x.polku.test(polku)) || reitit[0];
   const parametrit = polku.match(r.polku)?.slice(1) || [];
-  piirraNav(polku);
+  piirraNav(polku, r);
   if (!r.julkinen && !tila.valmentaja) {
     location.hash = tila.istunto ? "#/" : "#/kirjaudu";
     if (tila.istunto) ilmoita("Tunnuksellasi ei ole valmentajan oikeuksia.", true);
@@ -86,7 +117,7 @@ async function kaynnista() {
     if (tapahtuma === "SIGNED_IN" || tapahtuma === "SIGNED_OUT") {
       const oli = tila.valmentaja;
       await tarkistaRooli();
-      if (tila.valmentaja && !oli) { await lataaPelaajat(); if (location.hash.startsWith("#/kirjaudu")) location.hash = "#/kerrat"; else reititä(); }
+      if (tila.valmentaja && !oli) { await lataaPelaajat(); if (location.hash.startsWith("#/kirjaudu")) location.hash = "#/"; else reititä(); }
     }
   });
   window.addEventListener("hashchange", reititä);

@@ -1,6 +1,11 @@
-# KPL testit
+# KPL Keskus
 
-KPL:n pesäpalloilijoiden talvitestien syöttö ja analyysi. Sivu: https://jugisoft.github.io/kpl-testit/
+Kouvolan Pallonlyöjien valmennuksen keskus: huomiot ja tietopankki (AI-sparraaja), siirtomarkkinat, analyysi, testit ja pelikirja. Sivu: https://jugisoft.github.io/kpl-testit/
+
+- **Keskus (valmentajille, etusivu kirjautuneena):** pikakirjaus, tuoreimmat huomiot, siirtomarkkinat, testit.
+- **Huomiot (`#/huomiot`, `#/huomio/:id`):** taulut `huomiot`, `huomio_kommentit`, `koosteet`. Uusi huomio kutsuu edge functionia `keskus-ai`, joka kommentoi huomion ja päivittää aiheen koosteen (vaatii salaisuuden `ANTHROPIC_API_KEY`; ilman sitä AI on pois päältä). Reaaliaikainen päivitys.
+- **Siirtomarkkinat (`#/siirtomarkkinat`):** taulu `siirtomarkkinat` (yksi jsonb-rivi). Jarvis vie datan vaultista skriptillä `vie_portaaliin.py` → edge function `keskus-vienti` (avaimen sha256 taulussa `vientiavaimet`).
+- **Analyysi (`#/analyysi`):** KPL sarjan rinnalla 2026, tietopankki, linkit YDIN 2027 -analytiikkaan.
 
 - **Julkinen etusivu:** ikäluokkien kehitys ilman nimiä (`julkinen_yhteenveto()`, vähintään 3 pelaajaa / ryhmä).
 - **Valmentajille (kirjautuminen):** testikerrat ja tulosten syöttö, testikerran tulokset, pelaajakortit, ryhmäanalyysi, hallinta.

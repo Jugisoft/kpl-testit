@@ -4,7 +4,7 @@ import { $, esc, ilmoita } from "../util.js";
 const paluu = () => location.origin + location.pathname;
 
 export async function nayta(main) {
-  if (tila.valmentaja) { location.hash = "#/kerrat"; return; }
+  if (tila.valmentaja) { location.hash = "#/"; return; }
   main.innerHTML = `
     <h1>Kirjaudu</h1>
     <p class="ingressi">Pelaajakohtaiset tulokset ja tulosten syöttö ovat valmentajien käytössä. Kirjaudu Google-tilillä tai sähköpostiin lähetettävällä linkillä.</p>

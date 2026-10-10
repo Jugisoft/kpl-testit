@@ -62,7 +62,7 @@ p.ingressi { color: var(--ink-2); max-width: 64ch; margin: 0 0 20px; font-size: 
 .rivi { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .rivi.vali { justify-content: space-between; }
 label.kentta { display: grid; gap: 4px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
-input[type=text], input[type=date], input[type=email], input[type=number], select, textarea {
+input[type=text], input[type=search], input[type=date], input[type=email], input[type=number], select, textarea {
   padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); min-width: 0; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 500; font-size: 15px; }
 .chip[aria-pressed="true"], .chip:has(input:checked) { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -176,7 +176,7 @@ kbd { font: 600 12px/1 var(--text); padding: 2px 5px; border: 1px solid var(--li
 #nav a[aria-current="page"] { background: rgba(56,214,255,.12); color: var(--cyan); }
 th { background: transparent; color: var(--ink-3); font-weight: 600; letter-spacing: .02em; }
 tbody tr:hover { background: rgba(56,214,255,.05); }
-input[type=text], input[type=date], input[type=email], input[type=number], select, textarea { background: #08111F; border-color: var(--line); }
+input[type=text], input[type=search], input[type=date], input[type=email], input[type=number], select, textarea { background: #08111F; border-color: var(--line); }
 .solu input { background: #08111F; border-color: var(--line); color: var(--ink); }
 .solu input:focus { background: #0E1D33; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(56,214,255,.2); }
 .syotto td.pelaaja { background: var(--surface); }
@@ -365,3 +365,54 @@ tr.oma td { background: rgba(56,214,255,.06); }
   .suodattimet input[type=search] { min-width: 0; width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .ajattelee::after { animation: none; content: "…"; } }
+
+/* ===== Muistio (OneNote-tyyli) ===== */
+.muistio { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; }
+.osiot { position: sticky; top: 72px; display: grid; gap: 1px; max-height: calc(100vh - 90px); overflow-y: auto; }
+.osiot h3 { font: 600 13px/1 var(--text); color: var(--ink-3); margin: 16px 10px 6px; }
+.osiot a { display: flex; justify-content: space-between; gap: 8px; padding: 7px 10px; border-radius: 7px; text-decoration: none; color: var(--ink-2); border-left: 3px solid transparent; }
+.osiot a:hover { background: rgba(255,255,255,.03); color: var(--ink); }
+.osiot a[aria-current="page"] { background: rgba(56,214,255,.09); color: var(--ink); border-left-color: var(--cyan); font-weight: 600; }
+.osio-otsikko { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.osio-otsikko h1 { margin: 0; }
+.osio-otsikko input[type=search] { width: min(320px, 100%); }
+.uusi-muistiinpano { display: grid; gap: 10px; padding: 14px; border-radius: 12px; background: var(--surface); border: 1px solid rgba(56,214,255,.28); margin-bottom: 18px; }
+.uusi-muistiinpano textarea { min-height: 80px; font-size: 16px; }
+.vihje-nappain { color: var(--ink-3); }
+.muistiinpanot { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.muistiinpano { padding: 14px 18px 12px; border-radius: 12px; background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: 1px solid var(--line); }
+.m-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--ink-3); margin-bottom: 6px; }
+.m-meta a.luokka { text-decoration: none; }
+.m-otsikko { font: 600 19px/1.35 var(--text); margin: 0 0 6px; }
+.muistiinpano .md { color: var(--ink-2); font-size: 16px; }
+.m-toiminnot { display: flex; gap: 16px; margin-top: 8px; }
+.m-toiminnot .linkkinappi { font-size: 14px; text-decoration: none; color: var(--ink-3); }
+.m-toiminnot .linkkinappi:hover, .m-toiminnot .linkkinappi[aria-expanded="true"] { color: var(--cyan); }
+.m-muokkaus { width: 100%; font-size: 16px; margin-bottom: 8px; }
+.m-kommentit { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.m-kommentit .kommentit { margin-bottom: 10px; }
+.m-kommentit .kommentti { padding: 8px 12px; }
+.m-kommentit .kommentti-lomake { grid-template-columns: 1fr auto; align-items: end; }
+.kooste { max-width: none; margin: 0 0 18px; padding: 12px 16px; border-radius: 12px; border: 1px dashed rgba(56,214,255,.35); }
+.muistiinpanot.yksi { max-width: 760px; }
+
+/* Keskuksen pikakirjaus */
+.osiovalinta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.osiovalinta .chip { padding: 4px 11px; font-size: 14px; }
+.osiovalinta .erotin { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+.pikakirjaus textarea { font-size: 18px; min-height: 96px; }
+.tuoreet { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.tuore { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 10px 14px; border-radius: 9px; text-decoration: none; background: var(--surface); border: 1px solid var(--line); }
+.tuore:hover { border-color: rgba(56,214,255,.45); }
+.t-osio { font-size: 13px; color: var(--cyan); font-weight: 600; }
+.tuore strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .muistio { grid-template-columns: 1fr; gap: 12px; }
+  .osiot { position: static; display: flex; overflow-x: auto; max-height: none; gap: 4px; padding-bottom: 4px; scrollbar-width: none; }
+  .osiot h3 { display: none; }
+  .osiot a { flex: none; border-left: 0; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+  .osiot a[aria-current="page"] { border-color: var(--cyan); }
+  .tuore { grid-template-columns: 1fr; gap: 2px; }
+  .tuore strong { white-space: normal; }
+}

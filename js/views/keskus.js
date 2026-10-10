@@ -1,32 +1,42 @@
 // KPL Keskus: valmennuksen aloitusnäkymä kopin koneelle.
 import { sb, tila } from "../db.js";
-import { $, esc, pvm } from "../util.js";
-import { haeHuomiot, kommenttimaarat, haeSiirtomarkkinat, lataaNimet, md } from "../keskus.js";
-import { lomake, kytkeLomake, huomioRivi } from "./huomiot.js";
+import { $, $$, esc, pvm, ilmoita } from "../util.js";
+import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten } from "../keskus.js";
 
 let kanava = null;
+let valittuOsio = "idea";
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } }
+
+const rivi = (h) => `<li><a class="tuore" href="#/huomio/${h.id}">
+  <span class="t-osio">${esc(osioNimi(huomionOsio(h)))}</span>
+  <strong>${esc(h.otsikko)}</strong>
+  <span class="pieni">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></a></li>`;
 
 export async function nayta(main) {
   await lataaNimet();
-  const [huomiot, maarat, sm] = await Promise.all([haeHuomiot(), kommenttimaarat(), haeSiirtomarkkinat().catch(() => null)]);
+  const [huomiot, sm] = await Promise.all([haeHuomiot(), haeSiirtomarkkinat().catch(() => null)]);
   const spJoukkue = tila.joukkueet.find((j) => /superpesis/i.test(j.nimi));
   const spKerrat = tila.kerrat.filter((k) => spJoukkue && k.joukkue_id === spJoukkue.id);
   const kpl = sm?.vaikutus?.find((v) => v.Joukkue === "KPL");
-  const viikko = huomiot.filter((h) => Date.now() - new Date(h.luotu) < 7 * 864e5).length;
-  const uutiset = (sm?.tarkeimmat || "").split("\n").filter((l) => l.trim().startsWith("-")).slice(0, 5).join("\n");
+  const uutiset = (sm?.tarkeimmat || "").split("\n").filter((l) => l.trim().startsWith("-")).slice(0, 4).join("\n");
+  const chip = (o) => `<button type="button" class="chip" data-osio="${o}" aria-pressed="${o === valittuOsio}">${esc(osioNimi(o))}</button>`;
 
   main.innerHTML = `
     <section class="kirjaus">
       <h1>Mitä huomasit?</h1>
-      <form id="pika" class="pikakirjaus">${lomake()}</form>
+      <form id="pika" class="pikakirjaus">
+        <textarea name="teksti" rows="3" required aria-label="Muistiinpano" placeholder="Kirjoita ajatus tai havainto. Ensimmäinen rivi on otsikko."></textarea>
+        <div class="osiovalinta" role="group" aria-label="Osio">
+          ${AIHEOSIOT.filter((o) => o !== "muu").map(chip).join("")}<span class="erotin" aria-hidden="true"></span>${JOUKKUEET.map(chip).join("")}
+        </div>
+        <div class="rivi"><button class="btn ensisij" type="submit">Tallenna</button><span class="pieni vihje-nappain">Ctrl + Enter tallentaa</span></div>
+      </form>
     </section>
 
     <div class="keskus-ruudukko">
-      <section class="k-huomiot">
-        <div class="osio-paa"><h2>Tuoreimmat huomiot</h2><a href="#/huomiot">Kaikki ${huomiot.length} huomiota</a></div>
-        <p class="pieni">${viikko ? `${viikko} uutta viimeisen viikon aikana.` : "Ei uusia huomioita tällä viikolla."}</p>
-        <ol class="huomiolista" id="tuoreet">${huomiot.slice(0, 6).map((h) => huomioRivi(h, maarat.get(h.id))).join("") || `<li class="tyhja">Kirjaa ensimmäinen huomio yllä olevaan kenttään.</li>`}</ol>
+      <section>
+        <div class="osio-paa"><h2>Viimeisimmät muistiinpanot</h2><a href="#/muistio">Avaa muistio</a></div>
+        <ol class="tuoreet" id="tuoreet">${huomiot.slice(0, 8).map(rivi).join("") || `<li class="tyhja">Ei vielä muistiinpanoja. Kirjoita ensimmäinen yllä olevaan kenttään.</li>`}</ol>
       </section>
 
       <aside class="k-sivu">
@@ -49,13 +59,32 @@ export async function nayta(main) {
       </aside>
     </div>`;
 
-  kytkeLomake($("#pika"), async (h) => { location.hash = `#/huomio/${h.id}`; });
+  const form = $("#pika"), ta = form.querySelector("textarea");
+  $$(".chip[data-osio]", form).forEach((b) => (b.onclick = () => {
+    valittuOsio = b.dataset.osio;
+    $$(".chip[data-osio]", form).forEach((x) => x.setAttribute("aria-pressed", x === b));
+    ta.focus();
+  }));
+  ta.onkeydown = (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); form.requestSubmit(); } };
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (!ta.value.trim()) return;
+    const nappi = form.querySelector("[type=submit]"); nappi.disabled = true;
+    try {
+      const h = await tallennaMuistiinpano(ta.value, valittuOsio);
+      if (!huomiot.some((x) => x.id === h.id)) huomiot.unshift(h);
+      ta.value = "";
+      ilmoita(`Tallennettu osioon ${osioNimi(valittuOsio)}`);
+      $("#tuoreet").innerHTML = huomiot.slice(0, 8).map(rivi).join("");
+    } catch (err) { ilmoita("Tallennus epäonnistui: " + err.message, true); }
+    finally { nappi.disabled = false; }
+  };
 
   poistu();
   kanava = sb.channel("keskus-huomiot")
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "huomiot" }, (m) => {
       if (huomiot.some((x) => x.id === m.new.id)) return;
       huomiot.unshift(m.new);
-      $("#tuoreet").innerHTML = huomiot.slice(0, 6).map((h) => huomioRivi(h, maarat.get(h.id))).join("");
+      $("#tuoreet").innerHTML = huomiot.slice(0, 8).map(rivi).join("");
     }).subscribe();
 }

@@ -1,9 +1,9 @@
 # KPL Keskus
 
-Kouvolan Pallonlyöjien valmennuksen keskus: huomiot ja tietopankki (AI-sparraaja), siirtomarkkinat, analyysi, testit ja pelikirja. Sivu: https://jugisoft.github.io/kpl-testit/
+Kouvolan Pallonlyöjien valmennuksen keskus: muistio, siirtomarkkinat, analyysi, testit ja pelikirja. Sivu: https://jugisoft.github.io/kpl-testit/
 
-- **Keskus (valmentajille, etusivu kirjautuneena):** pikakirjaus, tuoreimmat huomiot, siirtomarkkinat, testit.
-- **Huomiot (`#/huomiot`, `#/huomio/:id`):** taulut `huomiot`, `huomio_kommentit`, `koosteet`. Uusi huomio kutsuu edge functionia `keskus-ai`, joka kommentoi huomion ja päivittää aiheen koosteen (vaatii salaisuuden `ANTHROPIC_API_KEY`; ilman sitä AI on pois päältä). Reaaliaikainen päivitys.
+- **Keskus (valmentajille, etusivu kirjautuneena):** pikakirjaus, viimeisimmät muistiinpanot, siirtomarkkinat, testit.
+- **Muistio (`#/muistio/:osio`, `#/huomio/:id`):** OneNote-tyyliset muistiinpanot osioittain (aiheet ja vastustajat), ensimmäinen rivi = otsikko. Taulut `huomiot`, `huomio_kommentit`, `koosteet`. Koosteet ja Jarvis-kommentit (`ai = true`) kirjoittaa Jarvis Supabase-yhteyden kautta Jugin pyynnöstä; portaalissa ei ole omaa AI-kutsua.
 - **Siirtomarkkinat (`#/siirtomarkkinat`):** taulu `siirtomarkkinat` (yksi jsonb-rivi). Jarvis vie datan vaultista skriptillä `vie_portaaliin.py` → edge function `keskus-vienti` (avaimen sha256 taulussa `vientiavaimet`).
 - **Analyysi (`#/analyysi`):** KPL sarjan rinnalla 2026, tietopankki, linkit YDIN 2027 -analytiikkaan.
 

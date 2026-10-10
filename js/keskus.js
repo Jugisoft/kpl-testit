@@ -1,17 +1,22 @@
 // KPL Keskus: huomiot, kommentit, koosteet, siirtomarkkinat ja AI-kutsu.
-import { sb, SUPABASE_URL, tila } from "./db.js";
+import { sb, tila } from "./db.js";
 import { esc } from "./util.js";
 
 export const LUOKAT = {
-  idea: "Idea",
-  vastustaja: "Vastustaja",
+  idea: "Ideat",
   oma_peli: "Oma peli",
   merkkipeli: "Merkkipeli",
-  pelaaja: "Pelaaja",
-  muu: "Muu",
+  pelaaja: "Pelaajat",
+  muu: "Muut",
+  vastustaja: "Vastustaja",
 };
-export const TILAT = { uusi: "Uusi", tyon_alla: "Työn alla", kaytossa: "Käytössä", arkisto: "Arkistossa" };
-export const JOUKKUEET = ["SoJy", "ViVe", "Manse", "KiPa", "Tahko", "JoMa", "IPV", "PattU", "KeKi", "Ura", "PuMu"];
+export const JOUKKUEET = ["IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"];
+// Osiot muistiossa: aiheet ja vastustajat. Avain: aihe (idea, oma_peli...) tai joukkueen lyhenne.
+export const AIHEOSIOT = ["idea", "oma_peli", "merkkipeli", "pelaaja", "muu"];
+export const osioNimi = (o) => (o === "kaikki" ? "Kaikki" : LUOKAT[o] || o);
+export const osioKentat = (o) => (JOUKKUEET.includes(o) ? { luokka: "vastustaja", vastustaja: o } : { luokka: o, vastustaja: null });
+export const huomionOsio = (h) => (h.luokka === "vastustaja" && h.vastustaja ? h.vastustaja : h.luokka);
+export const koosteAvain = (o) => (JOUKKUEET.includes(o) ? `vastustaja:${o}` : o);
 
 const valmentajat = new Map();
 export async function lataaNimet() {
@@ -19,7 +24,7 @@ export async function lataaNimet() {
   const { data } = await sb.rpc("valmentajien_nimet");
   (data || []).forEach((v) => valmentajat.set(v.email, v.nimi));
 }
-export const kirjoittajanNimi = (email, ai = false) => (ai ? "AI-sparraaja" : valmentajat.get(email) || (email || "?").split("@")[0]);
+export const kirjoittajanNimi = (email, ai = false) => (ai ? "Jarvis" : valmentajat.get(email) || (email || "?").split("@")[0]);
 export const omaEmail = () => (tila.istunto?.user?.email || "").toLowerCase();
 
 export async function haeHuomiot() {
@@ -42,34 +47,24 @@ export async function kommenttimaarat() {
   return m;
 }
 
-export async function tallennaHuomio(h) {
-  const rivi = {
-    otsikko: h.otsikko.trim(),
-    teksti: (h.teksti || "").trim(),
-    luokka: h.luokka,
-    vastustaja: h.luokka === "vastustaja" || h.vastustaja ? h.vastustaja || null : null,
-    lahde: h.lahde?.trim() || null,
-    tagit: h.tagit || [],
-  };
-  const { data, error } = await sb.from("huomiot").insert(rivi).select().single();
+// Tallentaa muistiinpanon osioon. Ensimmäinen rivi = otsikko, loput = teksti.
+export async function tallennaMuistiinpano(teksti, osio) {
+  const rivit = teksti.trim().split("\n");
+  let otsikko = rivit[0].replace(/^#+\s*/, "").trim();
+  let runko = rivit.slice(1).join("\n").trim();
+  if (otsikko.length > 160) { runko = (otsikko + "\n" + runko).trim(); otsikko = otsikko.slice(0, 120).replace(/\s+\S*$/, "") + "…"; }
+  const { data, error } = await sb.from("huomiot").insert({ otsikko, teksti: runko, ...osioKentat(osio) }).select().single();
   if (error) throw error;
-  pyydaAI(data.id); // ei odoteta
   return data;
 }
-
-// AI-sparraaja (edge function keskus-ai). Palauttaa { ok, syy? }.
-export async function pyydaAI(huomioId) {
-  try {
-    const { data: s } = await sb.auth.getSession();
-    const r = await fetch(`${SUPABASE_URL}/functions/v1/keskus-ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${s.session?.access_token}` },
-      body: JSON.stringify({ huomio_id: huomioId }),
-    });
-    return await r.json();
-  } catch (e) {
-    return { ok: false, syy: e.message };
-  }
+export const muistiinpanonTeksti = (h) => (h.teksti ? `${h.otsikko}\n${h.teksti}` : h.otsikko);
+export async function paivitaMuistiinpano(id, teksti, osio) {
+  const rivit = teksti.trim().split("\n");
+  const muutos = { otsikko: rivit[0].replace(/^#+\s*/, "").trim().slice(0, 160), teksti: rivit.slice(1).join("\n").trim() };
+  if (osio) Object.assign(muutos, osioKentat(osio));
+  const { data, error } = await sb.from("huomiot").update(muutos).eq("id", id).select().single();
+  if (error) throw error;
+  return data;
 }
 
 export async function haeKoosteet() {
@@ -124,4 +119,4 @@ export function md(teksti) {
 }
 
 export const luokkaMerkki = (h) =>
-  `<span class="luokka l-${esc(h.luokka)}">${esc(LUOKAT[h.luokka] || h.luokka)}${h.vastustaja ? ` · ${esc(h.vastustaja)}` : ""}</span>`;
+  `<a class="luokka l-${esc(h.luokka)}" href="#/muistio/${esc(huomionOsio(h))}">${esc(h.luokka === "vastustaja" ? h.vastustaja || "Vastustaja" : LUOKAT[h.luokka] || h.luokka)}</a>`;

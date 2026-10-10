@@ -27,8 +27,8 @@ export async function nayta(main) {
     <p class="vihje">Nousijoiden (Ura, PuMu) luvut ovat Ykköspesiksestä eivätkä ole suoraan vertailukelpoisia. Joukkueiden kokoonpanot ovat muuttuneet, katso <a href="#/siirtomarkkinat">Siirtomarkkinat</a>.</p>` : ""}
 
     <h2>Tietopankki</h2>
-    ${koosteet.length ? `<ul class="linkkilista">${koosteet.slice(0, 8).map((k) => `<li><a href="#/huomiot">${esc(k.otsikko)}</a><span class="pieni">${k.huomioita} huomiota, päivitetty ${aikaSitten(k.paivitetty)}</span></li>`).join("")}</ul>`
-      : `<p>Koosteita ei vielä ole. Ne syntyvät, kun <a href="#/huomiot">huomioita</a> kirjataan.</p>`}
+    ${koosteet.length ? `<ul class="linkkilista">${koosteet.slice(0, 8).map((k) => `<li><a href="#/muistio/${esc(k.aihe.replace("vastustaja:", ""))}">${esc(k.otsikko)}</a><span class="pieni">${k.huomioita} muistiinpanosta, päivitetty ${aikaSitten(k.paivitetty)}</span></li>`).join("")}</ul>`
+      : `<p>Koosteita ei vielä ole. Jarvis kokoaa ne <a href="#/muistio">muistiinpanoista</a> pyydettäessä.</p>`}
 
     <h2>YDIN-analytiikka</h2>
     <p>Koko sarjan tilastot ja analyysit pesistulokset.fi:n datasta. Julkinen sivusto, avautuu uuteen välilehteen.</p>

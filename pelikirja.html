@@ -229,12 +229,13 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
    x: vasen(-)/oikea(+) kotipesän takaa katsottuna, y: syvyys kotirajasta. */
 const FIELD = {
   // pelikenttä: kotipesä → 2-pesän sivuraja → takaraja → 3-pesän sivuraja → 1-pesä
-  outline: [[0,0],[21,32],[21,96],[-21,96],[-21,32],[-11.3,16.5]],
-  runLane: [[0,0],[-6.7,0],[-21,20],[-21,32],[-11.3,16.5]],     // lähtö- ja kotipolun välinen alue
-  vara1:   [[-11.3,16.5],[-16.7,14.1],[-21,20],[-21,32]],        // 1-pesän vara-alue
+  // 1-pesä on suoralla rajalla kotipesästä 3-pesän puolen kulmaan (-21,32), 20 m kotipesästä (korjattu 10.10.2026)
+  outline: [[0,0],[21,32],[21,96],[-21,96],[-21,32],[-10.97,16.72]],
+  runLane: [[0,0],[-6.7,0],[-21,20],[-21,32],[-10.97,16.72]],     // lähtö- ja kotipolun välinen alue
+  vara1:   [[-10.97,16.72],[-16.7,14.1],[-21,20],[-21,32]],        // 1-pesän vara-alue
   vara2:   [[21,35.5],[31,35.5],[31,99],[21,99]],                 // 2-pesän vara-alue + jatke
   vara3:   [[-21,35.5],[-31,35.5],[-31,99],[-21,99]],             // 3-pesän vara-alue + jatke
-  bases: { "1": [-11.3,16.5], "2": [21,38.5], "3": [-21,38.5] },
+  bases: { "1": [-10.97,16.72], "2": [21,38.5], "3": [-21,38.5] },
   homeArc: 2.7, kotipesa: 5, suoja: 7
 };
 const ROLES = [
@@ -566,13 +567,17 @@ function dimLayer(items){
         h+=line([[-21,PL_Y],[21,PL_Y]],`stroke="#fff" stroke-opacity=".5" stroke-width="1"`); }
       if(showKoti) h+=line([[p.x,p.y],[0,0]],`stroke="#fff" stroke-width="1.6" stroke-dasharray="5 4"`);
     }
-    const fs=Math.max(10,SZ(11*g.s/8)*1.3), y0=g.Y+fs*1.2;
+    const bat=view==="lyoja";
+    const fs=bat?Math.max(11,Math.min(16,g.s*.9)):Math.max(10,SZ(11*g.s/8)*1.3), y0=g.Y+fs*1.2;
     const st=`font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="600" text-anchor="middle" fill="#fff" stroke="rgba(0,0,0,.65)" stroke-width="${f1(fs*.2)}" paint-order="stroke"`;
     const rows=[];
     if(showKoti) rows.push("koti "+fmt(koti));
     rows.push("raja "+fmt(side.d));
     if(showPL) rows.push("PL "+(pl>0?"+":"")+fmt(pl));
-    rows.forEach((t,i)=>{ h+=`<text x="${f1(g.X)}" y="${f1(y0+i*fs*1.05)}" font-size="${f1(fs)}" ${st}>${t}</text>`; });
+    // Lyöjän silmin pelaajat ovat lähes samalla korkeudella: mitat yhdelle riville, ettei teksti mene päällekkäin
+    const out=bat?[rows.join(" · ")]:rows;
+    out.forEach((t,i)=>{ const hw=t.length*fs*.27, x=Math.max(VB.x+hw+4,Math.min(VB.x+VB.w-hw-4,g.X));   // pidä teksti kuvan sisällä
+      h+=`<text x="${f1(x)}" y="${f1(y0+i*fs*1.05)}" font-size="${f1(fs)}" ${st}>${t}</text>`; });
   }
   return h;
 }
@@ -588,7 +593,7 @@ function drawDyn(){
   if(showBall) h+=ballArc(pl.pallo);
   list=list.map(it=>{const p=posOf(it.ent,phase,t);return {...it,p,z:pr(p.x,p.y).zc};}).sort((a,b)=>b.z-a.z);
   for(const it of list) h+=token(it.id,it.label,it.p,it.col,it.full,it.id.startsWith("o:")?"var(--opp-ink)":"var(--accent-ink)");
-  if(showDims&&!bat) h+=dimLayer(list);
+  if(showDims) h+=dimLayer(list);
   dyn.innerHTML=h;
 }
 

@@ -945,6 +945,7 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
     if(nimet) pats=nimet.data;
     plays=kuviot.length?kuviot:[JSON.parse(JSON.stringify(PERUS))];
     migrPlays(plays);
+    { const kk=new URLSearchParams(location.search).get("k"); if(kk&&plays.find(p=>p.id===kk)) sel=kk; }
     if(!plays.find(p=>p.id===sel)) sel=plays[0].id;
     $("whoami").innerHTML=""; const w=document.createElement("span"); w.textContent=ME.split("@")[0]; const back=document.createElement("a"); back.href="index.html#/"; back.textContent="KPL Keskus";
     $("whoami").append(w,back);

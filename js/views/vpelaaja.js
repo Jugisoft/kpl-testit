@@ -14,11 +14,11 @@ const ly = { tilanne: "", palot: "", lyonti: "", tyyppi: "", tulos: "", piste: n
 const ul = { rooli: "", tilanne: "", paino: "", piste: null };
 let suodatin = "";
 
-const chipit = (nimi, lista, arvo) => `<div class="chipit pieni-chipit" role="group" aria-label="${nimi}">${lista.map(([k, n, vari]) =>
+export const chipit = (nimi, lista, arvo) => `<div class="chipit pieni-chipit" role="group" aria-label="${nimi}">${lista.map(([k, n, vari]) =>
   `<button type="button" class="chip" data-k="${esc(k)}" aria-pressed="${k === arvo}">${vari ? `<span class="pallura" style="background:${vari}"></span>` : ""}${esc(n)}</button>`).join("")}</div>`;
-const T = TILANTEET.map((t) => [t, t.replace("-tilanne", "")]);
-const PALOT = [["0", "0 paloa"], ["1", "1 palo"], ["2", "2 paloa"]];
-const LYONNIT = [["1", "1. lyönti"], ["2", "2. lyönti"], ["3", "3. lyönti"]];
+export const T = TILANTEET.map((t) => [t, t.replace("-tilanne", "")]);
+export const PALOT = [["0", "0 paloa"], ["1", "1 palo"], ["2", "2 paloa"]];
+export const LYONNIT = [["1", "1. lyönti"], ["2", "2. lyönti"], ["3", "3. lyönti"]];
 
 export async function nayta(main, id, valilehti = "lyonnit") {
   await lataaNimet();
@@ -32,7 +32,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
 
   const lkm = (t) => lista.filter((h) => h.tyyppi === t).length;
   main.innerHTML = `
-    <p class="murupolku"><a href="#/muistio/${esc(p.joukkue)}/pelaajat">${esc(osioNimi(p.joukkue))}: pelaajat</a></p>
+    <p class="murupolku"><a href="#/muistio/${esc(p.joukkue)}/${p.joukkue === "KPL" ? "pelaajat" : "sisapeli"}">${esc(osioNimi(p.joukkue))}: ${p.joukkue === "KPL" ? "pelaajat" : "sisäpeli"}</a></p>
     <div class="pelaaja-paa">
       <h1>${esc(p.nimi)}</h1>
       <div class="pelaaja-tiedot">
@@ -79,7 +79,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
     }).subscribe();
 }
 
-function kytkeChipit(el, tilaObj, avain, jalkeen) {
+export function kytkeChipit(el, tilaObj, avain, jalkeen) {
   $$(`[data-ryhma="${avain}"] .chip`, el).forEach((b) => (b.onclick = () => {
     tilaObj[avain] = tilaObj[avain] === b.dataset.k ? "" : b.dataset.k;
     $$(`[data-ryhma="${avain}"] .chip`, el).forEach((x) => x.setAttribute("aria-pressed", x.dataset.k === tilaObj[avain]));
@@ -87,8 +87,8 @@ function kytkeChipit(el, tilaObj, avain, jalkeen) {
   }));
 }
 
-const voiPoistaa = (h) => h.kirjoittaja === omaEmail() || tila.admin;
-const nimiTaulu = (lista) => Object.fromEntries(lista.map(([k, n]) => [k, n]));
+export const voiPoistaa = (h) => h.kirjoittaja === omaEmail() || tila.admin;
+export const nimiTaulu = (lista) => Object.fromEntries(lista.map(([k, n]) => [k, n]));
 
 // --- Lyönnit
 function piirraLyonnit(el, p, lista, lisaa, poista) {
@@ -142,7 +142,7 @@ function piirraLyonnit(el, p, lista, lisaa, poista) {
   };
 }
 
-function yhteenveto(lyonnit) {
+export function yhteenveto(lyonnit) {
   if (lyonnit.length < 3) return "";
   const TY = nimiTaulu(LYONTITYYPIT);
   const ryhmat = new Map();
@@ -199,7 +199,7 @@ function piirraUlkopeli(el, p, lista, lisaa, poista) {
   };
 }
 
-function ulkoYhteenveto(kirj) {
+export function ulkoYhteenveto(kirj) {
   const R = nimiTaulu(ROOLIT), PA = nimiTaulu(PAINOT);
   const r = new Map();
   kirj.filter((h) => h.tiedot?.paino).forEach((h) => { const k = `${R[h.tiedot.rooli] || "Paikka?"}|${h.tiedot.tilanne || ""}`; const o = r.get(k) || {}; o[h.tiedot.paino] = (o[h.tiedot.paino] || 0) + 1; r.set(k, o); });

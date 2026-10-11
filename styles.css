@@ -574,3 +574,58 @@ main { max-width: 1320px; }
 .vk-ala { font-size: 13px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 760px) { .osio-alat { display: contents; } .osiot .osio-ryhma { margin-top: 0; font-size: 15px; } }
 @media (prefers-reduced-motion: reduce) { .vastustajakortti { transition: none; } .vastustajakortti:hover { transform: none; } }
+
+/* --- Vastustajan purku: jaettu teksti, roolimatriisi, ulkopeli tilanteittain */
+.jaettu-teksti { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--kpl); border-radius: 12px; padding: 14px 18px; margin: 0 0 22px; }
+.jt-paa { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.jt-paa h2 { margin: 0; font-size: 19px; }
+.jt-paa .linkkinappi { margin-left: auto; }
+.jt-paa .pieni { color: var(--ink-3); }
+.jt-sisalto { margin-top: 8px; }
+.jt-sisalto .md > :first-child { margin-top: 0; }
+.jt-sisalto .md > :last-child { margin-bottom: 0; }
+.jt-tyhja { color: var(--ink-3); margin: 0; font-style: italic; }
+.jt-sisalto textarea { width: 100%; }
+.roolimatriisi-osio { margin-bottom: 26px; }
+.roolimatriisi-osio .osio-paa { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.roolimatriisi-osio .osio-paa h2 { margin: 0; }
+.roolimatriisi { border-collapse: separate; border-spacing: 3px; min-width: 640px; width: 100%; }
+.roolimatriisi th, .roolimatriisi td { padding: 0; border: 0; text-align: center; }
+.roolimatriisi thead th { font-weight: 600; }
+.roolimatriisi .rm-nimi { text-align: left; padding: 4px 10px 4px 0; min-width: 150px; font-weight: 500; }
+.roolimatriisi .rm-nimi a { text-decoration: none; font-weight: 600; }
+.roolimatriisi .rm-nimi a:hover { color: var(--kpl); }
+.rm-kuvaus { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; line-height: 1.3; max-width: 260px; }
+.rm-sarake { background: none; border: 0; padding: 4px 2px; width: 100%; cursor: pointer; color: var(--ink-2); font: 600 15px/1.2 var(--num); border-bottom: 2px solid transparent; }
+.rm-sarake.valittu, .rm-sarake:hover { color: var(--kpl); border-bottom-color: var(--kpl); }
+.rm-solu button { width: 100%; min-width: 44px; height: 40px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 16px; }
+.rm-solu button:hover { border-color: var(--ink-3); }
+.rm-solu.rooli button { background: rgba(245,168,0,.16); border-color: rgba(245,168,0,.55); }
+.rm-solu.valittu button { outline: 2px solid var(--kpl); outline-offset: 1px; }
+.rm-merkki { font-size: 11px; color: var(--kpl); text-transform: uppercase; letter-spacing: .04em; }
+.roolimatriisi tr.valittu .rm-nimi a { color: var(--kpl); }
+.roolimatriisi tr.ei-akt .rm-nimi { opacity: .6; }
+.roolimatriisi.muokkaus .rm-solu button { border-style: dashed; }
+.roolimatriisi.muokkaus .rm-solu.rooli button { border-style: solid; }
+.roolimatriisi td.n { color: var(--ink-3); padding-left: 6px; }
+.suodattimet { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.suodattimet select { max-width: 280px; }
+.roolissa { margin: 6px 0; padding: 8px 12px; background: var(--amber-bg); border-radius: 8px; }
+.tilannevalinta { margin: 0 0 16px; flex-wrap: wrap; }
+.tilannevalinta .chip { position: relative; }
+.sisalto-merkki { width: 7px; height: 7px; border-radius: 50%; background: var(--kpl); display: inline-block; }
+.ulko-ruudukko { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 400px); gap: 24px; align-items: start; }
+.ulko-ruudukko > * { min-width: 0; }
+.ulko-ruudukko aside { display: flex; flex-direction: column; gap: 16px; }
+.ulko-ruudukko aside h2 { font-size: 18px; margin: 0 0 8px; }
+.ulko-ruudukko .osio-paa { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.kuviolinkit { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.kuviolinkit a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; text-decoration: none; }
+.kuviolinkit a:hover { border-color: var(--kpl); }
+@media (max-width: 900px) { .ulko-ruudukko { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .rm-solu button { min-width: 36px; height: 36px; font-size: 14px; }
+  .roolimatriisi .rm-nimi { min-width: 120px; position: sticky; left: 0; background: var(--paper); z-index: 1; }
+  .rm-kuvaus { display: none; }
+}
+@media (max-width: 900px) { #lyonnit > section { order: -1; } }

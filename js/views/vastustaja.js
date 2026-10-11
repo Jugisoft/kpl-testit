@@ -7,6 +7,7 @@ import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAIN
 import { chipit, kytkeChipit, T, PALOT, LYONNIT, voiPoistaa, nimiTaulu } from "./vpelaaja.js";
 import { kortti, kytkeKortit, kontekstinHuomiot } from "./muistio.js";
 import { piirraFlappi, onLuonnosta } from "./flappi.js";
+import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 
 // Välimuisti valitun joukkueen rakenteisista kirjauksista, jaetuista teksteistä ja Pelikirjan kuvioista
 const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "" };
@@ -100,6 +101,7 @@ function kytkeTekstit(el, piirra) {
 }
 
 // ======================= SISÄPELI =======================
+// Valitaan pelaaja pomppuvalikosta: kuva ja tiedot (roolit, mitä lyö tilanteittain). "Koko joukkue" näyttää roolitaulukon.
 export function piirraSisapeli(el, pelaajat) {
   const piirra = () => piirraSisapeli(el, pelaajat);
   const joukkue = V.joukkue;
@@ -107,51 +109,83 @@ export function piirraSisapeli(el, pelaajat) {
   const akt = kaikki.filter((p) => p.aktiivinen);
   const lyonnit = V.kirj.filter((h) => h.tyyppi === "lyonti");
   if (s.pelaaja && !pelaajat.has(s.pelaaja)) s.pelaaja = "";
-  // Matriisissa myös ne, joilla on kirjauksia vaikka eivät ole kokoonpanossa
+  // Valikossa ja taulukossa myös ne, joilla on kirjauksia vaikka eivät ole kokoonpanossa
   const rivit = [...akt, ...kaikki.filter((p) => !p.aktiivinen && lyonnit.some((h) => h.pelaaja_id === p.id))];
   const TY = nimiTaulu(LYONTITYYPIT), TU = nimiTaulu(TULOKSET);
+  const valittuP = s.pelaaja ? pelaajat.get(s.pelaaja) : null;
+  const omat = valittuP ? lyonnit.filter((h) => h.pelaaja_id === valittuP.id) : lyonnit;
+  const suodatetut = omat.filter((h) => !s.tilanne || h.tiedot?.tilanne === s.tilanne);
+  const roolissa = s.tilanne ? rivit.filter((p) => (p.roolit || []).includes(s.tilanne)) : [];
+  const pnimi = (h) => pelaajat.get(h.pelaaja_id)?.nimi || "";
+  const nro = (p) => (p.numero != null ? `${p.numero} ` : "");
+  const roolitLyhyt = (p) => (p.roolit || []).filter((r) => SARAKKEET.includes(r)).map(lyhyt).join(", ");
+  const pelaajaValinta = (nimi, arvo, tyhja, roolit = false) => `<select name="${nimi}" id="${nimi}"><option value="">${tyhja}</option>${akt.map((p) => `<option value="${p.id}"${p.id === arvo ? " selected" : ""}>${esc(nro(p) + p.nimi)}${roolit && roolitLyhyt(p) ? ` · ${esc(roolitLyhyt(p))}` : ""}</option>`).join("")}${
+    kaikki.filter((p) => !p.aktiivinen).length ? `<optgroup label="Ei kokoonpanossa">${kaikki.filter((p) => !p.aktiivinen).map((p) => `<option value="${p.id}"${p.id === arvo ? " selected" : ""}>${esc(p.nimi)}</option>`).join("")}</optgroup>` : ""}</select>`;
 
   const solu = (p, t) => {
     const hs = lyonnit.filter((h) => h.pelaaja_id === p.id && h.tiedot?.tilanne === t);
     const rooli = (p.roolit || []).includes(t);
     const lask = {}; hs.forEach((h) => { const k = h.tiedot?.tyyppi; if (k) lask[k] = (lask[k] || 0) + 1; });
     const ylin = Object.entries(lask).sort((a, b) => b[1] - a[1])[0];
-    const valittu = s.pelaaja === p.id && s.tilanne === t;
     const otsikko = `${p.nimi}, ${t}${rooli ? " (suunniteltu rooli)" : ""}${hs.length ? `: ${hs.length} lyöntiä${ylin ? `, yleisin ${TY[ylin[0]]}` : ""}` : ""}`;
-    return `<td class="rm-solu${rooli ? " rooli" : ""}${valittu ? " valittu" : ""}"><button type="button" data-p="${p.id}" data-t="${esc(t)}" title="${esc(otsikko)}" aria-label="${esc(otsikko)}">
+    return `<td class="rm-solu${rooli ? " rooli" : ""}"><button type="button" data-p="${p.id}" data-t="${esc(t)}" title="${esc(otsikko)}" aria-label="${esc(otsikko)}">
       ${hs.length ? `<span class="num">${hs.length}</span>${ylin ? `<span class="pallura" style="background:${tyyppiTieto(ylin[0])?.[2]}"></span>` : ""}` : rooli ? `<span class="rm-merkki">rooli</span>` : ""}</button></td>`;
   };
 
-  const suodatetut = lyonnit.filter((h) => (!s.pelaaja || h.pelaaja_id === s.pelaaja) && (!s.tilanne || h.tiedot?.tilanne === s.tilanne));
-  const valittuP = s.pelaaja && pelaajat.get(s.pelaaja);
-  const roolissa = s.tilanne ? rivit.filter((p) => (p.roolit || []).includes(s.tilanne)) : [];
-  const pnimi = (h) => pelaajat.get(h.pelaaja_id)?.nimi || "";
-  const pelaajaValinta = (nimi, arvo, tyhja) => `<select name="${nimi}"><option value="">${tyhja}</option>${akt.map((p) => `<option value="${p.id}"${p.id === arvo ? " selected" : ""}>${p.numero != null ? `${p.numero} ` : ""}${esc(p.nimi)}</option>`).join("")}${
-    kaikki.filter((p) => !p.aktiivinen).length ? `<optgroup label="Ei kokoonpanossa">${kaikki.filter((p) => !p.aktiivinen).map((p) => `<option value="${p.id}"${p.id === arvo ? " selected" : ""}>${esc(p.nimi)}</option>`).join("")}</optgroup>` : ""}</select>`;
+  // Pelaajan profiili: lyhyt yhteenveto tekstinä
+  const profiili = (hs) => {
+    if (!hs.length) return `<p class="pieni">Ei vielä kirjattuja lyöntejä. Kirjaa alla, niin profiili muodostuu tähän.</p>`;
+    const lask = {}; hs.forEach((h) => { const k = h.tiedot?.tyyppi; if (k) lask[k] = (lask[k] || 0) + 1; });
+    const yleisimmat = Object.entries(lask).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const puoli = hs.filter((h) => h.tiedot?.x != null);
+    const vasen = puoli.filter((h) => h.tiedot.x < -5).length, oikea = puoli.filter((h) => h.tiedot.x > 5).length, keski = puoli.length - vasen - oikea;
+    const suunta = puoli.length >= 3 ? [[vasen, "3-rajalle"], [keski, "keskelle"], [oikea, "2-rajalle"]].sort((a, b) => b[0] - a[0])[0] : null;
+    const juoksut = hs.filter((h) => h.tiedot?.tulos === "juoksu").length;
+    return `<ul class="pk-faktat">
+      <li><b class="num">${hs.length}</b> lyöntiä kirjattu</li>
+      ${yleisimmat.length ? `<li>Lyö eniten: ${yleisimmat.map(([k, n]) => `<span class="nowrap"><span class="pallura" style="background:${tyyppiTieto(k)?.[2]}"></span>${esc(TY[k])} ${n}</span>`).join(", ")}</li>` : ""}
+      ${suunta ? `<li>Suunta pääosin ${suunta[1]} (${suunta[0]}/${puoli.length})</li>` : ""}
+      ${juoksut ? `<li><b class="num">${juoksut}</b> juoksua</li>` : ""}
+    </ul>`;
+  };
+  const muistiinpanot = valittuP ? kontekstinHuomiot().filter((h) => h.pelaaja_id === valittuP.id && h.tyyppi === "muistiinpano").slice(0, 3) : [];
+  const indeksi = rivit.findIndex((p) => p.id === s.pelaaja);
 
   el.innerHTML = `
     ${tekstiLohko("sisapeli:yleinen", "Sisäpelin yleiskuva", "Miten joukkue pelaa sisällä? Esim. pelinjohtajan tyyli, lyöntijärjestyksen runko, jokerit, mitä tilanteita he hakevat.")}
 
+    <div class="pelaajavalitsin">
+      <button type="button" class="btn pieni-nappi pv-nuoli" id="pv-edel" aria-label="Edellinen pelaaja"${rivit.length ? "" : " disabled"}>‹</button>
+      <label class="pv-valinta"><span class="sr">Pelaaja</span>${pelaajaValinta("pv-valinta", s.pelaaja, "Koko joukkue", true)}</label>
+      <button type="button" class="btn pieni-nappi pv-nuoli" id="pv-seur" aria-label="Seuraava pelaaja"${rivit.length ? "" : " disabled"}>›</button>
+    </div>
+
+    ${valittuP ? `
+    <section class="pelaajakortti-iso">
+      ${kuvaKehys(valittuP)}
+      <div class="pki-tiedot">
+        <div class="pki-paa"><h2>${valittuP.numero != null ? `<span class="num pki-nro">${valittuP.numero}</span>` : ""}${esc(valittuP.nimi)}</h2>
+          <a class="pieni" href="#/vp/${valittuP.id}">Pelaajasivu</a>${indeksi >= 0 ? `<span class="pieni harmaa">${indeksi + 1} / ${rivit.length}</span>` : ""}</div>
+        <label class="pki-kuvaus"><span class="sr">Kuvaus</span><input type="text" id="pki-kuvaus" maxlength="300" value="${esc(valittuP.kuvaus || "")}" placeholder="Lyhyt kuvaus, esim. vasenkätinen kärkilyöjä, nopea etenijä"></label>
+        <div class="pki-osa"><span class="osa-nimi">Suunniteltu rooli <span class="pieni">napauta valitaksesi</span></span>
+          <div class="chipit pieni-chipit" id="pki-roolit">${SARAKKEET.map((t) => `<button type="button" class="chip rooli-chip" data-rooli="${esc(t)}" aria-pressed="${(valittuP.roolit || []).includes(t)}">${esc(t === "Jokeri" ? "Jokeri" : lyhyt(t) + "-tilanne").replace("Ajo-tilanne", "Ajolähtö")}</button>`).join("")}</div></div>
+        <div class="pki-osa"><span class="osa-nimi">Mitä lyö</span>${profiili(omat)}</div>
+        ${ryhmaYhteenveto(omat, (h) => h.tiedot?.tilanne || "Tilanne ei kirjattu", "Tilanne", "Tilanteittain")}
+        ${muistiinpanot.length ? `<div class="pki-osa"><span class="osa-nimi">Muistiinpanot</span><ul class="pki-mp">${muistiinpanot.map((h) => `<li><a href="#/huomio/${h.id}">${esc(h.otsikko)}</a> <span class="pieni harmaa">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></li>`).join("")}</ul></div>` : ""}
+      </div>
+    </section>` : `
     <section class="roolimatriisi-osio">
       <div class="osio-paa"><h2>Roolit ja lyönnit tilanteittain</h2>
         <button type="button" class="btn pieni-nappi${s.roolitila ? " ensisij" : ""}" id="roolitila" aria-pressed="${s.roolitila}">${s.roolitila ? "Valmis" : "Merkitse roolit"}</button></div>
-      <p class="pieni">${s.roolitila ? "Napauta ruutua merkitäksesi, missä tilanteessa pelaajaa on suunniteltu käytettävän. Napauta uudelleen poistaaksesi." : "Korostettu ruutu = suunniteltu rooli. Luku = kirjatut lyönnit ja väri yleisin lyönti. Napauta ruutua nähdäksesi lyönnit kartalla."}</p>
+      <p class="pieni">${s.roolitila ? "Napauta ruutua merkitäksesi, missä tilanteessa pelaajaa on suunniteltu käytettävän. Napauta uudelleen poistaaksesi." : "Korostettu ruutu = suunniteltu rooli. Luku = kirjatut lyönnit ja väri yleisin lyönti. Napauta ruutua avataksesi pelaajan."}</p>
       <div class="taulu-wrap"><table class="roolimatriisi${s.roolitila ? " muokkaus" : ""}">
         <thead><tr><th class="rm-nimi">Pelaaja</th>${SARAKKEET.map((t) => `<th><button type="button" class="rm-sarake${s.tilanne === t ? " valittu" : ""}" data-sarake="${esc(t)}" title="${esc(t)}">${esc(lyhyt(t))}</button></th>`).join("")}<th class="n">Yht.</th></tr></thead>
-        <tbody>${rivit.map((p) => `<tr class="${s.pelaaja === p.id ? "valittu" : ""}${p.aktiivinen ? "" : " ei-akt"}">
-          <th class="rm-nimi"><a href="#/vp/${p.id}">${p.numero != null ? `<span class="num">${p.numero}</span> ` : ""}${esc(p.nimi)}</a>${p.kuvaus ? `<span class="rm-kuvaus">${esc(p.kuvaus)}</span>` : ""}</th>
+        <tbody>${rivit.map((p) => `<tr class="${p.aktiivinen ? "" : "ei-akt"}">
+          <th class="rm-nimi"><button type="button" class="rm-pelaaja" data-valitse="${p.id}">${p.numero != null ? `<span class="num">${p.numero}</span> ` : ""}${esc(p.nimi)}</button>${p.kuvaus ? `<span class="rm-kuvaus">${esc(p.kuvaus)}</span>` : ""}</th>
           ${SARAKKEET.map((t) => solu(p, t)).join("")}
           <td class="n">${lyonnit.filter((h) => h.pelaaja_id === p.id).length || ""}</td></tr>`).join("") || `<tr><td colspan="${SARAKKEET.length + 2}" class="tyhja">Ei pelaajia. Lisää pelaaja alta.</td></tr>`}
         </tbody></table></div>
-      <details class="muut-pelaajat"><summary>Pelaajien hallinta</summary>
-        <p class="pieni">Kokoonpano 2027 sopimustilanteen mukaan. Avaa pelaajan sivu muuttaaksesi numeroa, kuvausta tai kokoonpanoa.</p>
-        ${kaikki.filter((p) => !p.aktiivinen).length ? `<p class="pieni">Ei kokoonpanossa: ${kaikki.filter((p) => !p.aktiivinen).map((p) => `<a href="#/vp/${p.id}">${esc(p.nimi)}</a>`).join(", ")}</p>` : ""}
-        <form id="uusi-pelaaja" class="rivi uusi-pelaaja">
-          <input type="text" name="nimi" required minlength="3" maxlength="80" placeholder="Etunimi Sukunimi" aria-label="Uuden pelaajan nimi">
-          <button class="btn" type="submit">Lisää pelaaja</button>
-        </form>
-      </details>
-    </section>
+    </section>`}
 
     <div class="kirjaus-ruudukko" id="lyonnit">
       <form class="paneeli kirjauslomake" id="vly-lomake">
@@ -167,52 +201,82 @@ export function piirraSisapeli(el, pelaajat) {
         <div class="rivi"><button class="btn ensisij" type="submit">Tallenna lyönti</button><span class="pieni">Valinnat jäävät voimaan seuraavaa kirjausta varten.</span></div>
       </form>
       <section>
-        <h2>Lyöntikartta <span class="pieni">${suodatetut.length} / ${lyonnit.length}</span></h2>
-        <div class="suodattimet">
-          <label class="pieni">Pelaaja ${pelaajaValinta("s-pelaaja", s.pelaaja, "Kaikki pelaajat")}</label>
-          <div class="chipit pieni-chipit" id="s-tilanne"><button type="button" class="chip" data-s="" aria-pressed="${!s.tilanne}">Kaikki tilanteet</button>${TILANTEET.map((t) => `<button type="button" class="chip" data-s="${esc(t)}" aria-pressed="${t === s.tilanne}">${esc(lyhyt(t))}</button>`).join("")}</div>
-        </div>
-        ${s.tilanne ? `<p class="roolissa"><b>${esc(s.tilanne)}</b>: ${roolissa.length ? `suunniteltu rooli ${roolissa.map((p) => esc(p.nimi)).join(", ")}` : "ei merkittyjä rooleja"}</p>` : ""}
-        ${valittuP?.kuvaus ? `<p class="pieni">${esc(valittuP.nimi)}: ${esc(valittuP.kuvaus)}</p>` : ""}
+        <h2>Lyöntikartta${valittuP ? `: ${esc(valittuP.nimi)}` : ""} <span class="pieni">${suodatetut.length} / ${omat.length}</span></h2>
+        <div class="chipit pieni-chipit s-tilanne" id="s-tilanne"><button type="button" class="chip" data-s="" aria-pressed="${!s.tilanne}">Kaikki tilanteet</button>${TILANTEET.map((t) => `<button type="button" class="chip" data-s="${esc(t)}" aria-pressed="${t === s.tilanne}">${esc(lyhyt(t))}</button>`).join("")}</div>
+        ${s.tilanne && !valittuP ? `<p class="roolissa"><b>${esc(s.tilanne)}</b>: ${roolissa.length ? `suunniteltu rooli ${roolissa.map((p) => esc(p.nimi)).join(", ")}` : "ei merkittyjä rooleja"}</p>` : ""}
         <div class="kentta-kehys iso">${kenttaSvg({ id: "vly-kartta", pisteet: suodatetut.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: tyyppiTieto(h.tiedot.tyyppi)?.[2] || "#F6F2EA", otsikko: `${pnimi(h)}: ${h.otsikko}`, id: h.id })) })}</div>
         <p class="selite">${LYONTITYYPIT.filter(([k]) => suodatetut.some((h) => h.tiedot?.tyyppi === k)).map(([, n, v]) => `<span><span class="pallura" style="background:${v}"></span>${n}</span>`).join("")}</p>
-        ${ryhmaYhteenveto(suodatetut, s.pelaaja ? (h) => h.tiedot?.tilanne || "Tilanne ei kirjattu" : pnimi, s.pelaaja ? "Tilanne" : "Pelaaja", s.pelaaja ? "Tilanteittain" : s.tilanne ? `Kuka lyö ${lyhyt(s.tilanne)}-tilanteessa` : "Pelaajittain")}
-        <div class="taulu-wrap"><table class="kirjaustaulu"><thead><tr>${s.pelaaja ? "" : "<th>Pelaaja</th>"}<th>Tilanne</th><th>Palot</th><th>Lyönti</th><th>Tyyppi</th><th>Tulos</th><th>Lisätieto</th><th></th></tr></thead><tbody>
-          ${suodatetut.slice(0, 200).map((h) => { const t = h.tiedot || {}; return `<tr>${s.pelaaja ? "" : `<td><a href="#/vp/${h.pelaaja_id}">${esc(pnimi(h))}</a></td>`}<td>${esc(lyhyt(t.tilanne || ""))}</td><td class="n">${t.palot ?? ""}</td><td class="n">${t.lyonti ? `${t.lyonti}.` : ""}</td>
+        ${valittuP ? "" : ryhmaYhteenveto(suodatetut, pnimi, "Pelaaja", s.tilanne ? `Kuka lyö ${lyhyt(s.tilanne)}-tilanteessa` : "Pelaajittain")}
+        <div class="taulu-wrap"><table class="kirjaustaulu"><thead><tr>${valittuP ? "" : "<th>Pelaaja</th>"}<th>Tilanne</th><th>Palot</th><th>Lyönti</th><th>Tyyppi</th><th>Tulos</th><th>Lisätieto</th><th></th></tr></thead><tbody>
+          ${suodatetut.slice(0, 200).map((h) => { const t = h.tiedot || {}; return `<tr>${valittuP ? "" : `<td><button type="button" class="linkkinappi" data-valitse="${h.pelaaja_id}">${esc(pnimi(h))}</button></td>`}<td>${esc(lyhyt(t.tilanne || ""))}</td><td class="n">${t.palot ?? ""}</td><td class="n">${t.lyonti ? `${t.lyonti}.` : ""}</td>
             <td>${t.tyyppi ? `<span class="pallura" style="background:${tyyppiTieto(t.tyyppi)?.[2]}"></span>${esc(TY[t.tyyppi] || t.tyyppi)}` : ""}</td><td>${esc(TU[t.tulos] || "")}</td>
             <td class="pieni">${esc(h.teksti || "")}<br><span class="harmaa">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></td>
-            <td>${voiPoistaa(h) ? `<button class="linkkinappi" data-poista="${h.id}">Poista</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="8" class="tyhja">${lyonnit.length ? "Ei lyöntejä tällä suodatuksella." : "Ei vielä lyöntejä. Kirjaa ensimmäinen lomakkeella."}</td></tr>`}
+            <td>${voiPoistaa(h) ? `<button class="linkkinappi" data-poista="${h.id}">Poista</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="8" class="tyhja">${omat.length ? "Ei lyöntejä tässä tilanteessa." : "Ei vielä lyöntejä. Kirjaa ensimmäinen lomakkeella."}</td></tr>`}
         </tbody></table></div>
       </section>
-    </div>`;
+    </div>
+
+    <details class="muut-pelaajat"><summary>Pelaajien hallinta</summary>
+      <p class="pieni">Kokoonpano 2027 sopimustilanteen mukaan. Numeron ja kokoonpanon voi muuttaa pelaajasivulla.</p>
+      ${kaikki.filter((p) => !p.aktiivinen).length ? `<p class="pieni">Ei kokoonpanossa: ${kaikki.filter((p) => !p.aktiivinen).map((p) => `<a href="#/vp/${p.id}">${esc(p.nimi)}</a>`).join(", ")}</p>` : ""}
+      <form id="uusi-pelaaja" class="rivi uusi-pelaaja">
+        <input type="text" name="nimi" required minlength="3" maxlength="80" placeholder="Etunimi Sukunimi" aria-label="Uuden pelaajan nimi">
+        <button class="btn" type="submit">Lisää pelaaja</button>
+      </form>
+    </details>`;
 
   kytkeTekstit(el, piirra);
-  $("#roolitila").onclick = () => { s.roolitila = !s.roolitila; piirra(); };
-  $$(".rm-solu button", el).forEach((b) => (b.onclick = async () => {
-    const p = pelaajat.get(b.dataset.p), t = b.dataset.t;
-    if (s.roolitila) {
+  const valitse = (id, tilanne = null) => {
+    s.pelaaja = id || ""; if (tilanne !== null) s.tilanne = tilanne;
+    if (id) lyv.pelaaja = id; if (tilanne) lyv.tilanne = tilanne;
+    piirra(); $(".pelaajavalitsin", el)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  $("#pv-valinta", el).onchange = (e) => { s.pelaaja = e.target.value; if (s.pelaaja) lyv.pelaaja = s.pelaaja; piirra(); };
+  const askel = (d) => { if (!rivit.length) return; const i = indeksi < 0 ? (d > 0 ? -1 : rivit.length) : indeksi; const n = rivit[(i + d + rivit.length) % rivit.length]; s.pelaaja = n.id; lyv.pelaaja = n.id; piirra(); };
+  $("#pv-edel", el).onclick = () => askel(-1);
+  $("#pv-seur", el).onclick = () => askel(1);
+  $$("[data-valitse]", el).forEach((b) => (b.onclick = () => valitse(b.dataset.valitse)));
+
+  if (valittuP) {
+    kytkeKuva(el, valittuP, piirra);
+    $("#pki-kuvaus", el).onchange = async (e) => {
+      const kuvaus = e.target.value.trim() || null;
+      const { error } = await sb.from("vastustajapelaajat").update({ kuvaus }).eq("id", valittuP.id);
+      if (error) return ilmoita(error.message, true);
+      valittuP.kuvaus = kuvaus; ilmoita("Kuvaus tallennettu");
+    };
+    $$("#pki-roolit [data-rooli]", el).forEach((b) => (b.onclick = async () => {
+      const t = b.dataset.rooli, p = valittuP;
       const roolit = (p.roolit || []).includes(t) ? p.roolit.filter((x) => x !== t) : [...(p.roolit || []), t];
       const { error } = await sb.from("vastustajapelaajat").update({ roolit }).eq("id", p.id);
       if (error) return ilmoita(error.message, true);
-      p.roolit = roolit; return piirra();
-    }
-    const sama = s.pelaaja === p.id && s.tilanne === t;
-    s.pelaaja = sama ? "" : p.id; s.tilanne = sama ? "" : t === "Jokeri" ? "" : t;
-    if (!sama) { lyv.pelaaja = p.id; if (t !== "Jokeri") lyv.tilanne = t; }
-    piirra(); $("#lyonnit")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }));
-  $$("[data-sarake]", el).forEach((b) => (b.onclick = () => {
-    if (b.dataset.sarake === "Jokeri") return;
-    s.tilanne = s.tilanne === b.dataset.sarake ? "" : b.dataset.sarake; s.pelaaja = ""; piirra();
-  }));
-  $("[name=s-pelaaja]", el).onchange = (e) => { s.pelaaja = e.target.value; if (s.pelaaja) lyv.pelaaja = s.pelaaja; piirra(); };
+      p.roolit = roolit; b.setAttribute("aria-pressed", roolit.includes(t));
+      const opt = $(`#pv-valinta option[value="${p.id}"]`, el); if (opt) opt.textContent = `${nro(p)}${p.nimi}${roolitLyhyt(p) ? ` · ${roolitLyhyt(p)}` : ""}`;
+    }));
+  } else {
+    $("#roolitila", el).onclick = () => { s.roolitila = !s.roolitila; piirra(); };
+    $$(".rm-solu button", el).forEach((b) => (b.onclick = async () => {
+      const p = pelaajat.get(b.dataset.p), t = b.dataset.t;
+      if (s.roolitila) {
+        const roolit = (p.roolit || []).includes(t) ? p.roolit.filter((x) => x !== t) : [...(p.roolit || []), t];
+        const { error } = await sb.from("vastustajapelaajat").update({ roolit }).eq("id", p.id);
+        if (error) return ilmoita(error.message, true);
+        p.roolit = roolit; return piirra();
+      }
+      valitse(p.id, t === "Jokeri" ? "" : t);
+    }));
+    $$("[data-sarake]", el).forEach((b) => (b.onclick = () => {
+      if (b.dataset.sarake === "Jokeri") return;
+      s.tilanne = s.tilanne === b.dataset.sarake ? "" : b.dataset.sarake; piirra();
+    }));
+  }
   $$("#s-tilanne .chip", el).forEach((b) => (b.onclick = () => { s.tilanne = b.dataset.s; if (s.tilanne) lyv.tilanne = s.tilanne; piirra(); }));
-  $("#uusi-pelaaja").onsubmit = async (e) => {
+  $("#uusi-pelaaja", el).onsubmit = async (e) => {
     e.preventDefault();
     const nimi = e.target.nimi.value.trim().replace(/\s+/g, " ");
     const { data, error } = await sb.from("vastustajapelaajat").insert({ joukkue, nimi }).select().single();
     if (error) return ilmoita(/duplicate/.test(error.message) ? `${nimi} on jo listalla.` : error.message, true);
-    pelaajat.set(data.id, data); ilmoita(`${nimi} lisätty`); piirra();
+    pelaajat.set(data.id, data); ilmoita(`${nimi} lisätty`); valitse(data.id);
   };
   $$("[data-poista]", el).forEach((b) => (b.onclick = async () => {
     if (!confirm("Poistetaanko lyönti?")) return;
@@ -222,10 +286,11 @@ export function piirraSisapeli(el, pelaajat) {
   }));
 
   // Kirjauslomake
-  const f = $("#vly-lomake");
-  const kentta = () => { $("#vly-kentta").innerHTML = kenttaSvg({ id: "vly-valinta", valittu: lyv.piste, aktiivinen: true }); $("#vly-valinta").onclick = (e) => { lyv.piste = kenttaPiste(e.currentTarget, e); kentta(); }; };
+  const f = $("#vly-lomake", el);
+  const kentta = () => { $("#vly-kentta", el).innerHTML = kenttaSvg({ id: "vly-valinta", valittu: lyv.piste, aktiivinen: true }); $("#vly-valinta", el).onclick = (e) => { lyv.piste = kenttaPiste(e.currentTarget, e); kentta(); }; };
   kentta();
   ["tilanne", "palot", "lyonti", "tyyppi", "tulos"].forEach((k) => kytkeChipit(f, lyv, k));
+  if (valittuP && !lyv.pelaaja) { lyv.pelaaja = valittuP.id; f.pelaaja.value = valittuP.id; }
   f.pelaaja.onchange = (e) => (lyv.pelaaja = e.target.value);
   f.onsubmit = async (e) => {
     e.preventDefault();
@@ -241,7 +306,7 @@ export function piirraSisapeli(el, pelaajat) {
       const h = await tallennaMuistiinpano(teksti ? `${otsikko}\n${teksti}` : otsikko, joukkue, { tyyppi: "lyonti", pelaaja_id: p.id, tiedot });
       if (!V.kirj.some((x) => x.id === h.id)) V.kirj.unshift(h);
       lyv.pelaaja = p.id; lyv.piste = null; ilmoita(`Lyönti tallennettu: ${p.nimi}`); piirra();
-      $("#vly-lomake")?.scrollIntoView({ block: "nearest" });
+      $("#vly-lomake", el)?.scrollIntoView({ block: "nearest" });
     } catch (err) { ilmoita("Tallennus epäonnistui: " + err.message, true); nappi.disabled = false; }
   };
 }

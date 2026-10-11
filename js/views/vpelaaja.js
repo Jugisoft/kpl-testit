@@ -5,6 +5,7 @@ import { haePelaajat, lataaNimet, kommenttimaarat, kirjoittajanNimi, aikaSitten,
 import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAINOT, tyyppiTieto } from "../kentta.js";
 import { kortti, kytkeKortit, asetaKonteksti, kontekstinHuomiot } from "./muistio.js";
 import { haeLiitteet, lataaTiedostot, tiedostoValitsin } from "../liitteet.js";
+import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 
 let kanava = null;
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } }
@@ -34,12 +35,13 @@ export async function nayta(main, id, valilehti = "lyonnit") {
   main.innerHTML = `
     <p class="murupolku"><a href="#/muistio/${esc(p.joukkue)}/${p.joukkue === "KPL" ? "pelaajat" : "sisapeli"}">${esc(osioNimi(p.joukkue))}: ${p.joukkue === "KPL" ? "pelaajat" : "sisäpeli"}</a></p>
     <div class="pelaaja-paa">
-      <h1>${esc(p.nimi)}</h1>
+      ${kuvaKehys(p, { iso: false })}
+      <div class="pp-tekstit"><h1>${esc(p.nimi)}</h1>
       <div class="pelaaja-tiedot">
         <label class="pieni">Numero <input type="number" id="numero" min="0" max="99" value="${p.numero ?? ""}" style="width:72px"></label>
         <label class="pieni laaja">Kuvaus <input type="text" id="kuvaus" maxlength="300" placeholder="Esim. vasenkätinen kärkilyöjä, nopea etenijä, ulkona 3-koppari" value="${esc(p.kuvaus || "")}"></label>
         <label class="chip"><input type="checkbox" id="aktiivinen" ${p.aktiivinen ? "checked" : ""}>Kokoonpanossa</label>
-      </div>
+      </div></div>
     </div>
     <div class="valilehdet" role="tablist">
       ${[["lyonnit", "Lyönnit", lkm("lyonti")], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
@@ -51,6 +53,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
     const { error } = await sb.from("vastustajapelaajat").update(muutos).eq("id", id);
     if (error) ilmoita(error.message, true); else { Object.assign(p, muutos); ilmoita("Tallennettu"); }
   };
+  kytkeKuva(main, p);
   $("#numero").onchange = (e) => tallennaPelaaja({ numero: e.target.value === "" ? null : +e.target.value });
   $("#kuvaus").onchange = (e) => tallennaPelaaja({ kuvaus: e.target.value.trim() || null });
   $("#aktiivinen").onchange = (e) => tallennaPelaaja({ aktiivinen: e.target.checked });

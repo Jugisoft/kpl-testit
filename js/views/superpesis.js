@@ -5,7 +5,7 @@ import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, keskiarvo, piirra,
 
 const RYHMA = "Miehet Superpesis";
 const LT = ["lt_napyt", "lt_1raja_pomppu", "lt_2raja_pomppu", "lt_keskipomppu", "lt_kumura", "lt_viistari", "lt_koppi"];
-const LYH = { lt_napyt: "Näpyt", lt_1raja_pomppu: "1-raja pomppu", lt_2raja_pomppu: "2-raja pomppu", lt_keskipomppu: "Keskipomppu", lt_kumura: "Kumura", lt_viistari: "Viistäri/pystäri", lt_koppi: "Koppi",
+const LYH = { lt_napyt: "Näpyt", lt_1raja_pomppu: "1-raja pomppu", lt_2raja_pomppu: "2-raja pomppu", lt_keskipomppu: "Keskipomppu", lt_kumura: "Kumura", lt_viistari: "Viistari/pystäri", lt_koppi: "Koppi",
   heitto_paikalta: "Heitto paikaltaan", heitto_vauhti: "Heitto vauhdista", lyonti: "Lyönti" };
 const TUTKA = ["heitto_paikalta", "heitto_vauhti", "lyonti"];
 const MAILAT = ["oma", "Optima", "Ultima"];
@@ -64,7 +64,7 @@ export async function nayta(main) {
 
     <h3>Lyöntiprofiili, talven keskiarvot</h3>
     <div class="taulu-wrap"><table id="t-profiili"></table></div>
-    <p class="vihje">Pelaajan keskiarvo kaikilta lyöntitestikerroilta. Mitä kirkkaampi solu, sitä parempi tulos joukkueen sisällä. Pelaajat tekevät joko 1-raja- tai keskipomppu- ja joko kumura- tai viistäritestin, joten osa soluista jää tyhjäksi.</p>`;
+    <p class="vihje">Pelaajan keskiarvo kaikilta lyöntitestikerroilta. Mitä kirkkaampi solu, sitä parempi tulos joukkueen sisällä. Pelaajat tekevät joko 1-raja- tai keskipomppu- ja joko kumura- tai viistaritestin, joten osa soluista jää tyhjäksi.</p>`;
 
   const fmt = (v, t) => (v == null ? "" : muotoile(v, t));
   const muutosSolu = (a, b, t) => { if (a == null || b == null) return `<td class="n"></td>`; const d = a - b; return `<td class="n ${d > 0 ? "pb" : d < 0 ? "huono" : ""}">${muotoileMuutos(d, t)}</td>`; };

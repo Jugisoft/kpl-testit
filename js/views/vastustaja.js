@@ -162,7 +162,7 @@ export function piirraSisapeli(el, pelaajat) {
 
     ${valittuP ? `
     <section class="pelaajakortti-iso">
-      ${kuvaKehys(valittuP)}
+      <div class="pki-kuva">${kuvaKehys(valittuP)}</div>
       <div class="pki-tiedot">
         <div class="pki-paa"><h2>${valittuP.numero != null ? `<span class="num pki-nro">${valittuP.numero}</span>` : ""}${esc(valittuP.nimi)}</h2>
           <a class="pieni" href="#/vp/${valittuP.id}">Pelaajasivu</a>${indeksi >= 0 ? `<span class="pieni harmaa">${indeksi + 1} / ${rivit.length}</span>` : ""}</div>

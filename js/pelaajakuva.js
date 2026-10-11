@@ -1,4 +1,5 @@
-// Vastustajan pelaajien kuvat: yksityinen tallennus (bucket "liitteet", kansio pelaajakuvat/), allekirjoitetut osoitteet.
+// Vastustajan pelaajien kuvat. Oma ladattu kuva (yksityinen tallennus, bucket "liitteet", kansio pelaajakuvat/)
+// menee pesistulokset.fi:n kuvan edelle. pesistulokset.fi:n kuvan alla näytetään aina lähde.
 import { sb } from "./db.js";
 import { $, esc, ilmoita } from "./util.js";
 
@@ -29,17 +30,17 @@ const nimikirjaimet = (nimi) => nimi.split(" ").filter(Boolean).map((x) => x[0])
 export function kuvaKehys(p, { iso = true } = {}) {
   return `<div class="pelaajakuva${iso ? " iso" : ""}" data-kuva-pelaaja="${p.id}">
     <div class="pk-paikka" aria-hidden="true"><span>${p.numero != null ? esc(String(p.numero)) : esc(nimikirjaimet(p.nimi))}</span></div>
-    <label class="pk-vaihda" title="Lisää tai vaihda kuva (voit myös vetää kuvan tähän)">${p.kuva ? "Vaihda kuva" : "Lisää kuva"}<input type="file" accept="image/*" hidden></label>
-  </div>`;
+    <label class="pk-vaihda" title="Lisää tai vaihda kuva (voit myös vetää kuvan tähän)">${p.kuva || p.kuva_url ? "Vaihda kuva" : "Lisää kuva"}<input type="file" accept="image/*" hidden></label>
+  </div>${!p.kuva && p.kuva_url ? `<a class="kuvalahde" href="${esc(p.kuva_lahde || "https://www.pesistulokset.fi")}" target="_blank" rel="noopener">Kuva: pesistulokset.fi</a>` : ""}`;
 }
 
 // Lataa kuvan näkyviin ja kytkee vaihdon (tiedostovalinta tai vedä ja pudota)
 export function kytkeKuva(el, p, jalkeen) {
   const kehys = el.querySelector(`[data-kuva-pelaaja="${p.id}"]`); if (!kehys) return;
   const nayta = async () => {
-    const url = await kuvaUrl(p.kuva);
+    const url = p.kuva ? await kuvaUrl(p.kuva) : p.kuva_url || null;
     const vanha = kehys.querySelector("img"); if (vanha) vanha.remove();
-    if (url) kehys.insertAdjacentHTML("afterbegin", `<img src="${esc(url)}" alt="${esc(p.nimi)}">`);
+    if (url) kehys.insertAdjacentHTML("afterbegin", `<img src="${esc(url)}" alt="${esc(p.nimi)}" loading="lazy" onerror="this.parentNode.classList.remove('on-kuva');this.remove()">`);
     kehys.classList.toggle("on-kuva", !!url);
   };
   nayta();

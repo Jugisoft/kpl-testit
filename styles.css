@@ -723,3 +723,8 @@ main { max-width: 1320px; }
 }
 .pelaajakortti-iso > * { min-width: 0; }
 .s-tilanne { margin-bottom: 10px; }
+.kuvalahde { display: block; margin-top: 5px; font-size: 11px; color: var(--ink-3); text-align: center; }
+.kuvalahde:hover { color: var(--kpl); }
+.pp-kuva { width: 96px; flex: none; }
+.pki-kuva { min-width: 0; }
+.pelaajakuva img { object-position: center top; }

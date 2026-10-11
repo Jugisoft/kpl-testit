@@ -35,7 +35,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
   main.innerHTML = `
     <p class="murupolku"><a href="#/muistio/${esc(p.joukkue)}/${p.joukkue === "KPL" ? "pelaajat" : "sisapeli"}">${esc(osioNimi(p.joukkue))}: ${p.joukkue === "KPL" ? "pelaajat" : "sisäpeli"}</a></p>
     <div class="pelaaja-paa">
-      ${kuvaKehys(p, { iso: false })}
+      <div class="pp-kuva">${kuvaKehys(p, { iso: false })}</div>
       <div class="pp-tekstit"><h1>${esc(p.nimi)}</h1>
       <div class="pelaaja-tiedot">
         <label class="pieni">Numero <input type="number" id="numero" min="0" max="99" value="${p.numero ?? ""}" style="width:72px"></label>

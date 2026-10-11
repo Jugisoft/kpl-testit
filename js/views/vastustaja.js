@@ -1,11 +1,12 @@
 // Vastustajan purku: sisäpeli pelaajittain ja tilanteittain (roolit + lyönnit),
-// ulkopeli kollektiivisesti tilanteittain (yhteinen kuvaus, havainnot, Pelikirjan kuviot).
+// ulkopeli kollektiivisesti tilanteittain (fläppitaulu, yhteinen kuvaus, havainnot).
 import { sb } from "../db.js";
 import { $, $$, esc, ilmoita } from "../util.js";
 import { tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, md, sukunimiJarjestys, haeSiirtomarkkinat, omaEmail } from "../keskus.js";
 import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAINOT, tyyppiTieto } from "../kentta.js";
 import { chipit, kytkeChipit, T, PALOT, LYONNIT, voiPoistaa, nimiTaulu } from "./vpelaaja.js";
 import { kortti, kytkeKortit, kontekstinHuomiot } from "./muistio.js";
+import { piirraFlappi, onLuonnosta } from "./flappi.js";
 
 // Välimuisti valitun joukkueen rakenteisista kirjauksista, jaetuista teksteistä ja Pelikirjan kuvioista
 const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "" };
@@ -16,7 +17,6 @@ let ulkoTilanne = "Yleinen";
 
 export const SARAKKEET = [...TILANTEET, "Jokeri"];
 const lyhyt = (t) => ({ "Ajolähtö (1–2–3)": "Ajo", "Kotiutus 3-pesältä": "Koti" }[t] || t.replace("-tilanne", ""));
-const norm = (x) => (x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 
 export function nollaaVastustaja() { V.joukkue = null; }
 
@@ -26,7 +26,7 @@ export async function lataaVastustaja(joukkue) {
   const [kirj, tekstit, kuviot, sm] = await Promise.all([
     sb.from("huomiot").select("*").eq("vastustaja", joukkue).in("tyyppi", ["lyonti", "ulkopeli"]).order("luotu", { ascending: false }).limit(5000),
     sb.from("vastustaja_tekstit").select("*").eq("joukkue", joukkue),
-    sb.from("pelikirja").select("id,data").eq("tyyppi", "kuvio"),
+    sb.from("vastustaja_kuviot").select("*").eq("joukkue", joukkue),
     haeSiirtomarkkinat().catch(() => null),
   ]);
   if (kirj.error) throw kirj.error;
@@ -34,16 +34,20 @@ export async function lataaVastustaja(joukkue) {
   V.kirj = kirj.data || [];
   V.tekstit = new Map((tekstit.data || []).map((t) => [t.avain, t]));
   V.nimi = sm?.joukkueiden_nimet?.[joukkue] || joukkue;
-  const koodi = norm(joukkue), koko = norm(V.nimi), alku = koko.split(" ")[0].slice(0, 5);
-  V.kuviot = (kuviot.data || []).map((r) => r.data).filter((k) => {
-    const n = norm(k?.joukkue);
-    return n && (n === koodi || koko.includes(n) || n.includes(koko) || (alku.length >= 4 && n.startsWith(alku)));
-  });
+  V.kuviot = kuviot.data || [];
 }
 
 // Realtime: muistion kanava välittää muutokset tänne
 export function vastustajaMuutos(taulu, m) {
   if (!V.joukkue) return;
+  if (taulu === "vastustaja_kuviot") {
+    const r = m.eventType === "DELETE" ? m.old : m.new;
+    if (m.eventType === "DELETE") { V.kuviot = V.kuviot.filter((k) => k.id !== r.id); return; }
+    if (r.joukkue !== V.joukkue) return;
+    const i = V.kuviot.findIndex((k) => k.id === r.id);
+    if (i >= 0) V.kuviot[i] = r; else V.kuviot.push(r);
+    return;
+  }
   if (taulu === "vastustaja_tekstit") {
     const r = m.new?.joukkue ? m.new : m.old;
     if (r?.joukkue !== V.joukkue) return;
@@ -56,6 +60,7 @@ export function vastustajaMuutos(taulu, m) {
   const i = V.kirj.findIndex((x) => x.id === h.id);
   if (i >= 0) V.kirj[i] = h; else V.kirj.unshift(h);
 }
+export { onLuonnosta };
 export const lyontienMaara = (joukkue) => (V.joukkue === joukkue ? V.kirj.filter((h) => h.tyyppi === "lyonti").length : 0);
 
 // --- Jaettu, kaikkien muokattava teksti (sisäpelin yleiskuva, ulkopeli tilanteittain)
@@ -270,15 +275,17 @@ export function piirraUlkopeli(el, pelaajat) {
   const joukkue = V.joukkue, t = ulkoTilanne;
   const huomiot = kontekstinHuomiot();
   const havainnot = (tt) => huomiot.filter((h) => h.vastustaja === joukkue && h.tyyppi === "muistiinpano" && h.tiedot?.osa === "ulkopeli" && (h.tiedot?.tilanne || "Yleinen") === tt);
-  const kuviot = (tt) => V.kuviot.filter((k) => tt === "Yleinen" || k.tilanne === tt);
+  const kuviot = (tt) => V.kuviot.filter((k) => k.tilanne === tt);
   const ulko = (tt) => V.kirj.filter((h) => h.tyyppi === "ulkopeli" && (tt === "Yleinen" || h.tiedot?.tilanne === tt));
-  const onSisaltoa = (tt) => V.tekstit.get(`ulkopeli:${tt}`)?.teksti || havainnot(tt).length || (tt !== "Yleinen" && (kuviot(tt).length || ulko(tt).length));
+  const onSisaltoa = (tt) => V.tekstit.get(`ulkopeli:${tt}`)?.teksti || havainnot(tt).length || kuviot(tt).length || (tt !== "Yleinen" && ulko(tt).length);
   const R = nimiTaulu(ROOLIT), PA = nimiTaulu(PAINOT);
   const kirj = ulko(t);
   const pn = (h) => pelaajat.get(h.pelaaja_id);
 
   el.innerHTML = `
     <div class="chipit tilannevalinta" role="tablist" aria-label="Tilanne">${ULKO_TILANTEET.map((tt) => `<button type="button" class="chip" data-ut="${esc(tt)}" aria-pressed="${tt === t}">${esc(tt === "Yleinen" ? "Yleinen" : lyhyt(tt))}${onSisaltoa(tt) ? `<span class="sisalto-merkki" aria-label="sisältää tietoa"></span>` : ""}</button>`).join("")}</div>
+
+    <div id="flappi"></div>
 
     ${tekstiLohko(`ulkopeli:${t}`, t === "Yleinen" ? "Ulkopelin yleiskuva" : `${t}: miten he pelaavat`, ULKO_OHJE[t] || `Miten ${V.nimi} pelaa ${t.toLowerCase()}? Asettelu, painot, ketkä liikkuvat ja mihin, mihin kannattaa lyödä.`)}
 
@@ -293,11 +300,6 @@ export function piirraUlkopeli(el, pelaajat) {
       </section>
       <aside>
         <section class="paneeli">
-          <div class="osio-paa"><h2>Pelikirjan kuviot</h2><a href="pelikirja.html">Avaa Pelikirja</a></div>
-          ${kuviot(t).length ? `<ul class="kuviolinkit">${kuviot(t).map((k) => `<li><a href="pelikirja.html?k=${encodeURIComponent(k.id)}"><b>${esc(k.lyoja || "Nimetön")}</b> <span class="pieni">${esc(lyhyt(k.tilanne || ""))}${k.variaatio ? ` · ${esc(k.variaatio)}` : ""}${k.koodi ? ` · ”${esc(k.koodi)}”` : ""}</span></a></li>`).join("")}</ul>`
-            : `<p class="pieni">Ei kuvioita, joiden vastustajaksi on merkitty ${esc(V.nimi)}${t === "Yleinen" ? "" : ` tilanteessa ${esc(t)}`}. Pelikirjassa kuvion kenttään “Vastustajan joukkue” kirjoitetaan joukkueen nimi tai lyhenne (${esc(joukkue)}).</p>`}
-        </section>
-        <section class="paneeli">
           <h2>Pelaajien liikkeet <span class="pieni">${kirj.length}</span></h2>
           ${kirj.length ? `${kirj.some((h) => h.tiedot?.x != null) ? `<div class="kentta-kehys">${kenttaSvg({ id: "uk-kartta", pisteet: kirj.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: "#F5A800", otsikko: `${pn(h)?.nimi || ""}: ${h.otsikko}`, id: h.id })) })}</div>` : ""}
             <div class="taulu-wrap"><table class="kirjaustaulu"><thead><tr><th>Pelaaja</th><th>Paikka</th>${t === "Yleinen" ? "<th>Tilanne</th>" : ""}<th>Paino</th></tr></thead><tbody>
@@ -310,7 +312,12 @@ export function piirraUlkopeli(el, pelaajat) {
 
   kytkeTekstit(el, piirra);
   kytkeKortit($("#uh-lista"));
-  $$("[data-ut]", el).forEach((b) => (b.onclick = () => { ulkoTilanne = b.dataset.ut; piirra(); }));
+  piirraFlappi($("#flappi", el), { joukkue, tilanne: t, kuviot: V.kuviot, pelaajat, piirraKaikki: piirra });
+  $$("[data-ut]", el).forEach((b) => (b.onclick = () => {
+    if (b.dataset.ut === ulkoTilanne) return;
+    if (onLuonnosta() && !confirm("Fläppitaulun kuviossa on tallentamattomia muutoksia. Hylätäänkö ne?")) return;
+    ulkoTilanne = b.dataset.ut; piirra();
+  }));
   const f = $("#uh-uusi"), ta = f.teksti;
   ta.onkeydown = (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); f.requestSubmit(); } };
   f.onsubmit = async (e) => {

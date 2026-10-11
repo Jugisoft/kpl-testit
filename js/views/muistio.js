@@ -6,7 +6,7 @@ import {
   JOUKKUEET, VASTUSTAJAT, AIHEOSIOT, osioNimi, haeSiirtomarkkinat, huomionOsio, koosteAvain, haeHuomiot, kommenttimaarat, haeKoosteet, lataaNimet, haePelaajat,
   kirjoittajanNimi, aikaSitten, md, luokkaMerkki, omaEmail, tallennaMuistiinpano, paivitaMuistiinpano, muistiinpanonTeksti, sukunimiJarjestys, pvmFi,
 } from "../keskus.js";
-import { lataaVastustaja, nollaaVastustaja, vastustajaMuutos, lyontienMaara, piirraSisapeli, piirraUlkopeli } from "./vastustaja.js";
+import { lataaVastustaja, nollaaVastustaja, vastustajaMuutos, lyontienMaara, onLuonnosta, piirraSisapeli, piirraUlkopeli } from "./vastustaja.js";
 import { haeLiitteet, lataaTiedostot, liitteetHtml, aktivoiLiitteet, poistaLiite, poistaHuomionTiedostot, tiedostoValitsin } from "../liitteet.js";
 
 const OSIOT = [...AIHEOSIOT, ...JOUKKUEET];
@@ -346,13 +346,17 @@ function kuuntele() {
       else if (m.eventType === "INSERT") { if (!K.huomiot.some((x) => x.id === m.new.id)) K.huomiot.unshift(m.new); }
       else { const h = K.huomiot.find((x) => x.id === m.new.id); if (h) Object.assign(h, m.new); }
       vastustajaMuutos("huomiot", m);
-      if (!document.querySelector(".m-muokkaus") && document.activeElement?.tagName !== "TEXTAREA") K.uudelleenpiirra();
+      if (!document.querySelector(".m-muokkaus") && !onLuonnosta() && document.activeElement?.tagName !== "TEXTAREA") K.uudelleenpiirra();
     })
-    .on("postgres_changes", { event: "*", schema: "public", table: "vastustaja_tekstit" }, (m) => {
-      vastustajaMuutos("vastustaja_tekstit", m);
-      if (K.valilehti !== "sisapeli" && K.valilehti !== "ulkopeli") return;
-      if (!document.querySelector(".m-muokkaus") && document.activeElement?.tagName !== "TEXTAREA" && document.activeElement?.tagName !== "SELECT") piirraRakenne();
-    }).subscribe();
+    .on("postgres_changes", { event: "*", schema: "public", table: "vastustaja_tekstit" }, (m) => rakenneMuutos("vastustaja_tekstit", m))
+    .on("postgres_changes", { event: "*", schema: "public", table: "vastustaja_kuviot" }, (m) => rakenneMuutos("vastustaja_kuviot", m))
+    .subscribe();
+}
+function rakenneMuutos(taulu, m) {
+  vastustajaMuutos(taulu, m);
+  if (K.valilehti !== "sisapeli" && K.valilehti !== "ulkopeli") return;
+  const kiireinen = document.querySelector(".m-muokkaus") || onLuonnosta() || ["TEXTAREA", "SELECT", "INPUT"].includes(document.activeElement?.tagName);
+  if (!kiireinen) piirraRakenne();
 }
 
 // Yksittäinen kirjaus (linkki Keskuksesta tai jaettu osoite)

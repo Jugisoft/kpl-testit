@@ -549,3 +549,12 @@ h1, h2, h3 { font-family: var(--num); }
 .kirjaudu-paa h1 { font: italic 800 clamp(44px, 7vw, 72px)/.95 var(--num); margin: 0 0 8px; }
 .kirjaudu-paa h1 em { color: var(--kpl); }
 @media (max-width: 560px) { .kirjaudu-paa { flex-direction: column; align-items: flex-start; } }
+
+/* ===== Skaalaus isoille näytöille (kopin kone, läppäri) =====
+   Puhelin ja tabletti ennallaan; leveällä näytöllä sisältö levenee ja koko kasvaa. */
+body { font-size: 16px; }
+main { max-width: 1320px; }
+@media (min-width: 1500px) { html { zoom: 1.12; } }
+@media (min-width: 1750px) { html { zoom: 1.25; } }
+@media (min-width: 2200px) { html { zoom: 1.45; } }
+@media (min-width: 2800px) { html { zoom: 1.8; } }

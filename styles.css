@@ -728,3 +728,29 @@ main { max-width: 1320px; }
 .pp-kuva { width: 96px; flex: none; }
 .pki-kuva { min-width: 0; }
 .pelaajakuva img { object-position: center top; }
+
+/* --- Pelaajaprofiili ja vikalista */
+.profiili-ruudukko { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.profiili-paa > p { margin: 0 0 8px; color: var(--ink-3); }
+.profiilikehys { display: block; width: 100%; height: 900px; border: 1px solid var(--line); border-radius: 14px; background: #0F0E0C; }
+@media (min-width: 1500px) { .profiili-ruudukko { grid-template-columns: minmax(0, 1fr) 340px; } .profiili-sivu { position: sticky; top: 80px; } }
+.vikalista { display: flex; flex-direction: column; gap: 10px; }
+.vl-paa { display: flex; align-items: center; gap: 10px; }
+.vl-paa h2 { margin: 0; font-size: 20px; }
+.vl-lkm { background: var(--kpl); color: var(--musta); border-radius: 99px; font: 700 13px/1 var(--num); padding: 4px 9px; }
+.vl-tila { margin: 0; }
+.vl-lomake { display: flex; flex-direction: column; gap: 8px; }
+.vl-lomake textarea { width: 100%; }
+.vl-pohja { display: inline-flex; gap: 6px; align-items: center; margin-right: auto; }
+.vl-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow: auto; }
+.vl-rivi { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; background: var(--surface-2); }
+.vl-rivi.tila-korjattu, .vl-rivi.tila-ei_muutosta { opacity: .62; }
+.vl-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.vl-merkki { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 99px; background: rgba(245,168,0,.18); color: var(--kpl); }
+.vl-merkki.tila-korjattu { background: var(--green-bg); color: var(--green); }
+.vl-merkki.tila-ei_muutosta { background: var(--surface); color: var(--ink-3); }
+.vl-luokka { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.vl-teksti { white-space: pre-wrap; overflow-wrap: anywhere; }
+.vl-vastaus { font-size: 13px; color: var(--ink-2); border-left: 2px solid var(--green); padding-left: 8px; }
+.vl-toiminnot { display: flex; gap: 12px; }
+.vl-toiminnot:empty { display: none; }

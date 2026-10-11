@@ -6,9 +6,10 @@ import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAIN
 import { kortti, kytkeKortit, asetaKonteksti, kontekstinHuomiot } from "./muistio.js";
 import { haeLiitteet, lataaTiedostot, tiedostoValitsin } from "../liitteet.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
+import { haeProfiili, profiiliKehys, kytkeKehys, piirraVikalista, poistuVikalista } from "../profiili.js";
 
 let kanava = null;
-export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } }
+export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } poistuVikalista(); }
 
 // Lomakkeen valinnat säilyvät peräkkäisten kirjausten välillä
 const ly = { tilanne: "", palot: "", lyonti: "", tyyppi: "", tulos: "", piste: null };
@@ -21,12 +22,13 @@ export const T = TILANTEET.map((t) => [t, t.replace("-tilanne", "")]);
 export const PALOT = [["0", "0 paloa"], ["1", "1 palo"], ["2", "2 paloa"]];
 export const LYONNIT = [["1", "1. lyönti"], ["2", "2. lyönti"], ["3", "3. lyönti"]];
 
-export async function nayta(main, id, valilehti = "lyonnit") {
+export async function nayta(main, id, valilehti) {
   await lataaNimet();
   const pelaajat = await haePelaajat(true);
   const p = pelaajat.get(id);
   if (!p) { main.innerHTML = `<h1>Pelaajaa ei löydy</h1><p><a class="btn" href="#/muistio">Muistio</a></p>`; return; }
-  const [{ data: kirjaukset }, maarat] = await Promise.all([sb.from("huomiot").select("*").eq("pelaaja_id", id).order("luotu", { ascending: false }), kommenttimaarat()]);
+  const [{ data: kirjaukset }, maarat, profiili] = await Promise.all([sb.from("huomiot").select("*").eq("pelaaja_id", id).order("luotu", { ascending: false }), kommenttimaarat(), haeProfiili(id)]);
+  if (!valilehti || (valilehti === "profiili" && !profiili)) valilehti = profiili ? "profiili" : "lyonnit";
   const liitteet = await haeLiitteet(kirjaukset.map((h) => h.id));
   let lista = kirjaukset;
   asetaKonteksti({ huomiot: lista, maarat, pelaajat, liitteet, osio: null, auki: new Set(), uudelleenpiirra: () => { lista = kontekstinHuomiot(); piirraValilehti(); } });
@@ -44,7 +46,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
       </div></div>
     </div>
     <div class="valilehdet" role="tablist">
-      ${[["lyonnit", "Lyönnit", lkm("lyonti")], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
+      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/vp/${id}/${k}" aria-selected="${valilehti === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>
     <div id="vp-sisalto"></div>`;
@@ -60,6 +62,7 @@ export async function nayta(main, id, valilehti = "lyonnit") {
 
   const piirraValilehti = () => {
     const el = $("#vp-sisalto"); if (!el) return;
+    if (valilehti === "profiili") return piirraProfiili(el, p, profiili);
     if (valilehti === "ulkopeli") return piirraUlkopeli(el, p, lista, lisaa, poista);
     if (valilehti === "muistiinpanot") return piirraMuistiinpanot(el, p, lista, lisaa);
     return piirraLyonnit(el, p, lista, lisaa, poista);
@@ -210,6 +213,15 @@ export function ulkoYhteenveto(kirj) {
   return `<details class="yhteenveto" open><summary>Painon suunta</summary><div class="taulu-wrap"><table><thead><tr><th>Paikka</th><th>Tilanne</th><th>Paino</th></tr></thead><tbody>
     ${[...r].map(([k, o]) => { const [rooli, til] = k.split("|"); return `<tr><td>${esc(rooli)}</td><td>${esc(til.replace("-tilanne", "") || "–")}</td><td>${Object.entries(o).sort((a, b) => b[1] - a[1]).map(([pa, n]) => `${esc(PA[pa])} ${n}`).join(", ")}</td></tr>`; }).join("")}
   </tbody></table></div></details>`;
+}
+
+// --- Jarvisin pelaajaprofiili ja sen vikalista
+function piirraProfiili(el, p, profiili) {
+  el.innerHTML = `<div class="profiili-ruudukko">
+    <div class="profiili-paa"><p class="pieni">Pelaajaprofiili, versio ${profiili.versio}${profiili.tila === "luonnos" ? " (luonnos)" : ""} · päivitetty ${aikaSitten(profiili.muokattu)}</p>${profiiliKehys(profiili.html)}</div>
+    <div id="vp-vikalista" class="profiili-sivu"></div></div>`;
+  kytkeKehys(el);
+  piirraVikalista($("#vp-vikalista"), p, profiili);
 }
 
 // --- Muistiinpanot ja liitteet pelaajasta

@@ -164,7 +164,7 @@ function piirraLista() {
   kytkeKortit(el);
 }
 
-const TYYPPINIMI = { lyonti: "Lyönti", ulkopeli: "Ulkopeli", ottelumuistio: "Ottelumuistio" };
+const TYYPPINIMI = { lyonti: "Lyönti", ulkopeli: "Ulkopeli", ottelumuistio: "Ottelumuistio", profiili: "Pelaajaprofiili" };
 export function kortti(h, { osio = true, pelaaja = true } = {}) {
   const m = K.maarat.get(h.id);
   const p = h.pelaaja_id && K.pelaajat.get(h.pelaaja_id);
@@ -173,8 +173,8 @@ export function kortti(h, { osio = true, pelaaja = true } = {}) {
     <div class="m-meta">${osio ? luokkaMerkki(h) : ""}${h.tyyppi !== "muistiinpano" ? `<span class="tyyppimerkki">${TYYPPINIMI[h.tyyppi]}${h.ottelu_pvm ? ` ${pvmFi(h.ottelu_pvm)}` : ""}</span>` : h.tiedot?.osa === "ulkopeli" ? `<span class="tyyppimerkki">Ulkopeli${h.tiedot.tilanne && h.tiedot.tilanne !== "Yleinen" ? `: ${esc(h.tiedot.tilanne)}` : ""}</span>` : ""}${pelaaja && p ? `<a class="pelaajamerkki" href="#/vp/${p.id}">${esc(p.nimi)}</a>` : ""}<span>${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}${h.muokattu && new Date(h.muokattu) - new Date(h.luotu) > 60000 ? " (muokattu)" : ""}</span></div>
     <div class="m-sisalto">${sisalto(h)}</div>
     <div class="m-toiminnot">
-      ${RAKENTEISET.includes(h.tyyppi) ? "" : `<button class="linkkinappi" data-t="muokkaa">Muokkaa</button>`}
-      <button class="linkkinappi" data-t="kommentit" aria-expanded="${K.auki.has(h.id)}">${m?.n ? `Kommentit (${m.n})` : "Kommentoi"}</button>
+      ${h.tyyppi === "profiili" ? `<a class="btn pieni-nappi ensisij" href="#/vp/${h.pelaaja_id}/profiili">Avaa profiili ja vikalista</a>` : `${RAKENTEISET.includes(h.tyyppi) ? "" : `<button class="linkkinappi" data-t="muokkaa">Muokkaa</button>`}
+      <button class="linkkinappi" data-t="kommentit" aria-expanded="${K.auki.has(h.id)}">${m?.n ? `Kommentit (${m.n})` : "Kommentoi"}</button>`}
       ${voiPoistaa ? `<button class="linkkinappi" data-t="poista">Poista</button>` : ""}
     </div>
     <div class="m-kommentit" ${K.auki.has(h.id) ? "" : "hidden"}></div>
@@ -187,7 +187,8 @@ export function kytkeKortit(el) {
     const id = li.dataset.id;
     const h = () => K.huomiot.find((x) => x.id === id);
     li.querySelector("[data-t=muokkaa]")?.addEventListener("click", () => muokkaa(li, h()));
-    li.querySelector("[data-t=kommentit]").onclick = (e) => {
+    const kb = li.querySelector("[data-t=kommentit]");
+    if (kb) kb.onclick = (e) => {
       const k = li.querySelector(".m-kommentit");
       const auki = k.hidden;
       k.hidden = !auki; e.currentTarget.setAttribute("aria-expanded", auki);
@@ -202,7 +203,7 @@ export function kytkeKortit(el) {
       ilmoita("Poistettu");
       K.uudelleenpiirra();
     });
-    if (K.auki.has(id)) lataaKommentit(li.querySelector(".m-kommentit"), id);
+    if (K.auki.has(id) && kb) lataaKommentit(li.querySelector(".m-kommentit"), id);
   });
   aktivoiLiitteet(el);
 }

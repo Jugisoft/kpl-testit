@@ -8,9 +8,10 @@ import { chipit, kytkeChipit, T, PALOT, LYONNIT, voiPoistaa, nimiTaulu } from ".
 import { kortti, kytkeKortit, kontekstinHuomiot } from "./muistio.js";
 import { piirraFlappi, onLuonnosta } from "./flappi.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
+import { profiiliIdt } from "../profiili.js";
 
 // Välimuisti valitun joukkueen rakenteisista kirjauksista, jaetuista teksteistä ja Pelikirjan kuvioista
-const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "" };
+const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "", profiilit: new Map() };
 // Valinnat säilyvät uudelleenpiirroissa
 const s = { pelaaja: "", tilanne: "", roolitila: false };
 const lyv = { pelaaja: "", tilanne: "", palot: "", lyonti: "", tyyppi: "", tulos: "", piste: null };
@@ -24,12 +25,14 @@ export function nollaaVastustaja() { V.joukkue = null; }
 export async function lataaVastustaja(joukkue) {
   if (V.joukkue === joukkue) return;
   if (V.joukkue !== null && V.joukkue !== joukkue) { s.pelaaja = ""; lyv.pelaaja = ""; s.roolitila = false; }
-  const [kirj, tekstit, kuviot, sm] = await Promise.all([
+  const [kirj, tekstit, kuviot, sm, profiilit] = await Promise.all([
     sb.from("huomiot").select("*").eq("vastustaja", joukkue).in("tyyppi", ["lyonti", "ulkopeli"]).order("luotu", { ascending: false }).limit(5000),
     sb.from("vastustaja_tekstit").select("*").eq("joukkue", joukkue),
     sb.from("vastustaja_kuviot").select("*").eq("joukkue", joukkue),
     haeSiirtomarkkinat().catch(() => null),
+    profiiliIdt().catch(() => new Map()),
   ]);
+  V.profiilit = profiilit;
   if (kirj.error) throw kirj.error;
   V.joukkue = joukkue;
   V.kirj = kirj.data || [];
@@ -165,6 +168,7 @@ export function piirraSisapeli(el, pelaajat) {
       <div class="pki-kuva">${kuvaKehys(valittuP)}</div>
       <div class="pki-tiedot">
         <div class="pki-paa"><h2>${valittuP.numero != null ? `<span class="num pki-nro">${valittuP.numero}</span>` : ""}${esc(valittuP.nimi)}</h2>
+          ${V.profiilit.has(valittuP.id) ? `<a class="btn pieni-nappi ensisij" href="#/vp/${valittuP.id}/profiili">Pelaajaprofiili v${V.profiilit.get(valittuP.id).versio}</a>` : ""}
           <a class="pieni" href="#/vp/${valittuP.id}">Pelaajasivu</a>${indeksi >= 0 ? `<span class="pieni harmaa">${indeksi + 1} / ${rivit.length}</span>` : ""}</div>
         <label class="pki-kuvaus"><span class="sr">Kuvaus</span><input type="text" id="pki-kuvaus" maxlength="300" value="${esc(valittuP.kuvaus || "")}" placeholder="Lyhyt kuvaus, esim. vasenkätinen kärkilyöjä, nopea etenijä"></label>
         <div class="pki-osa"><span class="osa-nimi">Suunniteltu rooli <span class="pieni">napauta valitaksesi</span></span>

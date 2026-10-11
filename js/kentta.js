@@ -16,8 +16,8 @@ export const ROOLIT = [
 ];
 export const TILANTEET = ["0-tilanne", "1-tilanne", "2-tilanne", "3-tilanne", "1–2-tilanne", "1–3-tilanne", "2–3-tilanne", "Ajolähtö (1–2–3)", "Kotiutus 3-pesältä"];
 export const LYONTITYYPIT = [
-  ["napy", "Näpy", "#7DD3FC"], ["pomppu", "Pomppu", "#2EE59D"], ["kumura", "Kumura", "#A78BFA"], ["viistari", "Viistäri", "#FFC93C"],
-  ["pystari", "Pystäri", "#FF9F43"], ["koppi", "Koppi", "#FF3B4E"], ["varmistus", "Varmistus", "#94A3B8"], ["kunnari", "Kunnari", "#F472B6"],
+  ["napy", "Näpy", "#7DD3FC"], ["pomppu", "Pomppu", "#2EE59D"], ["kumura", "Kumura", "#A78BFA"], ["viistari", "Viistari", "#FFC93C"],
+  ["pystari", "Pystäri", "#FF9F43"], ["koppi", "Koppi", "#FF3B4E"], ["sailytys", "Säilytys", "#94A3B8"], ["lapari", "Läpäri", "#F472B6"],
 ];
 export const TULOKSET = [["onnistui", "Onnistui"], ["ei", "Ei onnistunut"], ["palo", "Palo"], ["haava", "Haava"]];
 export const PAINOT = [["eteen", "Eteen"], ["taakse", "Taakse"], ["2-raja", "Kakkosrajalle"], ["3-raja", "Kolmosrajalle"], ["paikallaan", "Paikallaan"]];

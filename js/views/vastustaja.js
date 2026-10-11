@@ -16,7 +16,7 @@ const lyv = { pelaaja: "", tilanne: "", palot: "", lyonti: "", tyyppi: "", tulos
 let ulkoTilanne = "Yleinen";
 
 export const SARAKKEET = [...TILANTEET, "Jokeri"];
-const lyhyt = (t) => ({ "Ajolähtö (1–2–3)": "Ajo", "Kotiutus 3-pesältä": "Koti" }[t] || t.replace("-tilanne", ""));
+const lyhyt = (t) => ({ "Ajolähtö (1–2–3)": "Ajo" }[t] || t.replace("-tilanne", ""));
 
 export function nollaaVastustaja() { V.joukkue = null; }
 
@@ -256,10 +256,10 @@ function ryhmaYhteenveto(lyonnit, avain, sarake, otsikko) {
     const ylin = Object.entries(lask).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t, n]) => `${TY[t]} ${n}`).join(", ");
     const puoli = hs.filter((h) => h.tiedot?.x != null);
     const vasen = puoli.filter((h) => h.tiedot.x < -5).length, oikea = puoli.filter((h) => h.tiedot.x > 5).length;
-    const onn = hs.filter((h) => h.tiedot?.tulos === "onnistui").length, tul = hs.filter((h) => h.tiedot?.tulos).length;
-    return `<tr><td>${esc(sarake === "Tilanne" ? lyhyt(k) : k)}</td><td class="n">${hs.length}</td><td>${esc(ylin || "–")}</td><td class="pieni">${puoli.length ? `3-raja ${vasen} · keski ${puoli.length - vasen - oikea} · 2-raja ${oikea}` : ""}</td><td class="n">${tul ? `${onn}/${tul}` : ""}</td></tr>`;
+    const onn = hs.filter((h) => ["onnistui", "juoksu"].includes(h.tiedot?.tulos)).length, tul = hs.filter((h) => h.tiedot?.tulos).length, juoksut = hs.filter((h) => h.tiedot?.tulos === "juoksu").length;
+    return `<tr><td>${esc(sarake === "Tilanne" ? lyhyt(k) : k)}</td><td class="n">${hs.length}</td><td>${esc(ylin || "–")}</td><td class="pieni">${puoli.length ? `3-raja ${vasen} · keski ${puoli.length - vasen - oikea} · 2-raja ${oikea}` : ""}</td><td class="n">${tul ? `${onn}/${tul}` : ""}</td><td class="n">${juoksut || ""}</td></tr>`;
   }).join("");
-  return `<details class="yhteenveto" open><summary>${esc(otsikko)}</summary><div class="taulu-wrap"><table><thead><tr><th>${sarake}</th><th class="n">Lyöntejä</th><th>Yleisimmät</th><th>Suunta</th><th class="n">Onnistui</th></tr></thead><tbody>${rivit}</tbody></table></div>
+  return `<details class="yhteenveto" open><summary>${esc(otsikko)}</summary><div class="taulu-wrap"><table><thead><tr><th>${sarake}</th><th class="n">Lyöntejä</th><th>Yleisimmät</th><th>Suunta</th><th class="n" title="Onnistui tai juoksu / lyönnit, joiden lopputulos kirjattu">Onnistui</th><th class="n">Juoksuja</th></tr></thead><tbody>${rivit}</tbody></table></div>
     <p class="vihje">Pienellä määrällä kirjauksia jakaumat ovat suuntaa-antavia.</p></details>`;
 }
 

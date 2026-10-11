@@ -14,12 +14,12 @@ export const ROOLIT = [
   ["L", "Lukkari"], ["S", "Sieppari"], ["1V", "Ykkösvahti"], ["2V", "Kakkosvahti"], ["3V", "Kolmosvahti"],
   ["2P", "Kakkospolttaja"], ["3P", "Kolmospolttaja"], ["2K", "2-koppari"], ["3K", "3-koppari"],
 ];
-export const TILANTEET = ["0-tilanne", "1-tilanne", "2-tilanne", "3-tilanne", "1–2-tilanne", "1–3-tilanne", "2–3-tilanne", "Ajolähtö (1–2–3)", "Kotiutus 3-pesältä"];
+export const TILANTEET = ["0-tilanne", "1-tilanne", "2-tilanne", "3-tilanne", "1–2-tilanne", "1–3-tilanne", "2–3-tilanne", "Ajolähtö (1–2–3)"];
 export const LYONTITYYPIT = [
   ["napy", "Näpy", "#7DD3FC"], ["pomppu", "Pomppu", "#2EE59D"], ["kumura", "Kumura", "#A78BFA"], ["viistari", "Viistari", "#FFC93C"],
   ["pystari", "Pystäri", "#FF9F43"], ["koppi", "Koppi", "#FF3B4E"], ["sailytys", "Säilytys", "#94A3B8"], ["lapari", "Läpäri", "#F472B6"],
 ];
-export const TULOKSET = [["onnistui", "Onnistui"], ["ei", "Ei onnistunut"], ["palo", "Palo"], ["haava", "Haava"]];
+export const TULOKSET = [["onnistui", "Onnistui"], ["ei", "Ei onnistunut"], ["juoksu", "Juoksu"], ["palo", "Palo"], ["haava", "Haava"]];
 export const PAINOT = [["eteen", "Eteen"], ["taakse", "Taakse"], ["2-raja", "Kakkosrajalle"], ["3-raja", "Kolmosrajalle"], ["paikallaan", "Paikallaan"]];
 export const tyyppiTieto = (k) => LYONTITYYPIT.find((t) => t[0] === k);
 

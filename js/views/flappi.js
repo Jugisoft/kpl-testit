@@ -20,7 +20,6 @@ function etenijat(tilanne) {
   const t = tilanne || "";
   const p = new Set();
   if (/Ajolähtö/.test(t)) [1, 2, 3].forEach((n) => p.add(n));
-  else if (/Kotiutus/.test(t)) p.add(3);
   else { const m = t.match(/^([0-3](?:–[0-3])?)-tilanne/); if (m) m[1].split("–").map(Number).filter(Boolean).forEach((n) => p.add(n)); }
   const siirto = { 1: [-2, 1.5], 2: [1.5, -2.5], 3: [-1.5, -2.5] };
   return [...p].map((n) => { const [x, y] = FIELD.bases[n]; return { n, x: x + siirto[n][0], y: y + siirto[n][1] }; });

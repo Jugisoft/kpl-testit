@@ -112,7 +112,7 @@ function piirraLyonnit(el, p, lista, lisaa, poista) {
     <section>
       <h2>Lyöntikartta <span class="pieni">${nakyvat.length} / ${lyonnit.length}</span></h2>
       ${kaytetyt.length ? `<div class="chipit pieni-chipit" id="suodatin"><button class="chip" data-s="" aria-pressed="${!suodatin}">Kaikki</button>${kaytetyt.map((t) => `<button class="chip" data-s="${esc(t)}" aria-pressed="${t === suodatin}">${esc(t.replace("-tilanne", ""))}</button>`).join("")}</div>` : ""}
-      <div class="kentta-kehys iso">${kenttaSvg({ id: "ly-kartta", pisteet: nakyvat.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: tyyppiTieto(h.tiedot.tyyppi)?.[2] || "#E6EEF8", otsikko: h.otsikko, id: h.id })) })}</div>
+      <div class="kentta-kehys iso">${kenttaSvg({ id: "ly-kartta", pisteet: nakyvat.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: tyyppiTieto(h.tiedot.tyyppi)?.[2] || "#F6F2EA", otsikko: h.otsikko, id: h.id })) })}</div>
       <p class="selite">${LYONTITYYPIT.filter(([k]) => nakyvat.some((h) => h.tiedot?.tyyppi === k)).map(([, n, v]) => `<span><span class="pallura" style="background:${v}"></span>${n}</span>`).join("")}</p>
       ${yhteenveto(nakyvat)}
       <div class="taulu-wrap"><table class="kirjaustaulu"><thead><tr><th>Tilanne</th><th>Palot</th><th>Lyönti</th><th>Tyyppi</th><th>Tulos</th><th>Lisätieto</th><th></th></tr></thead><tbody>
@@ -174,7 +174,7 @@ function piirraUlkopeli(el, p, lista, lisaa, poista) {
     </form>
     <section>
       <h2>Ulkopelin kirjaukset <span class="pieni">${kirj.length}</span></h2>
-      <div class="kentta-kehys iso">${kenttaSvg({ id: "ul-kartta", pisteet: kirj.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: "#38D6FF", otsikko: h.otsikko, id: h.id })) })}</div>
+      <div class="kentta-kehys iso">${kenttaSvg({ id: "ul-kartta", pisteet: kirj.filter((h) => h.tiedot?.x != null).map((h) => ({ x: h.tiedot.x, y: h.tiedot.y, vari: "#F5A800", otsikko: h.otsikko, id: h.id })) })}</div>
       ${ulkoYhteenveto(kirj)}
       <div class="taulu-wrap"><table class="kirjaustaulu"><thead><tr><th>Paikka</th><th>Tilanne</th><th>Paino</th><th>Lisätieto</th><th></th></tr></thead><tbody>
         ${kirj.map((h) => { const t = h.tiedot || {}; return `<tr><td>${esc(R[t.rooli] || "")}</td><td>${esc((t.tilanne || "").replace("-tilanne", ""))}</td><td>${esc(PA[t.paino] || "")}</td>

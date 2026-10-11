@@ -6,8 +6,11 @@ const paluu = () => location.origin + location.pathname;
 export async function nayta(main) {
   if (tila.valmentaja) { location.hash = "#/"; return; }
   main.innerHTML = `
-    <h1>Kirjaudu</h1>
-    <p class="ingressi">Pelaajakohtaiset tulokset ja tulosten syöttö ovat valmentajien käytössä. Kirjaudu Google-tilillä tai sähköpostiin lähetettävällä linkillä.</p>
+    <div class="kirjaudu-paa">
+      <img src="img/kpl-logo-192.png" alt="Kouvolan Pallonlyöjät" width="96" height="96">
+      <div><h1>KPL <em>Keskus</em></h1>
+      <p class="ingressi">Kouvolan Pallonlyöjien valmennuksen yhteinen keskus: muistiinpanot, pelikirja, vastustajat, siirtomarkkinat ja testit. Kirjaudu Google-tilillä tai sähköpostiin lähetettävällä linkillä.</p></div>
+    </div>
     ${tila.istunto ? `<div class="paneeli" style="max-width:520px;margin-bottom:16px"><strong>Olet kirjautunut osoitteella ${esc(tila.istunto.user.email)},</strong> mutta sitä ei ole valmentajien listalla. Pyydä ylläpitäjää lisäämään osoite.</div>` : ""}
     <div class="paneeli" style="max-width:520px;display:grid;gap:18px">
       <button class="btn ensisij" id="google" style="justify-content:center;padding:12px">

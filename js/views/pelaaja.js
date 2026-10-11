@@ -99,10 +99,10 @@ export async function nayta(main, id) {
   if (profiili) piirra($("#profiili"), {
     type: "radar",
     data: { labels: profiili.rivit.map((r) => tila.testi[r.t].nimi), datasets: [
-      { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--cyan"), backgroundColor: "rgba(56,214,255,.18)", pointBackgroundColor: vari("--cyan"), pointRadius: 3 },
+      { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--cyan"), backgroundColor: "rgba(245,168,0,.18)", pointBackgroundColor: vari("--cyan"), pointRadius: 3 },
       { label: "Keskitaso", data: profiili.rivit.map(() => 50), borderColor: vari("--ink-3"), borderDash: [4, 4], pointRadius: 0, backgroundColor: "transparent" },
     ] },
-    options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 20, suggestedMax: 80, grid: { color: "rgba(56,214,255,.12)" }, angleLines: { color: "rgba(56,214,255,.12)" }, pointLabels: { color: vari("--ink-2"), font: { size: 13 } }, ticks: { stepSize: 10, backdropColor: "transparent", color: vari("--ink-3") } } } },
+    options: { maintainAspectRatio: false, scales: { r: { suggestedMin: 20, suggestedMax: 80, grid: { color: "rgba(245,168,0,.12)" }, angleLines: { color: "rgba(245,168,0,.12)" }, pointLabels: { color: vari("--ink-2"), font: { size: 13 } }, ticks: { stepSize: 10, backdropColor: "transparent", color: vari("--ink-3") } } } },
   });
 }
 

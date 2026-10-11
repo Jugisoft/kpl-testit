@@ -1,7 +1,7 @@
 // KPL Keskus: valmennuksen aloitusnäkymä kopin koneelle.
 import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
-import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten } from "../keskus.js";
+import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, omaEmail } from "../keskus.js";
 
 let kanava = null;
 let valittuOsio = "idea";
@@ -20,19 +20,42 @@ export async function nayta(main) {
   const spKerrat = tila.kerrat.filter((k) => spJoukkue && k.joukkue_id === spJoukkue.id);
   const kpl = sm?.vaikutus?.find((v) => v.Joukkue === "KPL");
   const uutiset = (sm?.tarkeimmat || "").split("\n").filter((l) => l.trim().startsWith("-")).slice(0, 4).join("\n");
+  const [{ count: kuvioita }, { count: pelaajia }] = await Promise.all([
+    sb.from("pelikirja").select("id", { count: "exact", head: true }).eq("tyyppi", "kuvio"),
+    sb.from("vastustajapelaajat").select("id", { count: "exact", head: true }).eq("aktiivinen", true).neq("joukkue", "KPL"),
+  ]);
+  const h = new Date().toLocaleString("fi-FI", { hour: "numeric", timeZone: "Europe/Helsinki" }) | 0;
+  const tervehdys = h < 5 ? "Hyvää yötä" : h < 10 ? "Huomenta" : h < 17 ? "Päivää" : "Iltaa";
+  const etunimi = (kirjoittajanNimi(omaEmail()) || "").split(" ")[0];
+  const viikko = huomiot.filter((x) => Date.now() - new Date(x.luotu) < 7 * 864e5).length;
+  const vastustajat = JOUKKUEET.filter((j) => j !== "KPL");
   const chip = (o) => `<button type="button" class="chip" data-osio="${o}" aria-pressed="${o === valittuOsio}">${esc(osioNimi(o))}</button>`;
 
   main.innerHTML = `
-    <section class="kirjaus">
-      <h1>Mitä huomasit?</h1>
+    <section class="etusivu-hero">
+      <div class="hero-kuva" aria-hidden="true"></div>
+      <div class="hero-sisalto">
+        <div class="hero-tunnus"><img src="img/kpl-logo-192.png" alt="Kouvolan Pallonlyöjät" width="76" height="76"><span>Kouvolan Pallonlyöjät<br><b>Superpesis 2027</b></span></div>
+        <h1>${esc(tervehdys)}${etunimi ? `, ${esc(etunimi)}` : ""}.</h1>
+        <p class="hero-ala">${viikko ? `Valmennus on kirjannut tällä viikolla ${viikko} ${viikko === 1 ? "uuden muistiinpanon" : "uutta muistiinpanoa"}.` : "Tervetuloa valmennuksen keskukseen. Kaikki muistiinpanot, kuviot ja tiedot yhdessä paikassa."}</p>
+      </div>
       <form id="pika" class="pikakirjaus">
-        <textarea name="teksti" rows="3" required aria-label="Muistiinpano" placeholder="Kirjoita ajatus tai havainto. Ensimmäinen rivi on otsikko."></textarea>
+        <label for="pika-teksti" class="pika-otsikko">Mitä huomasit?</label>
+        <textarea id="pika-teksti" name="teksti" rows="3" required placeholder="Kirjoita ajatus tai havainto. Ensimmäinen rivi on otsikko."></textarea>
         <div class="osiovalinta" role="group" aria-label="Osio">
           ${AIHEOSIOT.filter((o) => o !== "muu").map(chip).join("")}<span class="erotin" aria-hidden="true"></span>${JOUKKUEET.map(chip).join("")}
         </div>
         <div class="rivi"><button class="btn ensisij" type="submit">Tallenna</button><span class="pieni vihje-nappain">Ctrl + Enter tallentaa</span></div>
       </form>
     </section>
+
+    <nav class="pikalinkit" aria-label="Pääosiot">
+      <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
+      <a href="pelikirja.html"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="#/muistio/${vastustajat[0]}/pelaajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
+      <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
+      <a href="#/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spKerrat.length}</span><span class="pl-ala">${spKerrat.length ? `edustuksen testikertaa, viimeisin ${pvm(spKerrat[0].pvm)}` : "edustuksen testikertaa"}</span></a>
+    </nav>
 
     <div class="keskus-ruudukko">
       <section>
@@ -42,20 +65,10 @@ export async function nayta(main) {
 
       <aside class="k-sivu">
         <section class="paneeli">
-          <div class="osio-paa"><h2>Siirtomarkkinat</h2><a href="#/siirtomarkkinat">Avaa</a></div>
+          <div class="osio-paa"><h2>Siirtomarkkinoilla</h2><a href="#/siirtomarkkinat">Kaikki</a></div>
           ${kpl ? `<p class="kpl-netto">KPL <span class="num">${kpl.Tulleet}</span> tullut <span class="num">${kpl.Lähteneet}</span> lähtenyt</p>` : ""}
           ${uutiset ? `<div class="md uutislista tiivis">${md(uutiset)}</div>` : `<p class="pieni">Tietoja ei vielä viety.</p>`}
           ${sm?.tilannekatsaus_paivitetty ? `<p class="pieni">Päivitetty ${esc(sm.tilannekatsaus_paivitetty)}</p>` : ""}
-        </section>
-        <section class="paneeli">
-          <div class="osio-paa"><h2>Testit</h2><a href="#/superpesis">Edustus</a></div>
-          ${spKerrat.length ? `<p>Viimeisin edustuksen testikerta ${pvm(spKerrat[0].pvm)}${spKerrat[0].nimi ? `: ${esc(spKerrat[0].nimi)}` : ""}.</p>` : `<p class="pieni">Edustuksen testikertoja ei vielä ole.</p>`}
-          <p class="rivi"><a class="btn" href="#/superpesis">Edustuksen testit</a><a class="btn" href="#/kerrat">Juniorit</a></p>
-        </section>
-        <section class="paneeli">
-          <div class="osio-paa"><h2>Pelikirja</h2></div>
-          <p class="pieni">Ulkopelin kuviot ja fläppitaulu.</p>
-          <p><a class="btn" href="pelikirja.html">Avaa pelikirja</a></p>
         </section>
       </aside>
     </div>`;

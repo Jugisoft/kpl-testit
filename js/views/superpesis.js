@@ -76,7 +76,7 @@ export async function nayta(main) {
       .sort((a, b) => (arvo(b.id, vika.id, t) ?? arvo(b.id, eka.id, t) ?? 0) - (arvo(a.id, vika.id, t) ?? arvo(a.id, eka.id, t) ?? 0));
     const varit = [vari("--ink-3"), vari("--cyan")];
     piirra($("#k-tutka"), { type: "bar",
-      data: { labels: mukana.map(nimi), datasets: tutkaKerrat.map((k, i) => ({ label: pvm(k.pvm), data: mukana.map((p) => arvo(p.id, k.id, t)), backgroundColor: i === tutkaKerrat.length - 1 ? "rgba(56,214,255,.75)" : "rgba(111,132,163,.45)", borderColor: varit[i === tutkaKerrat.length - 1 ? 1 : 0], borderWidth: 1, borderRadius: 3, barPercentage: .9, categoryPercentage: .8 })) },
+      data: { labels: mukana.map(nimi), datasets: tutkaKerrat.map((k, i) => ({ label: pvm(k.pvm), data: mukana.map((p) => arvo(p.id, k.id, t)), backgroundColor: i === tutkaKerrat.length - 1 ? "rgba(245,168,0,.75)" : "rgba(145,137,125,.45)", borderColor: varit[i === tutkaKerrat.length - 1 ? 1 : 0], borderWidth: 1, borderRadius: 3, barPercentage: .9, categoryPercentage: .8 })) },
       options: { indexAxis: "y", maintainAspectRatio: false,
         scales: { x: { min: t === "lyonti" ? 140 : 100, title: { display: true, text: "km/h" } }, y: { ticks: { autoSkip: false } } },
         plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.parsed.x} km/h` } } } } });
@@ -101,8 +101,8 @@ export async function nayta(main) {
     const t = valLt;
     const mukana = pelaajat.filter((p) => ltKerrat.some((k) => arvo(p.id, k.id, t) != null));
     const ka = ltKerrat.map((k) => keskiarvo(mukana.map((p) => arvo(p.id, k.id, t)).filter((x) => x != null)));
-    const sarjat = ["#38D6FF", "#FF3B4E", "#2EE59D", "#FFC93C", "#A78BFA", "#2E7BFF", "#F472B6"];
-    const ds = mukana.map((p) => { const kor = korostus.has(p.id), c = kor ? sarjat[[...korostus].indexOf(p.id) % sarjat.length] : "rgba(111,132,163,.45)";
+    const sarjat = ["#F5A800", "#FF3B4E", "#2EE59D", "#FFC93C", "#A78BFA", "#C98A00", "#F472B6"];
+    const ds = mukana.map((p) => { const kor = korostus.has(p.id), c = kor ? sarjat[[...korostus].indexOf(p.id) % sarjat.length] : "rgba(145,137,125,.45)";
       return { label: nimi(p), data: ltKerrat.map((k) => arvo(p.id, k.id, t)), borderColor: c, backgroundColor: c, borderWidth: kor ? 3 : 1, pointRadius: kor ? 4 : 2, spanGaps: true, order: kor ? 0 : 2 }; });
     ds.push({ label: "Joukkueen keskiarvo", data: ka, borderColor: vari("--ink"), borderDash: [6, 4], borderWidth: 2, pointRadius: 0, order: 1 });
     piirra($("#k-lt"), { type: "line", data: { labels: ltKerrat.map((k) => pvmLyhyt(k.pvm)), datasets: ds },
@@ -127,7 +127,7 @@ export async function nayta(main) {
     <tbody>${pelaajat.filter((p) => LT.some((t) => profKa(p.id, t) != null)).map((p) => `<tr><td>${pelaajaLinkki(p)}</td>${LT.map((t) => {
       const v = profKa(p.id, t); if (v == null) return `<td class="n"></td>`;
       const [lo, hi] = rajat[t], s = hi > lo ? (v - lo) / (hi - lo) : .5;
-      return `<td class="n" style="background:rgba(56,214,255,${(.06 + .5 * s).toFixed(2)})">${v.toFixed(1).replace(".", ",")}</td>`; }).join("")}
+      return `<td class="n" style="background:rgba(245,168,0,${(.06 + .5 * s).toFixed(2)})">${v.toFixed(1).replace(".", ",")}</td>`; }).join("")}
       <td class="n">${new Set(rivit.filter((r) => r.pelaaja_id === p.id && r.testi.startsWith("lt_")).map((r) => r.testikerta_id)).size}</td></tr>`).join("")}</tbody>`;
 
   $$("[data-tutka]").forEach((b) => (b.onclick = () => { valTutka = b.dataset.tutka; $$("[data-tutka]").forEach((x) => x.setAttribute("aria-pressed", x === b)); tutka(); }));

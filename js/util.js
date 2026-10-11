@@ -81,7 +81,7 @@ export function ilmoita(teksti, virhe = false) {
 // Kaaviot (Chart.js)
 const kaaviot = new Map();
 export function vari(nimi) { return getComputedStyle(document.documentElement).getPropertyValue(nimi).trim(); }
-export const SARJAVARIT = ["#38D6FF", "#FF3B4E", "#2EE59D", "#FFC93C", "#A78BFA", "#2E7BFF", "#F472B6", "#94A3B8"];
+export const SARJAVARIT = ["#F5A800", "#FF3B4E", "#2EE59D", "#7DD3FC", "#A78BFA", "#C98A00", "#F472B6", "#94A3B8"];
 let hehkuRekisteroity = false;
 export function piirra(canvas, config) {
   if (!window.Chart) { setTimeout(() => piirra(canvas, config), 150); return; }
@@ -89,9 +89,9 @@ export function piirra(canvas, config) {
   const Chart = window.Chart;
   Chart.defaults.font.family = "Barlow, system-ui, sans-serif";
   Chart.defaults.color = vari("--ink-3");
-  Chart.defaults.borderColor = "rgba(56,214,255,.07)";
-  Chart.defaults.plugins.tooltip.backgroundColor = "rgba(8,17,31,.95)";
-  Chart.defaults.plugins.tooltip.borderColor = "rgba(56,214,255,.35)";
+  Chart.defaults.borderColor = "rgba(245,168,0,.07)";
+  Chart.defaults.plugins.tooltip.backgroundColor = "rgba(15,14,13,.95)";
+  Chart.defaults.plugins.tooltip.borderColor = "rgba(245,168,0,.35)";
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.padding = 10;
   if (!hehkuRekisteroity) {

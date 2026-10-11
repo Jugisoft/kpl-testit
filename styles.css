@@ -558,3 +558,19 @@ main { max-width: 1320px; }
 @media (min-width: 1750px) { html { zoom: 1.25; } }
 @media (min-width: 2200px) { html { zoom: 1.45; } }
 @media (min-width: 2800px) { html { zoom: 1.8; } }
+
+/* Muistion valikko: vastustajat ryhmänä */
+.osiot .osio-ryhma { margin-top: 14px; font: italic 700 20px/1 var(--num); color: var(--ink); border-left-color: transparent; }
+.osiot .osio-ryhma[aria-current="page"] { color: var(--kpl); }
+.osio-alat { display: grid; gap: 1px; padding-left: 10px; border-left: 1px solid var(--line); margin-left: 10px; }
+.vastustajaruudukko { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.vastustajakortti { position: relative; display: grid; gap: 6px; padding: 16px 18px; border-radius: 14px; text-decoration: none; height: 100%; background: linear-gradient(160deg, #23211e, #181716 60%); border: 1px solid #2f2b27; overflow: hidden; transition: border-color .15s ease, transform .15s ease; }
+.vastustajakortti:hover { border-color: rgba(245,168,0,.6); transform: translateY(-2px); }
+.vk-nimi { font: italic 700 24px/1.05 var(--num); padding-right: 56px; }
+.vk-lyh { position: absolute; top: 14px; right: 16px; font: 700 15px/1 var(--num); color: var(--musta); background: var(--kpl); padding: 4px 7px; border-radius: 5px; }
+.vk-pj { font-size: 14px; color: var(--ink-2); }
+.vk-luvut { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-3); }
+.vk-luvut b { color: var(--kpl); font-size: 18px; margin-right: 3px; }
+.vk-ala { font-size: 13px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) { .osio-alat { display: contents; } .osiot .osio-ryhma { margin-top: 0; font-size: 15px; } }
+@media (prefers-reduced-motion: reduce) { .vastustajakortti { transition: none; } .vastustajakortti:hover { transform: none; } }

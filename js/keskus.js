@@ -13,7 +13,8 @@ export const LUOKAT = {
 export const JOUKKUEET = ["KPL", "IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"];
 // Osiot muistiossa: aiheet ja vastustajat. Avain: aihe (idea, oma_peli...) tai joukkueen lyhenne.
 export const AIHEOSIOT = ["idea", "oma_peli", "merkkipeli", "pelaaja", "muu"];
-export const osioNimi = (o) => (o === "kaikki" ? "Kaikki" : LUOKAT[o] || o);
+export const VASTUSTAJAT = JOUKKUEET.filter((j) => j !== "KPL");
+export const osioNimi = (o) => (o === "kaikki" ? "Kaikki" : o === "vastustajat" ? "Vastustajat" : LUOKAT[o] || o);
 export const osioKentat = (o) => (JOUKKUEET.includes(o) ? { luokka: "vastustaja", vastustaja: o } : { luokka: o, vastustaja: null });
 export const huomionOsio = (h) => (h.luokka === "vastustaja" && h.vastustaja ? h.vastustaja : h.luokka);
 export const koosteAvain = (o) => (JOUKKUEET.includes(o) ? `vastustaja:${o}` : o);

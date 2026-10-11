@@ -3,7 +3,7 @@
 import { sb, tila } from "../db.js";
 import { $, $$, esc, ilmoita } from "../util.js";
 import {
-  JOUKKUEET, AIHEOSIOT, osioNimi, huomionOsio, koosteAvain, haeHuomiot, kommenttimaarat, haeKoosteet, lataaNimet, haePelaajat,
+  JOUKKUEET, VASTUSTAJAT, AIHEOSIOT, osioNimi, haeSiirtomarkkinat, huomionOsio, koosteAvain, haeHuomiot, kommenttimaarat, haeKoosteet, lataaNimet, haePelaajat,
   kirjoittajanNimi, aikaSitten, md, luokkaMerkki, omaEmail, tallennaMuistiinpano, paivitaMuistiinpano, muistiinpanonTeksti, sukunimiJarjestys, pvmFi,
 } from "../keskus.js";
 import { haeLiitteet, lataaTiedostot, liitteetHtml, aktivoiLiitteet, poistaLiite, poistaHuomionTiedostot, tiedostoValitsin } from "../liitteet.js";
@@ -24,9 +24,9 @@ const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/
 
 export async function nayta(main, osio, valilehti) {
   await lataaNimet();
-  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && (m === "kaikki" || OSIOT.includes(m)) ? m : "kaikki"}`); return; }
+  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && (m === "kaikki" || m === "vastustajat" || OSIOT.includes(m)) ? m : "vastustajat"}`); return; }
   osio = decodeURIComponent(osio);
-  if (osio !== "kaikki" && !OSIOT.includes(osio)) osio = "kaikki";
+  if (osio !== "kaikki" && osio !== "vastustajat" && !OSIOT.includes(osio)) osio = "kaikki";
   muista(osio);
   const [huomiot, maarat, koosteet, pelaajat, liitteet] = await Promise.all([haeHuomiot(), kommenttimaarat(), haeKoosteet(), haePelaajat(true), haeLiitteet()]);
   K = { ...K, huomiot, maarat, koosteet, pelaajat, liitteet, osio, valilehti: onJoukkue(osio) ? valilehti || "muistiinpanot" : "muistiinpanot", auki: K.osio === osio ? K.auki : new Set() };
@@ -44,7 +44,11 @@ export async function nayta(main, osio, valilehti) {
 function osiolista() {
   const lkm = (o) => K.huomiot.filter((h) => !RAKENTEISET.includes(h.tyyppi) && (o === "kaikki" || huomionOsio(h) === o)).length;
   const linkki = (o) => `<a href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}><span>${esc(osioNimi(o))}</span><span class="lkm">${lkm(o) || ""}</span></a>`;
-  return `${linkki("kaikki")}<h3>Aiheet</h3>${AIHEOSIOT.map(linkki).join("")}<h3>Joukkueet</h3>${JOUKKUEET.map(linkki).join("")}`;
+  const otsikko = (o, n) => `<a class="osio-ryhma" href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}>${n}</a>`;
+  return `${linkki("kaikki")}
+    ${otsikko("vastustajat", "Vastustajat")}<div class="osio-alat">${VASTUSTAJAT.map(linkki).join("")}</div>
+    <h3>Oma joukkue</h3>${linkki("oma_peli")}${linkki("KPL")}
+    <h3>Muut</h3>${["idea", "merkkipeli", "pelaaja", "muu"].map(linkki).join("")}`;
 }
 
 function piirraOsio() {
@@ -55,18 +59,19 @@ function piirraOsio() {
   $("#osio").innerHTML = `
     <div class="osio-otsikko">
       <h1>${esc(osioNimi(o))}</h1>
-      <input type="search" id="haku" placeholder="Hae kaikista muistiinpanoista" value="${esc(K.haku)}" aria-label="Hae muistiinpanoista">
+      ${o === "vastustajat" ? "" : `<input type="search" id="haku" placeholder="Hae kaikista muistiinpanoista" value="${esc(K.haku)}" aria-label="Hae muistiinpanoista">`}
     </div>
     ${joukkue ? `<div class="valilehdet" role="tablist">
       ${[["muistiinpanot", "Muistiinpanot", ""], ["pelaajat", "Pelaajat", pelaajia], ["ottelumuistiot", "Ottelumuistiot", muistioita]]
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/muistio/${o}/${k}" aria-selected="${v === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>` : ""}
     <div id="valilehti"></div>`;
-  $("#haku").oninput = (e) => {
+  if ($("#haku")) $("#haku").oninput = (e) => {
     K.haku = e.target.value;
     if (K.valilehti === "pelaajat" && K.haku) { K.valilehti = "muistiinpanot"; const pos = e.target.selectionStart; piirraOsio(); const h = $("#haku"); h.focus(); h.setSelectionRange(pos, pos); return; }
     piirraLista();
   };
+  if (o === "vastustajat") return piirraVastustajat();
   if (joukkue && v === "pelaajat") return piirraPelaajat();
   piirraKirjoitus();
   if (kooste && v === "muistiinpanot") $("#valilehti").insertAdjacentHTML("beforeend", `<details class="kooste"><summary><span class="k-otsikko">Jarvisin kooste</span><span class="pieni">${kooste.huomioita} muistiinpanosta, ${aikaSitten(kooste.paivitetty)}</span></summary><div class="md">${md(kooste.sisalto)}</div></details>`);
@@ -242,6 +247,31 @@ function paivitaMaara(id, d) {
   const m = K.maarat.get(id) || { n: 0, ai: 0 }; m.n = Math.max(0, m.n + d); K.maarat.set(id, m);
   const b = document.querySelector(`.muistiinpano[data-id="${id}"] [data-t=kommentit]`);
   if (b) b.textContent = m.n ? `Kommentit (${m.n})` : "Kommentoi";
+}
+
+// --- Vastustajat-yleisnäkymä: kaikki vastustajat kortteina
+async function piirraVastustajat() {
+  $("#osio").querySelector(".osio-otsikko h1").textContent = "Vastustajat";
+  const sm = await haeSiirtomarkkinat().catch(() => null);
+  const el = $("#valilehti");
+  const kortti = (j) => {
+    const pj = sm?.pelinjohtajat?.find((p) => p.Joukkue === j);
+    const v = sm?.vaikutus?.find((x) => x.Joukkue === j);
+    const mp = K.huomiot.filter((h) => h.vastustaja === j && h.tyyppi === "muistiinpano").length;
+    const om = K.huomiot.filter((h) => h.vastustaja === j && h.tyyppi === "ottelumuistio").length;
+    const kirj = K.huomiot.filter((h) => h.vastustaja === j && RAKENTEISET.includes(h.tyyppi)).length;
+    const pel = [...K.pelaajat.values()].filter((p) => p.joukkue === j && p.aktiivinen).length;
+    const viim = K.huomiot.filter((h) => h.vastustaja === j).sort((a, b) => b.luotu.localeCompare(a.luotu))[0];
+    return `<li><a class="vastustajakortti" href="#/muistio/${j}">
+      <span class="vk-nimi">${esc(sm?.joukkueiden_nimet?.[j] || j)}</span>
+      <span class="vk-lyh">${esc(j)}</span>
+      ${pj ? `<span class="vk-pj">PJ ${esc(pj["PJ 2027"] && pj["PJ 2027"] !== "?" ? pj["PJ 2027"] : "auki")}</span>` : ""}
+      <span class="vk-luvut"><span><b class="num">${mp}</b> muistiinpanoa</span><span><b class="num">${kirj}</b> kirjausta</span><span><b class="num">${om}</b> ottelumuistiota</span><span><b class="num">${pel}</b> pelaajaa</span></span>
+      <span class="vk-ala">${viim ? `Viimeksi ${aikaSitten(viim.luotu)}: ${esc(viim.otsikko)}` : v?.Arvio ? `Siirtomarkkinat: ${esc(v.Arvio.toLowerCase())}` : "Ei vielä kirjauksia"}</span>
+    </a></li>`;
+  };
+  el.innerHTML = `<p class="ingressi" style="margin-top:0">Superpesis 2027:n vastustajat. Avaa joukkue kirjataksesi sisä- ja ulkopelin havaintoja, pelaajien lyöntejä ja ottelumuistioita.</p>
+    <ul class="vastustajaruudukko">${VASTUSTAJAT.map(kortti).join("")}</ul>`;
 }
 
 // --- pelaajat-välilehti

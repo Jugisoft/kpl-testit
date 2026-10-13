@@ -1,27 +1,27 @@
 import { sb, tila, lataaPerus, tarkistaRooli, lataaPelaajat } from "./js/db.js";
 import { $, esc, tuhoaKaaviot, ilmoita } from "./js/util.js";
-import * as koti from "./js/views/koti.js";
 import * as kirjaudu from "./js/views/kirjaudu.js";
 import * as kerrat from "./js/views/kerrat.js";
 import * as syotto from "./js/views/syotto.js";
 import * as kerta from "./js/views/kerta.js";
 import * as pelaajat from "./js/views/pelaajat.js";
 import * as pelaaja from "./js/views/pelaaja.js";
-import * as ryhma from "./js/views/ryhma.js";
 import * as hallinta from "./js/views/hallinta.js";
-import * as superpesis from "./js/views/superpesis.js";
 import * as keskus from "./js/views/keskus.js";
 import * as muistio from "./js/views/muistio.js";
 import * as vpelaaja from "./js/views/vpelaaja.js";
 import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
 import * as analyysi from "./js/views/analyysi.js";
+import * as testit from "./js/views/testit.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
 
 const reitit = [
   { polku: /^\/?$/, nakyma: etusivu },
-  { polku: /^\/tilastot$/, nakyma: koti, osio: "testit" },
+  { polku: /^\/testit(?:\/([a-z]+))?(?:\/([a-z]+))?(?:\/([\w-]+))?$/, nakyma: testit, osio: "testit" },
+  // vanhat osoitteet
+  { polku: /^\/(superpesis|ryhma|tilastot)$/, nakyma: { nayta: (m, x) => location.replace(x === "superpesis" ? "#/testit/superpesis" : "#/testit/juniorit") } },
   { polku: /^\/kirjaudu$/, nakyma: kirjaudu, julkinen: true },
   { polku: /^\/muistio(?:\/([^/]+))?(?:\/([^/]+))?$/, nakyma: muistio },
   { polku: /^\/vp\/([\w-]+)(?:\/([a-z]+))?$/, nakyma: vpelaaja },
@@ -34,8 +34,6 @@ const reitit = [
   { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta, osio: "testit" },
   { polku: /^\/pelaajat$/, nakyma: pelaajat, osio: "testit" },
   { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja, osio: "testit" },
-  { polku: /^\/ryhma$/, nakyma: ryhma, osio: "testit" },
-  { polku: /^\/superpesis$/, nakyma: superpesis, osio: "testit" },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
 ];
 
@@ -45,14 +43,12 @@ const PAAVALIKKO = [
   ["Muistio", "#/muistio", (p) => /^\/(muistio|huomio|vp\/)/.test(p)],
   ["Siirtomarkkinat", "#/siirtomarkkinat", (p) => p === "/siirtomarkkinat"],
   ["Analyysi", "#/analyysi", (p) => p === "/analyysi"],
-  ["Testit", "#/superpesis", (p, r) => r?.osio === "testit"],
+  ["Testit", "#/testit", (p, r) => r?.osio === "testit"],
 ];
 const TESTIVALIKKO = [
-  ["Edustus", "#/superpesis", (p) => p === "/superpesis"],
+  ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
   ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
   ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
-  ["Ryhmäanalyysi", "#/ryhma", (p) => p === "/ryhma"],
-  ["Julkiset tilastot", "#/tilastot", (p) => p === "/tilastot"],
 ];
 
 let nykyinen = null;

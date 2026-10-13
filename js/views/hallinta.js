@@ -1,5 +1,6 @@
 // Ylläpito: valmentajat, pelaajat, testikerrat ja testit.
 import { sb, tila, nimi, lataaPelaajat, lataaPerus } from "../db.js";
+import { LUOKAT } from "./testit.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 
 const ROOLIT = { pelaaja: "Pelaaja", valmentaja: "Valmentaja", admin: "Ylläpitäjä" };
@@ -41,16 +42,20 @@ export async function nayta(main) {
       <tbody>${tila.kerrat.map((k) => `<tr data-kerta="${k.id}"><td><input type="date" data-k="pvm" value="${k.pvm}"></td><td><input type="text" data-k="nimi" value="${esc(k.nimi || "")}" style="width:320px"></td><td><input type="checkbox" data-k="piikit" ${k.piikit ? "checked" : ""}></td></tr>`).join("")}</tbody></table></div>
 
     <h2>Testit</h2>
-    <div class="taulu-wrap"><table><thead><tr><th>Koodi</th><th>Nimi</th><th>Yksikkö</th><th>Pienempi parempi</th><th>Yrityksiä</th><th>Min</th><th>Max</th><th>Käytössä</th></tr></thead>
+    <div class="taulu-wrap"><table><thead><tr><th>Koodi</th><th>Nimi</th><th>Luokka</th><th>Alaluokka</th><th>Yksikkö</th><th>Pienempi parempi</th><th>Yrityksiä</th><th>Min</th><th>Max</th><th>Käytössä</th></tr></thead>
       <tbody>${tila.testit.filter((t) => !t.johdettu).map((t) => `<tr data-testi="${t.koodi}"><td class="pieni">${t.koodi}</td>
-        <td><input type="text" data-k="nimi" value="${esc(t.nimi)}" style="width:220px"></td><td><input type="text" data-k="yksikko" value="${esc(t.yksikko)}" style="width:80px"></td>
+        <td><input type="text" data-k="nimi" value="${esc(t.nimi)}" style="width:220px"></td>
+        <td><select data-k="luokka">${LUOKAT.map(([k, n]) => `<option value="${k}"${t.luokka === k ? " selected" : ""}>${n}</option>`).join("")}</select></td>
+        <td><input type="text" data-k="alaluokka" list="alaluokat" value="${esc(t.alaluokka || "")}" style="width:150px"></td><td><input type="text" data-k="yksikko" value="${esc(t.yksikko)}" style="width:80px"></td>
         <td><input type="checkbox" data-k="pienempi_parempi" ${t.pienempi_parempi ? "checked" : ""}></td><td><input type="number" data-k="yrityksia" value="${t.yrityksia}" style="width:60px"></td>
         <td><input type="number" step="any" data-k="min_arvo" value="${t.min_arvo ?? ""}" style="width:70px"></td><td><input type="number" step="any" data-k="max_arvo" value="${t.max_arvo ?? ""}" style="width:70px"></td>
         <td><input type="checkbox" data-k="aktiivinen" ${t.aktiivinen ? "checked" : ""}></td></tr>`).join("")}</tbody></table></div>
     <form id="uusi-t" class="rivi" style="margin-top:10px">
       <input type="text" name="koodi" placeholder="koodi (esim. pituus_vauhti)" required pattern="[a-z0-9_]+"><input type="text" name="nimi" placeholder="nimi" required>
       <input type="text" name="yksikko" placeholder="yksikkö" required style="width:90px">
-      <select name="ryhma"><option>nopeus</option><option>tutka</option><option>taito</option><option>voima</option></select>
+      <select name="luokka" aria-label="Luokka">${LUOKAT.map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select>
+      <input type="text" name="alaluokka" list="alaluokat" placeholder="alaluokka" style="width:150px">
+      <datalist id="alaluokat">${[...new Set(tila.testit.map((t) => t.alaluokka).filter(Boolean))].map((a) => `<option value="${esc(a)}">`).join("")}</datalist>
       <label class="chip"><input type="checkbox" name="pienempi_parempi">Pienempi parempi</label>
       <button class="btn ensisij">Lisää testi</button></form>`;
 
@@ -99,7 +104,7 @@ export async function nayta(main) {
   };
   $("#uusi-t").onsubmit = async (e) => {
     e.preventDefault(); const f = e.target;
-    const { error } = await sb.from("testit").insert({ koodi: f.koodi.value, nimi: f.nimi.value, yksikko: f.yksikko.value, ryhma: f.ryhma.value, pienempi_parempi: f.pienempi_parempi.checked, jarjestys: 90 });
+    const { error } = await sb.from("testit").insert({ koodi: f.koodi.value, nimi: f.nimi.value, yksikko: f.yksikko.value, ryhma: { fysiikka: "voima", voima: "tutka", nopeus: "nopeus", lajitaito: "taito" }[f.luokka.value], luokka: f.luokka.value, alaluokka: f.alaluokka.value.trim() || null, pienempi_parempi: f.pienempi_parempi.checked, jarjestys: 90 });
     if (error) return ilmoita(error.message, true);
     await lataaPerus(); nayta(main);
   };

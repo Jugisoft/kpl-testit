@@ -25,7 +25,7 @@ export const tila = {
 };
 
 // Johdettu testi: lentävä 20 m = 30 m − 10 m samasta yrityksestä
-export const LENTAVA = { koodi: "lentava20", nimi: "Lentävä 20 m", ryhma: "nopeus", yksikko: "s", pienempi_parempi: true, desimaalit: 2, jarjestys: 12, johdettu: true };
+export const LENTAVA = { koodi: "lentava20", nimi: "Lentävä 20 m", ryhma: "nopeus", luokka: "nopeus", alaluokka: "Pikanopeus", yksikko: "s", pienempi_parempi: true, desimaalit: 2, jarjestys: 12, johdettu: true };
 
 export async function lataaPerus() {
   const [t, j, k] = await Promise.all([

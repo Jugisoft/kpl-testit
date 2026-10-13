@@ -1,5 +1,6 @@
 import { sb, tila, nimi, lataaPerus } from "../db.js";
 import { $, $$, esc, pvm, kausi, ilmoita } from "../util.js";
+import { LUOKAT, LUOKKANIMI } from "./testit.js";
 
 export const PAKETIT = [
   { nimi: "Nopeus 10 + 30 m", testit: ["10m", "30m"] },
@@ -56,7 +57,8 @@ export async function poistaKerta(nappi, id, valmis) {
 
 function uusiLomake(el) {
   const tanaan = new Date().toISOString().slice(0, 10);
-  const ryhmat = [...new Set(tila.testit.filter((t) => !t.johdettu && t.aktiivinen).map((t) => t.ryhma))];
+  const ryhmat = LUOKAT.map(([k, n]) => [k, n]).filter(([k]) => tila.testit.some((t) => t.luokka === k && !t.johdettu && t.aktiivinen));
+  if (tila.testit.some((t) => !LUOKKANIMI[t.luokka] && !t.johdettu && t.aktiivinen)) ryhmat.push([null, "Muut"]);
   const aktiiviset = tila.pelaajat.filter((p) => p.aktiivinen);
   const muut = tila.pelaajat.filter((p) => !p.aktiivinen);
   const pelaajaRivi = (p, valittu) => `<label class="chip"><input type="checkbox" name="pelaaja" value="${p.id}" data-joukkue="${p.joukkue_id}" ${valittu ? "checked" : ""}>${esc(nimi(p))} <span class="pieni">${p.syntymavuosi || ""}</span></label>`;
@@ -71,7 +73,7 @@ function uusiLomake(el) {
       <div>
         <h3 style="margin-top:0">Testit</h3>
         <div class="chipit" style="margin-bottom:10px">${PAKETIT.map((p, i) => `<button type="button" class="chip" data-paketti="${i}">+ ${esc(p.nimi)}</button>`).join("")}</div>
-        ${ryhmat.map((r) => `<div class="chipit" style="margin-bottom:6px">${tila.testit.filter((t) => t.ryhma === r && !t.johdettu && t.aktiivinen).map((t) => `<label class="chip"><input type="checkbox" name="testi" value="${t.koodi}">${esc(t.nimi)}</label>`).join("")}</div>`).join("")}
+        ${ryhmat.map(([r, rn]) => `<div class="testiryhma"><span class="osa-nimi">${esc(rn)}</span><div class="chipit" style="margin-bottom:6px">${tila.testit.filter((t) => (r ? t.luokka === r : !LUOKKANIMI[t.luokka]) && !t.johdettu && t.aktiivinen).map((t) => `<label class="chip"><input type="checkbox" name="testi" value="${t.koodi}">${esc(t.nimi)}</label>`).join("")}</div></div>`).join("")}
         <label class="chip" style="margin-top:8px"><input type="checkbox" name="piikit">Juostaan piikkareilla</label>
       </div>
       <div>

@@ -9,7 +9,8 @@ import {
 import { lataaVastustaja, nollaaVastustaja, vastustajaMuutos, lyontienMaara, onLuonnosta, piirraSisapeli, piirraUlkopeli } from "./vastustaja.js";
 import { haeLiitteet, lataaTiedostot, liitteetHtml, aktivoiLiitteet, poistaLiite, poistaHuomionTiedostot, tiedostoValitsin } from "../liitteet.js";
 
-const OSIOT = [...AIHEOSIOT, ...JOUKKUEET];
+// Valmennus-osio näkyy vain valmentajille ja ylläpitäjälle (tietokanta estää pelaajilta)
+const osiot = () => [...AIHEOSIOT, ...(tila.valmennus ? ["valmennus"] : []), ...JOUKKUEET];
 const RAKENTEISET = ["lyonti", "ulkopeli"];
 let kanava = null;
 // Jaettu tila: myös pelaajasivu käyttää kortteja asetaKonteksti()-funktion kautta.
@@ -34,9 +35,9 @@ const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/
 
 export async function nayta(main, osio, valilehti) {
   await lataaNimet();
-  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && (m === "kaikki" || m === "vastustajat" || OSIOT.includes(m)) ? m : "vastustajat"}`); return; }
+  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && (m === "kaikki" || m === "vastustajat" || osiot().includes(m)) ? m : "vastustajat"}`); return; }
   osio = decodeURIComponent(osio);
-  if (osio !== "kaikki" && osio !== "vastustajat" && !OSIOT.includes(osio)) osio = "kaikki";
+  if (osio !== "kaikki" && osio !== "vastustajat" && !osiot().includes(osio)) osio = "kaikki";
   muista(osio);
   const [huomiot, maarat, koosteet, pelaajat, liitteet] = await Promise.all([haeHuomiot(), kommenttimaarat(), haeKoosteet(), haePelaajat(true), haeLiitteet()]);
   K = { ...K, huomiot, maarat, koosteet, pelaajat, liitteet, osio, valilehti: oikeaValilehti(osio, valilehti), auki: K.osio === osio ? K.auki : new Set() };
@@ -62,6 +63,7 @@ function osiolista() {
   const linkki = (o) => `<a href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}><span>${esc(osioNimi(o))}</span><span class="lkm">${lkm(o) || ""}</span></a>`;
   const otsikko = (o, n) => `<a class="osio-ryhma" href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}>${n}</a>`;
   return `${linkki("kaikki")}
+    ${tila.valmennus ? `<h3 class="valmennus-otsikko" title="Näkyy vain valmentajille, ei pelaajille">Valmennus <span class="lukko">vain valmennus</span></h3>${linkki("valmennus")}` : ""}
     ${otsikko("vastustajat", "Vastustajat")}<div class="osio-alat">${VASTUSTAJAT.map(linkki).join("")}</div>
     <h3>Oma joukkue</h3>${linkki("oma_peli")}${linkki("KPL")}
     <h3>Muut</h3>${["idea", "merkkipeli", "pelaaja", "muu"].map(linkki).join("")}`;
@@ -114,14 +116,16 @@ function paivitaLkm() {
 
 function piirraKirjoitus() {
   const o = K.osio, joukkue = onJoukkue(o), ottelu = K.valilehti === "ottelumuistiot";
-  const pelaajat = joukkue ? [...K.pelaajat.values()].filter((p) => p.joukkue === o && p.aktiivinen).sort(sukunimiJarjestys) : [];
+  // Valmennus-osiossa voi liittää muistiinpanon omaan (KPL) pelaajaan
+  const pelJoukkue = joukkue ? o : o === "valmennus" ? "KPL" : null;
+  const pelaajat = pelJoukkue ? [...K.pelaajat.values()].filter((p) => p.joukkue === pelJoukkue && p.aktiivinen).sort(sukunimiJarjestys) : [];
   $("#valilehti").innerHTML = `
     <form id="uusi" class="uusi-muistiinpano">
       ${ottelu ? `<label class="kentta pvm-kentta">Ottelun päivä <input type="date" name="pvm" value="${tanaan()}" required></label>` : ""}
-      <textarea name="teksti" rows="3" placeholder="${ottelu ? "Ottelumuistion teksti, tai liitä tiedosto (Word, Excel, kuva, PDF)." : o === "kaikki" ? "Kirjoita muistiinpano. Ensimmäinen rivi on otsikko." : `Kirjoita muistiinpano osioon ${esc(osioNimi(o))}. Ensimmäinen rivi on otsikko.`}"></textarea>
+      <textarea name="teksti" rows="3" placeholder="${ottelu ? "Ottelumuistion teksti, tai liitä tiedosto (Word, Excel, kuva, PDF)." : o === "kaikki" ? "Kirjoita muistiinpano. Ensimmäinen rivi on otsikko." : o === "valmennus" ? "Valmennuksen oma reflektio: oman joukkueen tai pelaajan suoritus, ajatukset, linjaukset. Näkyy vain valmentajille, ei pelaajille." : `Kirjoita muistiinpano osioon ${esc(osioNimi(o))}. Ensimmäinen rivi on otsikko.`}"></textarea>
       <div class="rivi">
-        ${o === "kaikki" ? `<label class="pieni">Osio <select name="osio">${OSIOT.map((x) => `<option value="${x}"${x === "idea" ? " selected" : ""}>${esc(osioNimi(x))}</option>`).join("")}</select></label>` : ""}
-        ${joukkue && !ottelu ? `<label class="pieni">Pelaaja <select name="pelaaja"><option value="">Koko joukkue</option>${pelaajat.map((p) => `<option value="${p.id}">${esc(p.nimi)}</option>`).join("")}</select></label>` : ""}
+        ${o === "kaikki" ? `<label class="pieni">Osio <select name="osio">${osiot().map((x) => `<option value="${x}"${x === "idea" ? " selected" : ""}>${esc(osioNimi(x))}</option>`).join("")}</select></label>` : ""}
+        ${pelJoukkue && !ottelu ? `<label class="pieni">Pelaaja <select name="pelaaja"><option value="">Koko joukkue</option>${pelaajat.map((p) => `<option value="${p.id}">${esc(p.nimi)}</option>`).join("")}</select></label>` : ""}
         <span id="tiedostot" class="tiedostot"></span>
         <button class="btn ensisij" type="submit">Tallenna</button>
         <span class="pieni vihje-nappain">Ctrl + Enter tallentaa. Tiedoston voi myös vetää tähän.</span>
@@ -170,7 +174,7 @@ export function kortti(h, { osio = true, pelaaja = true } = {}) {
   const p = h.pelaaja_id && K.pelaajat.get(h.pelaaja_id);
   const voiPoistaa = h.kirjoittaja === omaEmail() || tila.admin;
   return `<li class="muistiinpano tyyppi-${esc(h.tyyppi)}" data-id="${h.id}">
-    <div class="m-meta">${osio ? luokkaMerkki(h) : ""}${h.tyyppi !== "muistiinpano" ? `<span class="tyyppimerkki">${TYYPPINIMI[h.tyyppi]}${h.ottelu_pvm ? ` ${pvmFi(h.ottelu_pvm)}` : ""}</span>` : h.tiedot?.osa === "ulkopeli" ? `<span class="tyyppimerkki">Ulkopeli${h.tiedot.tilanne && h.tiedot.tilanne !== "Yleinen" ? `: ${esc(h.tiedot.tilanne)}` : ""}</span>` : ""}${pelaaja && p ? `<a class="pelaajamerkki" href="#/vp/${p.id}">${esc(p.nimi)}</a>` : ""}<span>${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}${h.muokattu && new Date(h.muokattu) - new Date(h.luotu) > 60000 ? " (muokattu)" : ""}</span></div>
+    <div class="m-meta">${osio ? luokkaMerkki(h) : ""}${h.tyyppi !== "muistiinpano" ? `<span class="tyyppimerkki">${TYYPPINIMI[h.tyyppi]}${h.ottelu_pvm ? ` ${pvmFi(h.ottelu_pvm)}` : ""}</span>` : h.tiedot?.osa === "ulkopeli" ? `<span class="tyyppimerkki">Ulkopeli${h.tiedot.tilanne && h.tiedot.tilanne !== "Yleinen" ? `: ${esc(h.tiedot.tilanne)}` : ""}</span>` : ""}${pelaaja && p ? `<a class="pelaajamerkki" href="#/vp/${p.id}">${esc(p.nimi)}</a>` : ""}${h.luokka === "valmennus" ? `<span class="lukko" title="Näkyy vain valmentajille">vain valmennus</span>` : ""}<span>${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}${h.muokattu && new Date(h.muokattu) - new Date(h.luotu) > 60000 ? " (muokattu)" : ""}</span></div>
     <div class="m-sisalto">${sisalto(h)}</div>
     <div class="m-toiminnot">
       ${h.tyyppi === "profiili" ? `<a class="btn pieni-nappi ensisij" href="#/vp/${h.pelaaja_id}/profiili">Avaa profiili ja vikalista</a>` : `${RAKENTEISET.includes(h.tyyppi) ? "" : `<button class="linkkinappi" data-t="muokkaa">Muokkaa</button>`}
@@ -210,13 +214,13 @@ export function kytkeKortit(el) {
 
 function muokkaa(li, h) {
   const s = li.querySelector(".m-sisalto");
-  const joukkue = h.luokka === "vastustaja" ? h.vastustaja : null;
+  const joukkue = h.luokka === "vastustaja" ? h.vastustaja : h.luokka === "valmennus" ? "KPL" : null;
   const pelaajat = joukkue ? [...K.pelaajat.values()].filter((p) => p.joukkue === joukkue).sort(sukunimiJarjestys) : [];
   s.innerHTML = `<textarea class="m-muokkaus" rows="${Math.min(18, Math.max(4, muistiinpanonTeksti(h).split("\n").length + 1))}">${esc(muistiinpanonTeksti(h))}</textarea>
     ${liitteetHtml(K.liitteet.get(h.id), { muokattava: true })}
     <div class="rivi">
       ${h.tyyppi === "ottelumuistio" ? `<label class="pieni">Ottelun päivä <input type="date" name="pvm" value="${esc(h.ottelu_pvm || "")}"></label>`
-        : `<label class="pieni">Osio <select name="osio">${OSIOT.map((x) => `<option value="${x}"${x === huomionOsio(h) ? " selected" : ""}>${esc(osioNimi(x))}</option>`).join("")}</select></label>`}
+        : `<label class="pieni">Osio <select name="osio">${osiot().map((x) => `<option value="${x}"${x === huomionOsio(h) ? " selected" : ""}>${esc(osioNimi(x))}</option>`).join("")}</select></label>`}
       ${joukkue && h.tyyppi === "muistiinpano" ? `<label class="pieni">Pelaaja <select name="pelaaja"><option value="">Koko joukkue</option>${pelaajat.map((p) => `<option value="${p.id}"${p.id === h.pelaaja_id ? " selected" : ""}>${esc(p.nimi)}</option>`).join("")}</select></label>` : ""}
       <span class="tiedostot"></span>
       <button class="btn ensisij pieni-nappi" data-t="tallenna">Tallenna</button><button class="btn pieni-nappi" data-t="peru">Peru</button></div>`;

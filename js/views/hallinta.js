@@ -8,14 +8,14 @@ export async function nayta(main) {
   main.innerHTML = `
     <h1>Hallinta</h1>
 
-    <h2>Valmentajat</h2>
-    <p class="pieni">Vain listalla olevat sähköpostiosoitteet näkevät nimet ja voivat syöttää tuloksia. Google-kirjautumisessa käytetään Google-tilin osoitetta.</p>
+    <h2>Käyttäjät</h2>
+    <p class="pieni">Vain listalla olevat sähköpostiosoitteet pääsevät Keskukseen. <b>Pelaajalla</b> on samat oikeudet kuin valmentajalla (muistiot, syötöt, Pelikirja, testit), mutta Muistion <b>Valmennus</b>-osio ei näy hänelle lainkaan. <b>Valmentaja</b> ja <b>ylläpitäjä</b> näkevät myös Valmennus-osion. Google-kirjautumisessa käytetään Google-tilin osoitetta.</p>
     <div class="taulu-wrap"><table><thead><tr><th>Sähköposti</th><th>Nimi</th><th>Rooli</th><th></th></tr></thead>
-      <tbody>${valmentajat.map((v) => `<tr><td>${esc(v.email)}</td><td>${esc(v.nimi || "")}</td><td>${v.rooli === "admin" ? "Ylläpitäjä" : "Valmentaja"}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
+      <tbody>${valmentajat.map((v) => `<tr><td>${esc(v.email)}</td><td>${esc(v.nimi || "")}</td><td>${({ admin: "Ylläpitäjä", valmentaja: "Valmentaja", pelaaja: "Pelaaja" })[v.rooli] || v.rooli}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
     <form id="uusi-v" class="rivi" style="margin-top:10px">
       <input type="email" name="email" placeholder="sähköposti" required style="width:240px"><input type="text" name="nimi" placeholder="nimi">
-      <select name="rooli"><option value="valmentaja">Valmentaja</option><option value="admin">Ylläpitäjä</option></select>
-      <button class="btn ensisij">Lisää valmentaja</button></form>
+      <select name="rooli"><option value="valmentaja">Valmentaja</option><option value="pelaaja">Pelaaja</option><option value="admin">Ylläpitäjä</option></select>
+      <button class="btn ensisij">Lisää käyttäjä</button></form>
 
     <h2>Pelaajat</h2>
     <p class="pieni">Muutokset tallentuvat, kun poistut kentästä. Ei-aktiiviset pelaajat eivät näy osallistujalistoissa, mutta heidän tuloksensa säilyvät.</p>

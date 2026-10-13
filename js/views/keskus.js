@@ -46,7 +46,7 @@ export async function nayta(main) {
         <label for="pika-teksti" class="pika-otsikko">Mitä huomasit?</label>
         <textarea id="pika-teksti" name="teksti" rows="3" required placeholder="Kirjoita ajatus tai havainto. Ensimmäinen rivi on otsikko."></textarea>
         <div class="osiovalinta" role="group" aria-label="Osio">
-          ${AIHEOSIOT.filter((o) => o !== "muu").map(chip).join("")}<span class="erotin" aria-hidden="true"></span>${JOUKKUEET.map(chip).join("")}
+          ${[...(tila.valmennus ? ["valmennus"] : []), ...AIHEOSIOT.filter((o) => o !== "muu")].map(chip).join("")}<span class="erotin" aria-hidden="true"></span>${JOUKKUEET.map(chip).join("")}
         </div>
         <div class="rivi"><button class="btn ensisij" type="submit">Tallenna</button><span class="pieni vihje-nappain">Ctrl + Enter tallentaa</span></div>
       </form>

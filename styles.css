@@ -754,3 +754,8 @@ main { max-width: 1320px; }
 .vl-vastaus { font-size: 13px; color: var(--ink-2); border-left: 2px solid var(--green); padding-left: 8px; }
 .vl-toiminnot { display: flex; gap: 12px; }
 .vl-toiminnot:empty { display: none; }
+
+/* --- Valmennus-osio (vain valmentajat) */
+.valmennus-otsikko { display: flex; align-items: center; gap: 8px; }
+.lukko { font: 600 10px/1 var(--text); text-transform: uppercase; letter-spacing: .06em; color: var(--kpl); background: rgba(245,168,0,.14); border-radius: 99px; padding: 3px 7px; white-space: nowrap; }
+.ei-oikeuksia { max-width: 640px; margin: 60px auto; }

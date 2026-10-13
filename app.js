@@ -16,12 +16,12 @@ import * as vpelaaja from "./js/views/vpelaaja.js";
 import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
 import * as analyysi from "./js/views/analyysi.js";
 
-// Valmentajalle etusivu on Keskus, muille julkiset tilastot.
-const etusivu = { nayta: (main, ...a) => (tila.valmentaja ? keskus : koti).nayta(main, ...a), poistu: () => keskus.poistu?.() };
+// Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
+const etusivu = keskus;
 
 const reitit = [
-  { polku: /^\/?$/, nakyma: etusivu, julkinen: true },
-  { polku: /^\/tilastot$/, nakyma: koti, julkinen: true, osio: "testit" },
+  { polku: /^\/?$/, nakyma: etusivu },
+  { polku: /^\/tilastot$/, nakyma: koti, osio: "testit" },
   { polku: /^\/kirjaudu$/, nakyma: kirjaudu, julkinen: true },
   { polku: /^\/muistio(?:\/([^/]+))?(?:\/([^/]+))?$/, nakyma: muistio },
   { polku: /^\/vp\/([\w-]+)(?:\/([a-z]+))?$/, nakyma: vpelaaja },
@@ -60,13 +60,13 @@ let navId = 0;
 
 function piirraNav(polku, r) {
   const linkki = ([teksti, href, aktiivinen]) => `<a href="${href}"${aktiivinen(polku, r) ? ' aria-current="page"' : ""}>${teksti}</a>`;
-  if (tila.valmentaja) {
+  if (tila.jasen) {
     $("#nav").innerHTML = PAAVALIKKO.map(linkki).join("") + `<a href="pelikirja.html">Pelikirja</a>` + (tila.admin ? linkki(["Hallinta", "#/hallinta", (p) => p === "/hallinta"]) : "");
   } else {
-    $("#nav").innerHTML = linkki(["Tilastot", "#/", (p) => p === "/" || p === "/tilastot"]);
+    $("#nav").innerHTML = "";
   }
   const ali = $("#alinav");
-  ali.hidden = !(tila.valmentaja && r?.osio === "testit");
+  ali.hidden = !(tila.jasen && r?.osio === "testit");
   ali.innerHTML = ali.hidden ? "" : TESTIVALIKKO.map(linkki).join("");
   const k = $("#kayttaja");
   if (tila.istunto) {
@@ -83,9 +83,10 @@ async function reititä() {
   const r = reitit.find((x) => x.polku.test(polku)) || reitit[0];
   const parametrit = polku.match(r.polku)?.slice(1) || [];
   piirraNav(polku, r);
-  if (!r.julkinen && !tila.valmentaja) {
-    location.hash = tila.istunto ? "#/" : "#/kirjaudu";
-    if (tila.istunto) ilmoita("Tunnuksellasi ei ole valmentajan oikeuksia.", true);
+  if (!r.julkinen && !tila.jasen) {
+    if (!tila.istunto) { if (polku !== "/kirjaudu") location.hash = "#/kirjaudu"; return; }
+    nykyinen?.poistu?.();
+    $("#sisalto").innerHTML = `<div class="ei-oikeuksia"><h1>Ei käyttöoikeutta</h1><p class="ingressi">Olet kirjautunut osoitteella <b>${esc(tila.istunto.user.email)}</b>, mutta sille ei ole annettu oikeuksia KPL Keskukseen. Pyydä ylläpitäjää lisäämään osoite.</p></div>`;
     return;
   }
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
@@ -113,13 +114,14 @@ async function kaynnista() {
     await sb.auth.getSession();
     history.replaceState(null, "", location.pathname + (location.hash || "#/"));
   }
-  await Promise.all([lataaPerus(), tarkistaRooli()]);
-  if (tila.valmentaja) await lataaPelaajat();
+  await tarkistaRooli();
+  if (tila.jasen) await Promise.all([lataaPerus(), lataaPelaajat()]);
   sb.auth.onAuthStateChange(async (tapahtuma) => {
     if (tapahtuma === "SIGNED_IN" || tapahtuma === "SIGNED_OUT") {
-      const oli = tila.valmentaja;
+      const oli = tila.jasen;
       await tarkistaRooli();
-      if (tila.valmentaja && !oli) { await lataaPelaajat(); if (location.hash.startsWith("#/kirjaudu")) location.hash = "#/"; else reititä(); }
+      if (tila.jasen && !oli) { await Promise.all([lataaPerus(), lataaPelaajat()]); if (location.hash.startsWith("#/kirjaudu")) location.hash = "#/"; else reititä(); }
+      else if (!tila.jasen) reititä();
     }
   });
   window.addEventListener("hashchange", reititä);

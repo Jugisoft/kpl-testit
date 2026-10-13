@@ -12,6 +12,8 @@ export const tila = {
   istunto: null,
   valmentaja: false,
   admin: false,
+  valmennus: false,   // valmentaja tai ylläpitäjä: näkee Valmennus-osion (pelaajat eivät)
+  jasen: false,       // kuka tahansa käyttäjä (= tila.valmentaja, säilytetty vanha nimi)
   testit: [],          // testimääritelmät
   testi: {},           // koodi -> testi
   joukkueet: [],
@@ -42,11 +44,15 @@ export async function lataaPerus() {
 export async function tarkistaRooli() {
   const { data } = await sb.auth.getSession();
   tila.istunto = data.session;
-  tila.valmentaja = tila.admin = false;
-  if (!tila.istunto) return;
-  const [v, a] = await Promise.all([sb.rpc("on_valmentaja"), sb.rpc("on_admin")]);
-  tila.valmentaja = !!v.data;
-  tila.admin = !!a.data;
+  // Kaikilla käyttäjillä samat oikeudet; Valmennus-osio vain valmentajille ja ylläpitäjälle
+  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = false;
+  if (tila.istunto) {
+    const [v, a, vm] = await Promise.all([sb.rpc("on_valmentaja"), sb.rpc("on_admin"), sb.rpc("on_valmennus")]);
+    tila.valmentaja = !!v.data;
+    tila.admin = !!a.data;
+    tila.valmennus = !!vm.data;
+  }
+  tila.jasen = tila.valmentaja;
 }
 
 export async function lataaPelaajat() {

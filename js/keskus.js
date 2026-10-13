@@ -9,6 +9,7 @@ export const LUOKAT = {
   pelaaja: "Pelaajat",
   muu: "Muut",
   vastustaja: "Vastustaja",
+  valmennus: "Valmennus",
 };
 export const JOUKKUEET = ["KPL", "IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"];
 // Osiot muistiossa: aiheet ja vastustajat. Avain: aihe (idea, oma_peli...) tai joukkueen lyhenne.

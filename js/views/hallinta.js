@@ -2,6 +2,8 @@
 import { sb, tila, nimi, lataaPelaajat, lataaPerus } from "../db.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 
+const ROOLIT = { pelaaja: "Pelaaja", valmentaja: "Valmentaja", admin: "Ylläpitäjä" };
+
 export async function nayta(main) {
   const { data: valmentajat } = await sb.from("valmentajat").select("*").order("email");
   const jSel = (v) => `<select data-k="joukkue_id">${tila.joukkueet.map((j) => `<option value="${j.id}" ${j.id === v ? "selected" : ""}>${esc(j.nimi)}</option>`).join("")}</select>`;
@@ -10,8 +12,8 @@ export async function nayta(main) {
 
     <h2>Käyttäjät</h2>
     <p class="pieni">Vain listalla olevat sähköpostiosoitteet pääsevät Keskukseen. <b>Pelaajalla</b> on samat oikeudet kuin valmentajalla (muistiot, syötöt, Pelikirja, testit), mutta Muistion <b>Valmennus</b>-osio ei näy hänelle lainkaan. <b>Valmentaja</b> ja <b>ylläpitäjä</b> näkevät myös Valmennus-osion. Google-kirjautumisessa käytetään Google-tilin osoitetta.</p>
-    <div class="taulu-wrap"><table><thead><tr><th>Sähköposti</th><th>Nimi</th><th>Rooli</th><th></th></tr></thead>
-      <tbody>${valmentajat.map((v) => `<tr><td>${esc(v.email)}</td><td>${esc(v.nimi || "")}</td><td>${({ admin: "Ylläpitäjä", valmentaja: "Valmentaja", pelaaja: "Pelaaja" })[v.rooli] || v.rooli}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
+    <div class="taulu-wrap"><table><thead><tr><th>Sähköposti</th><th>Nimi</th><th>Oikeusryhmä</th><th></th></tr></thead>
+      <tbody>${valmentajat.map((v) => `<tr><td>${esc(v.email)}</td><td>${esc(v.nimi || "")}</td><td>${v.email === tila.istunto.user.email.toLowerCase() ? `${ROOLIT[v.rooli] || v.rooli} <span class="pieni">(oma tunnus)</span>` : `<select data-rooli-v="${esc(v.email)}" aria-label="Oikeusryhmä: ${esc(v.email)}">${Object.entries(ROOLIT).map(([k, n]) => `<option value="${k}"${k === v.rooli ? " selected" : ""}>${n}</option>`).join("")}</select>`}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
     <form id="uusi-v" class="rivi" style="margin-top:10px">
       <input type="email" name="email" placeholder="sähköposti" required style="width:240px"><input type="text" name="nimi" placeholder="nimi">
       <select name="rooli"><option value="valmentaja">Valmentaja</option><option value="pelaaja">Pelaaja</option><option value="admin">Ylläpitäjä</option></select>
@@ -67,6 +69,16 @@ export async function nayta(main) {
     if (error) return ilmoita(error.message, true);
     ilmoita(`${nimi(p)} poistettu`); await lataaPelaajat(); nayta(main);
   }));
+  $$("[data-rooli-v]").forEach((s) => {
+    const alku = s.value;
+    s.onchange = async () => {
+      const email = s.dataset.rooliV, uusi = s.value;
+      if (!confirm(`Muutetaanko käyttäjän ${email} oikeusryhmäksi ${ROOLIT[uusi]}?${uusi === "pelaaja" ? " Valmennus-osio ei enää näy hänelle." : ""}`)) { s.value = alku; return; }
+      const { error } = await sb.from("valmentajat").update({ rooli: uusi }).eq("email", email);
+      if (error) { s.value = alku; return ilmoita(error.message, true); }
+      ilmoita(`${email}: ${ROOLIT[uusi]}`); nayta(main);
+    };
+  });
   $$("[data-poista-v]").forEach((b) => (b.onclick = async () => {
     if (b.dataset.vahvista !== "1") { b.dataset.vahvista = "1"; b.textContent = "Vahvista poisto"; return; }
     const { error } = await sb.from("valmentajat").delete().eq("email", b.dataset.poistaV);

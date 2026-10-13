@@ -27,7 +27,10 @@ export async function nayta(main) {
   const h = new Date().toLocaleString("fi-FI", { hour: "numeric", timeZone: "Europe/Helsinki" }) | 0;
   const tervehdys = h < 5 ? "Hyvää yötä" : h < 10 ? "Huomenta" : h < 17 ? "Päivää" : "Iltaa";
   const etunimi = (kirjoittajanNimi(omaEmail()) || "").split(" ")[0];
-  const viikko = huomiot.filter((x) => Date.now() - new Date(x.luotu) < 7 * 864e5).length;
+  // Tervehdyksen luku: vain valmentajien omat kirjaukset (ei Jarvisin profiileja tai muita automaattisia)
+  const tuoreet = huomiot.filter((x) => Date.now() - new Date(x.luotu) < 7 * 864e5);
+  const viikko = tuoreet.filter((x) => x.kirjoittaja !== "ai" && x.tyyppi !== "profiili").length;
+  const profiileja = tuoreet.filter((x) => x.tyyppi === "profiili").length;
   const vastustajat = JOUKKUEET.filter((j) => j !== "KPL");
   const chip = (o) => `<button type="button" class="chip" data-osio="${o}" aria-pressed="${o === valittuOsio}">${esc(osioNimi(o))}</button>`;
 
@@ -37,7 +40,7 @@ export async function nayta(main) {
       <div class="hero-sisalto">
         <div class="hero-tunnus"><img src="img/kpl-logo-192.png" alt="Kouvolan Pallonlyöjät" width="76" height="76"><span>Kouvolan Pallonlyöjät<br><b>Superpesis 2027</b></span></div>
         <h1>${esc(tervehdys)}${etunimi ? `, ${esc(etunimi)}` : ""}.</h1>
-        <p class="hero-ala">${viikko ? `Valmennus on kirjannut tällä viikolla ${viikko} ${viikko === 1 ? "uuden muistiinpanon" : "uutta muistiinpanoa"}.` : "Tervetuloa valmennuksen keskukseen. Kaikki muistiinpanot, kuviot ja tiedot yhdessä paikassa."}</p>
+        <p class="hero-ala">${viikko ? `Valmennus on kirjannut viimeisen 7 päivän aikana ${viikko} ${viikko === 1 ? "uuden muistiinpanon" : "uutta muistiinpanoa"}.` : "Tervetuloa valmennuksen keskukseen. Kaikki muistiinpanot, kuviot ja tiedot yhdessä paikassa."}${profiileja ? ` Jarvis on tehnyt ${profiileja} ${profiileja === 1 ? "uuden pelaajaprofiilin" : "uutta pelaajaprofiilia"} kommentoitavaksi.` : ""}</p>
       </div>
       <form id="pika" class="pikakirjaus">
         <label for="pika-teksti" class="pika-otsikko">Mitä huomasit?</label>

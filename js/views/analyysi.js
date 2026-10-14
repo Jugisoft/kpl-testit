@@ -40,13 +40,17 @@ export async function nayta(main) {
       <li><a href="${YDIN}vertailu.html" target="_blank" rel="noopener">Vertailu</a><span class="pieni">Kaksi joukkuetta tai pelaajaa rinnakkain</span></li>
     </ul>
 
+    <h2>Juoksuodotus</h2>
+    <p>Montako juoksua vuorosta keskimäärin syntyy pesätilanteen ja palojen mukaan, milloin kärkilyönti kannattaa ja paljonko kunkin lyöjän lyöntivuorot tuottivat juoksuja yli sarjan keskitason. Kausi 2026.</p>
+    <p><a class="btn ensisij" href="#/juoksuodotus">Avaa juoksuodotus</a></p>
+
     <h2>Vastustajakortit</h2>
     <p>Tulostettava tiivistelmä ottelupäivää varten: lyöjät tilastoineen ja rooleineen, joukkueen kärkilyönnit lähtöpesittäin, ulkopelin kuviot ja valmennuksen havainnot.</p>
     <ul class="kt-valinta">${["IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"].map((j) => `<li><a class="btn" href="#/kortti/${j}">${j}</a></li>`).join("")}</ul>
 
     <h2>Työn alla</h2>
     <ul class="tulossa">
-      <li><strong>Juoksuodotus pesätilanteittain.</strong> Montako juoksua vuorosta keskimäärin syntyy, kun pesillä on tietty tilanne ja paloja tietty määrä. Pohja lyöjäjärjestyksen, jokerien ja kärkilyönnin riskin arviointiin.</li>
+      
       
       <li><strong>Merkinmurtaja.</strong> Vastustajan viuhkamerkkien analyysi videolta kirjatuista havainnoista.</li>
     </ul>`;

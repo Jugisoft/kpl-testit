@@ -14,6 +14,7 @@ import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
 import * as analyysi from "./js/views/analyysi.js";
 import * as testit from "./js/views/testit.js";
 import * as kortti from "./js/views/kortti.js";
+import * as juoksuodotus from "./js/views/juoksuodotus.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -31,6 +32,7 @@ const reitit = [
   { polku: /^\/kortti(?:\/([\w]+))?$/, nakyma: kortti },
   { polku: /^\/siirtomarkkinat$/, nakyma: siirtomarkkinat },
   { polku: /^\/analyysi$/, nakyma: analyysi },
+  { polku: /^\/juoksuodotus$/, nakyma: juoksuodotus },
   { polku: /^\/kerrat$/, nakyma: kerrat, osio: "testit" },
   { polku: /^\/syota\/([\w-]+)$/, nakyma: syotto, osio: "testit" },
   { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta, osio: "testit" },
@@ -44,7 +46,7 @@ const PAAVALIKKO = [
   ["Keskus", "#/", (p) => p === "/"],
   ["Muistio", "#/muistio", (p) => /^\/(muistio|huomio|vp\/|kortti)/.test(p)],
   ["Siirtomarkkinat", "#/siirtomarkkinat", (p) => p === "/siirtomarkkinat"],
-  ["Analyysi", "#/analyysi", (p) => p === "/analyysi"],
+  ["Analyysi", "#/analyysi", (p) => p === "/analyysi" || p === "/juoksuodotus"],
   ["Testit", "#/testit", (p, r) => r?.osio === "testit"],
 ];
 const TESTIVALIKKO = [

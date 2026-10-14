@@ -963,3 +963,68 @@ td.n.kt-ei { font-style: normal; }
 }
 .kt-paperi .md h4 { color: var(--p-ink); font: 700 10pt/1.2 var(--num); margin: 6px 0 2px; }
 .kt-pieni-taulu td { vertical-align: baseline; }
+
+/* --- Juoksuodotus (#/juoksuodotus) */
+#sisalto { --jo-seq: #F5A800; --jo-plus: #F5A800; --jo-miinus: #5AB4E8; }
+.jo-ohjaus { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin: 0 0 14px; }
+.jo-ohjaus .kentta select { min-width: 180px; }
+.jo-matriisi-kehys { display: grid; grid-template-columns: minmax(0, 620px) minmax(220px, 1fr); gap: 28px; align-items: start; }
+.jo-taulu { width: 100%; border-collapse: separate; border-spacing: 3px; }
+.jo-taulu thead th { font: 600 14px/1.2 var(--text); color: var(--ink-2); text-align: center; padding: 0 0 6px; }
+.jo-taulu thead th:first-child { text-align: left; }
+.jo-taulu tbody th { text-align: left; font-weight: 500; white-space: nowrap; padding-right: 10px; }
+.jo-taulu tbody th span { vertical-align: middle; }
+.jo-ikoni { width: 18px; height: 26px; vertical-align: middle; margin-right: 8px; overflow: visible; }
+.jo-ikoni polyline { fill: none; stroke: var(--ink-3); stroke-width: 1.2; stroke-dasharray: 2 1.6; }
+.jo-ikoni rect { fill: var(--surface-2); stroke: var(--ink-3); stroke-width: 1.1; }
+.jo-ikoni rect.on { fill: var(--kpl); stroke: var(--kpl); }
+.jo-ikoni circle { fill: var(--ink-2); }
+.jo-solu { position: relative; height: 58px; border-radius: 6px; text-align: center; vertical-align: middle; color: var(--ink); outline-offset: -2px; }
+.jo-solu.tumma { color: #181818; }
+.jo-solu.pieni-otos .jo-arvo { opacity: .55; }
+.jo-arvo { display: block; font-size: 26px; font-weight: 700; line-height: 1; }
+.jo-n { display: block; font-size: 11px; opacity: .7; margin-top: 3px; }
+.jo-selite p { margin: 0 0 8px; }
+.jo-asteikko { height: 12px; border-radius: 3px; background: linear-gradient(90deg, color-mix(in oklab, var(--jo-seq) 8%, var(--surface)), var(--jo-seq)); }
+.jo-asteikko-luvut { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); margin-top: 4px !important; }
+.jo-avain { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+.jo-avain.plus { background: var(--jo-plus); } .jo-avain.miinus { background: var(--jo-miinus); }
+.jo-lukuohje { margin-top: 18px !important; padding: 12px 14px; border-left: 3px solid var(--kpl); background: var(--surface); border-radius: 0 8px 8px 0; color: var(--ink-2); }
+.jo-lukuohje b { color: var(--ink); font-family: var(--num); font-size: 18px; }
+
+.jo-kl td, .jo-lyojat td { vertical-align: middle; }
+.jo-tilanne { white-space: nowrap; }
+.jo-tilanne .jo-ikoni { width: 14px; height: 20px; }
+.jo-palkkisarake { width: 40%; min-width: 220px; }
+.jo-kynnys { position: relative; height: 22px; background: var(--surface-2); border-radius: 4px; }
+.jo-kp { position: absolute; inset: 0 auto 0 0; background: color-mix(in oklab, var(--kpl) 70%, var(--surface)); border-radius: 4px 0 0 4px; }
+.jo-km { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); }
+.jo-km i { position: absolute; top: 50%; left: 6px; transform: translateY(-50%); font: 600 12px/1 var(--num); font-style: normal; color: var(--ink); background: var(--surface); padding: 2px 4px; border-radius: 3px; white-space: nowrap; }
+.jo-kynnys b { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+.jo-plus-teksti { color: var(--jo-plus); }
+.jo-miinus-teksti { color: var(--jo-miinus); }
+.pieni-otos-merkki { color: var(--ink-3); }
+
+.jo-hajonta { display: grid; grid-template-columns: 1fr 56px; align-items: center; gap: 10px; }
+.jo-hajonta .rata { position: relative; height: 14px; }
+.jo-hajonta .rata::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-3); }
+.jo-hajonta .rata span { position: absolute; top: 0; bottom: 0; }
+.jo-hajonta .rata .plus { background: var(--jo-plus); border-radius: 0 4px 4px 0; }
+.jo-hajonta .rata .miinus { background: var(--jo-miinus); border-radius: 4px 0 0 4px; }
+.jo-hajonta b { text-align: right; font-size: 16px; }
+.jo-lyojat tr.oma td:first-child { box-shadow: inset 3px 0 0 var(--kpl); }
+.jo-vali td { text-align: center; color: var(--ink-3); }
+.jo-joukkuepalkit { display: grid; gap: 6px; max-width: 760px; }
+.jo-jr { display: grid; grid-template-columns: 60px 1fr 130px; align-items: center; gap: 12px; padding: 4px 8px; border-radius: 6px; }
+.jo-jr.oma { background: rgba(245,168,0,.10); }
+.jo-jn { font-weight: 600; }
+.jo-menetelma { margin-top: 36px; color: var(--ink-2); }
+.jo-menetelma summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.jo-menetelma li { margin-bottom: 4px; }
+@media (max-width: 860px) { .jo-matriisi-kehys { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .jo-arvo { font-size: 20px; } .jo-solu { height: 50px; } .jo-n { font-size: 10px; }
+  .jo-taulu tbody th span { font-size: 13px; } .jo-ikoni { margin-right: 4px; }
+  .jo-jr { grid-template-columns: 48px 1fr; } .jo-jr .pieni { display: none; }
+}
+@media (max-width: 560px) { .jo-mob-pois { display: none; } .jo-palkkisarake { min-width: 110px; width: auto; } .jo-kl, .jo-lyojat { font-size: 13px; } .jo-kl td, .jo-kl th, .jo-lyojat td, .jo-lyojat th { padding-left: 6px; padding-right: 6px; } .jo-km i { display: none; } }

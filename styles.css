@@ -794,3 +794,172 @@ tr.yhteensa td { border-top: 1px solid var(--line); }
 .ennatyslista .num { font-size: 18px; font-weight: 700; }
 .testiryhma .osa-nimi { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin: 8px 0 6px; }
 @media (max-width: 560px) { .testiruudut { grid-template-columns: 1fr 1fr; } .tr-arvo { font-size: 22px; } .ryhmanappi b { font-size: 16px; } }
+
+/* --- Vastustajakortti (#/kortti/:joukkue): valkoinen A4-arkki, sama näytöllä ja paperilla */
+.kt-linkki { margin-left: auto; align-self: center; white-space: nowrap; }
+.kt-valinta { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-wrap: wrap; gap: 8px; }
+.kt-ohjaus { max-width: 210mm; margin: 0 auto 18px; }
+.kt-ohjaus-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.kt-ohjaus-paa h1 { margin: 0; }
+.kt-ohjaus-paa p { margin: 4px 0 0; }
+.kt-valinnat { display: grid; gap: 10px; margin-top: 14px; }
+.kt-valinnat fieldset { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: 150px 1fr; gap: 8px; align-items: start; }
+.kt-valinnat legend { float: left; font-size: 14px; font-weight: 600; color: var(--ink-2); padding-top: 4px; }
+.kt-valinnat .chip { font-size: 13px; padding: 4px 10px; }
+@media (max-width: 640px) { .kt-valinnat fieldset { grid-template-columns: 1fr; } }
+
+.kt-paperi {
+  --p-ink: #1A1916; --p-ink-2: #55524B; --p-ink-3: #8C877D; --p-line: #DCD7CC; --p-line-2: #EDE9E1;
+  --p-paper: #FFFFFF; --p-kpl: #F5A800; --p-kpl-pale: #FFF3D1; --p-good: #1E7A4C; --p-weak: #B8432F; --p-field: #E9F0E5;
+  max-width: 210mm; margin: 0 auto; padding: 12mm 12mm 10mm; background: var(--p-paper); color: var(--p-ink);
+  font: 8.6pt/1.42 var(--text); border-radius: 4px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.9);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact; color-scheme: light; overflow-wrap: anywhere;
+}
+.kt-paperi .num, .kt-paperi td.n { font-family: var(--num); font-variant-numeric: tabular-nums; }
+.kt-paperi h3 { font: 700 13pt/1.1 var(--num); margin: 0 0 5px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.kt-paperi h4 { font: 700 10pt/1.2 var(--num); margin: 0 0 2px; }
+.kt-lisa { font: 400 7.2pt/1.3 var(--text); color: var(--p-ink-3); }
+.kt-paperi .md p { margin: 0 0 4px; }
+.kt-paperi .md ul, .kt-paperi .md ol { margin: 0 0 4px; padding-left: 16px; }
+.kt-paperi .md h4 { margin-top: 6px; }
+.kt-paperi a { color: inherit; }
+.kt-lohko { margin-top: 6.5mm; break-inside: avoid; }
+.kt-tyhja { color: var(--p-ink-3); font-style: italic; margin: 0; }
+.kt-tyhja-lohko .kt-tyhja::after { content: " Tyhjä osio jätetään tulosteesta pois."; }
+.kt-huom { color: var(--p-ink-3); font-size: 7.2pt; margin: 4px 0 0; }
+
+/* otsikko: iso lyhenne on kortin tunnistettava elementti */
+.kt-paa { display: grid; grid-template-columns: auto 1fr auto; gap: 0 6mm; align-items: end; padding-bottom: 4mm; border-bottom: 2.4pt solid var(--p-ink); position: relative; }
+.kt-paa::after { content: ""; position: absolute; left: 0; bottom: -2.4pt; width: 34mm; height: 2.4pt; background: var(--p-kpl); }
+.kt-tunnus { font: italic 800 64pt/.78 var(--num); letter-spacing: -.02em; color: var(--p-ink); margin-bottom: -1mm; }
+.kt-laji { margin: 0; color: var(--p-ink-2); font-size: 8pt; }
+.kt-otsikko h2 { font: 700 21pt/1 var(--num); margin: 1px 0 4px; color: var(--p-ink); }
+.kt-meta { display: flex; flex-wrap: wrap; gap: 2px 16px; margin: 0; }
+.kt-meta div { display: flex; gap: 5px; }
+.kt-meta dt { color: var(--p-ink-3); }
+.kt-meta dd { margin: 0; font-weight: 600; }
+.kt-logo { width: 13mm; height: 13mm; align-self: start; }
+
+/* joukkueen luvut */
+.kt-avainluvut { display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--p-line); border-bottom: 1px solid var(--p-line); }
+.kt-avainluvut > div { padding: 5px 8px 6px; display: grid; gap: 1px; border-left: 1px solid var(--p-line-2); }
+.kt-avainluvut > div:first-child { border-left: 0; padding-left: 0; }
+.kt-avainluvut b { font: 700 17pt/1 var(--num); }
+.kt-avainluvut b i { font-style: normal; color: var(--p-ink-3); margin: 0 1px; }
+.kt-avainluvut span { font-size: 7pt; line-height: 1.25; color: var(--p-ink-2); }
+.kt-kaaviot { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 4mm; }
+.kt-kaavio { margin: 0; }
+.kt-kaavio figcaption { display: grid; margin-bottom: 4px; }
+.kt-kaavio figcaption b { font: 700 10pt/1.2 var(--num); }
+.kt-kaavio figcaption span { font-size: 7pt; color: var(--p-ink-3); }
+.kt-palkki { display: grid; grid-template-columns: 17mm 1fr 9mm 9mm; align-items: center; gap: 6px; height: 15px; }
+.kt-pk { font-size: 7.4pt; color: var(--p-ink-2); }
+.kt-pa { position: relative; height: 9px; background: var(--p-line-2); border-radius: 1px; }
+.kt-pt { position: absolute; inset: 0 auto 0 0; background: var(--p-ink-3); border-radius: 1px; }
+.kt-palkki.vahva .kt-pt { background: var(--p-ink); }
+.kt-palkki.heikko .kt-pt { background: #C9C3B7; }
+.kt-pka { position: absolute; top: -3px; bottom: -3px; width: 1.6px; margin-left: -.8px; background: var(--p-kpl); }
+.kt-pv { font-size: 10pt; font-weight: 700; text-align: right; }
+.kt-pe { font-size: 7.6pt; text-align: right; color: var(--p-ink-3); }
+.kt-palkki.vahva .kt-pe { color: var(--p-good); font-weight: 700; }
+.kt-palkki.heikko .kt-pe { color: var(--p-weak); font-weight: 700; }
+
+/* lyöjätaulukko */
+.kt-lyojat { break-inside: auto; }
+.kt-taulu { width: 100%; border-collapse: collapse; }
+.kt-taulu th { font: 600 7.2pt/1.2 var(--text); color: var(--p-ink-2); text-align: left; padding: 3px 4px; border-bottom: 1.2pt solid var(--p-ink); vertical-align: bottom; }
+.kt-taulu td { font-size: 8.4pt; line-height: 1.35; padding: 3.5px 4px; border-bottom: 1px solid var(--p-line-2); vertical-align: top; }
+.kt-taulu tr { break-inside: avoid; }
+.kt-taulu thead { display: table-header-group; }
+.kt-taulu .n { text-align: right; white-space: nowrap; }
+.kt-taulu td.n { font-size: 10pt; line-height: 1.15; }
+.kt-taulu td.n small { display: block; font: 6.4pt/1 var(--text); color: var(--p-ink-3); margin-top: 1px; }
+.kt-nro { font-weight: 700; color: var(--p-ink-2); width: 6mm; }
+.kt-nimi { min-width: 42mm; }
+td.kt-nimi b { font-weight: 600; font-size: 8.8pt; }
+.kt-tausta, .kt-kuvaus, .kt-kirj { display: block; font-size: 7pt; line-height: 1.3; color: var(--p-ink-2); }
+.kt-kuvaus { color: var(--p-ink); font-style: italic; }
+.kt-kirj { color: var(--p-ink-3); }
+.kt-uusi { display: inline-block; font: 700 6.6pt/1 var(--text); padding: 1.5px 4px 1px; border-radius: 2px; background: var(--p-kpl); color: #1A1916; }
+.kt-roolit { width: 22mm; }
+.kt-rooli { display: inline-block; min-width: 13px; text-align: center; font: 700 7.6pt/1 var(--num); padding: 2px 3px; margin: 0 2px 2px 0; border: 1px solid var(--p-ink); border-radius: 2px; }
+.kt-yht { font-weight: 700; }
+td.kt-hyva { box-shadow: inset 0 -2.2px 0 var(--p-kpl); font-weight: 700; }
+td.kt-pieni-otos { color: var(--p-ink-3); }
+.kt-ei { color: var(--p-ink-3); font-style: italic; font-size: 7.4pt; }
+td.n.kt-ei { font-style: normal; }
+.kt-lahteneet { margin: 5px 0 0; font-size: 7.4pt; color: var(--p-ink-2); }
+.kt-lahteneet b { color: var(--p-ink); }
+
+/* ulkopeli */
+.kt-ulkoruudukko { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 7mm; }
+.kt-ulko { break-inside: avoid; border-left: 2px solid var(--p-line); padding-left: 3mm; }
+.kt-havainnot { margin: 2px 0 0; padding-left: 14px; color: var(--p-ink-2); }
+.kt-havainnot span { color: var(--p-ink-3); }
+
+/* kentät paperilla: vaalea pohja, tummat viivat */
+.kt-paperi .kp-kentta { fill: var(--p-field); stroke: var(--p-ink); stroke-width: .3; }
+.kt-paperi .kp-vara { fill: #F5F7F2; stroke: var(--p-line); }
+.kt-paperi .kp-kaista { fill: rgba(176,146,92,.16); stroke: rgba(26,25,22,.35); }
+.kt-paperi .kp-koti { fill: rgba(176,146,92,.4); stroke: var(--p-ink); }
+.kt-paperi .kp-pesa { fill: var(--p-ink); }
+.kt-paperi .kp-apu { stroke: rgba(26,25,22,.12); }
+.kt-paperi .kp-mitta { fill: rgba(26,25,22,.35); }
+.kt-paperi .kp-teksti { fill: rgba(26,25,22,.6); }
+.kt-paperi .kp-piste { stroke: rgba(26,25,22,.75); stroke-width: .25; }
+.kt-kuvioruudukko { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; }
+.kt-kuvio { margin: 0; break-inside: avoid; }
+.kt-kuvio svg { width: 100%; height: auto; }
+.kt-kuvio figcaption { display: grid; gap: 1px; margin-top: 2px; font-size: 7.2pt; color: var(--p-ink-2); }
+.kt-kuvio figcaption b { font: 700 9.4pt/1.15 var(--num); color: var(--p-ink); }
+.kt-pel circle { fill: var(--p-ink); }
+.kt-pel text { font: 700 1.9px var(--num); fill: #fff; }
+.kt-pel text.kt-pnimi { font: 600 1.85px var(--text); fill: var(--p-ink); paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: .5px; }
+.kt-pel.vaihto circle { fill: var(--p-kpl); stroke: var(--p-ink); stroke-width: .3; }
+.kt-pel.vaihto text:not(.kt-pnimi) { fill: var(--p-ink); }
+.kt-etenija circle { fill: #fff; stroke: var(--p-ink); stroke-width: .3; stroke-dasharray: .6 .4; }
+.kt-etenija text { font: 700 1.4px var(--num); fill: var(--p-ink); }
+.kt-nuoli { stroke: var(--p-ink); stroke-width: .42; stroke-dasharray: 1.1 .6; }
+.kt-karki { fill: var(--p-ink); }
+
+/* lyöntikartta */
+.kt-kartta-ruudukko { display: grid; grid-template-columns: 62mm 1fr; gap: 7mm; align-items: start; }
+.kt-kartta-ruudukko figure { margin: 0; max-width: 70mm; }
+.kt-kartta-ruudukko svg { width: 100%; height: auto; }
+.kt-selite { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 7pt; color: var(--p-ink-2); margin-top: 3px; }
+.kt-selite i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; border: .5px solid rgba(0,0,0,.5); }
+.kt-pieni-taulu td.n { font-size: 9.4pt; }
+
+/* kooste, muistiinpanot, merkinnät */
+.kt-kooste { background: var(--p-kpl-pale); padding: 4mm 5mm; border-radius: 2px; }
+.kt-muistiot ul { margin: 0 0 4px; padding-left: 14px; }
+.kt-muistiot li { margin-bottom: 2px; }
+.kt-kirjoittaja { color: var(--p-ink-3); font-size: 7pt; white-space: nowrap; }
+.kt-viiva { height: 7.5mm; border-bottom: 1px solid var(--p-line); }
+.kt-ala { display: flex; justify-content: space-between; gap: 10mm; margin-top: 7mm; padding-top: 2mm; border-top: 1px solid var(--p-line); font-size: 6.6pt; color: var(--p-ink-3); }
+
+@media (max-width: 760px) {
+  .kt-paperi { padding: 16px; font-size: 12px; border-radius: 0; margin: 0 -20px; }
+  .kt-paa { grid-template-columns: 1fr auto; }
+  .kt-tunnus { grid-column: 1 / -1; font-size: 54px; margin-bottom: 4px; }
+  .kt-avainluvut { grid-template-columns: repeat(3, 1fr); }
+  .kt-avainluvut > div:nth-child(4) { border-left: 0; padding-left: 0; }
+  .kt-kaaviot, .kt-ulkoruudukko, .kt-kartta-ruudukko { grid-template-columns: 1fr; }
+  .kt-kuvioruudukko { grid-template-columns: 1fr 1fr; }
+  .kt-lyojat { overflow-x: auto; }
+  .kt-ala { flex-direction: column; gap: 2px; }
+}
+
+@page { size: A4 portrait; margin: 10mm 10mm 12mm;
+  @bottom-right { content: "Sivu " counter(page) " / " counter(pages); font: 7pt Poppins, sans-serif; color: #8C877D; } }
+@media print {
+  :root { color-scheme: light; }
+  html, body { background: #fff !important; zoom: 1 !important; }
+  .topbar, .alinav, .kt-ohjaus, .ilmoitus { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .kt-paperi { max-width: none; padding: 0; box-shadow: none; border-radius: 0; margin: 0; font-size: 8.4pt; }
+  .kt-lyojat { overflow: visible; }
+  .kt-tyhja-lohko { display: none; }
+}
+.kt-paperi .md h4 { color: var(--p-ink); font: 700 10pt/1.2 var(--num); margin: 6px 0 2px; }
+.kt-pieni-taulu td { vertical-align: baseline; }

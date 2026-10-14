@@ -7,6 +7,7 @@ Kouvolan Pallonlyöjien valmennuksen keskus: muistio, siirtomarkkinat, analyysi,
 - **Pelaajasivu (`#/vp/:id[/lyonnit|ulkopeli|muistiinpanot]`):** taulu `vastustajapelaajat` (kokoonpanot 2027 tuotu siirtomarkkinoista). Lyönnit tilanteittain kentälle (x/y metreinä, kenttä Pelikirjan mitoista `js/kentta.js`), ulkopelin painon suunta, muistiinpanot.
 - **Liitteet:** yksityinen Storage-bucket `liitteet` (max 25 Mt/tiedosto), taulu `liitteet`; vain valmentajat, linkit allekirjoitettuina (1 h).
 - **Siirtomarkkinat (`#/siirtomarkkinat`):** taulu `siirtomarkkinat` (yksi jsonb-rivi). Jarvis vie datan vaultista skriptillä `vie_portaaliin.py` → edge function `keskus-vienti` (avaimen sha256 taulussa `vientiavaimet`).
+- **Vastustajakortti (`#/kortti/:joukkue`):** tulostettava A4-tiivistelmä ottelupäivää varten (`js/views/kortti.js`). Kokoonpano 2027 (Muistion pelaajat + siirtomarkkinoiden sopimuslista), pelaajien tilastot runkosarja 2026, suunnitellut roolit, kirjatut lyönnit, joukkueen kärkilyönnit lähtöpesittäin, ulkopelin tekstit, fläppitaulun kuviot, Jarvisin kooste ja muistiinpanot. Tilastot taulussa `tilastot` (kausi, vaihe, tyyppi pelaaja/joukkue, data jsonb), Jarvis vie ne skriptillä `vie_tilastot.py` (YDIN 2027 -data) → edge function `keskus-vienti`. Valmennus-osion sisältöä ei käytetä.
 - **Analyysi (`#/analyysi`):** KPL sarjan rinnalla 2026, tietopankki, linkit YDIN 2027 -analytiikkaan.
 
 - **Julkinen etusivu:** ikäluokkien kehitys ilman nimiä (`julkinen_yhteenveto()`, vähintään 3 pelaajaa / ryhmä).

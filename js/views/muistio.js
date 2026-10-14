@@ -84,6 +84,7 @@ function piirraOsio() {
     ${joukkue ? `<div class="valilehdet" role="tablist">
       ${(o === "KPL" ? VALILEHDET_KPL : VALILEHDET_V).map(([k, n]) => [k, n, lkm[k]])
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/muistio/${o}/${k}" aria-selected="${v === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
+      ${o !== "KPL" ? `<a class="btn pieni-nappi kt-linkki" href="#/kortti/${o}" title="Tulostettava tiivistelmä ottelupäivää varten">Vastustajakortti</a>` : ""}
     </div>` : ""}
     <div id="valilehti"></div>`;
   if ($("#haku")) $("#haku").oninput = (e) => {

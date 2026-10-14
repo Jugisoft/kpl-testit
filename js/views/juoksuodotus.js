@@ -5,7 +5,7 @@ import { $, $$, esc } from "../util.js";
 
 const NIMI = { "0": "0-tilanne", "1": "1-tilanne", "2": "2-tilanne", "3": "3-tilanne", "1–2": "1–2-tilanne", "1–3": "1–3-tilanne", "2–3": "2–3-tilanne", "1–2–3": "Ajolähtö (1–2–3)" };
 const PIENI = 60; // tätä pienempi otos merkitään
-const s = { joukkue: "", ero: false, lyojaJoukkue: "KPL", minLv: 50 };
+const s = { joukkue: "", ero: false, lyojaJoukkue: "KPL", minLv: 50, klJoukkue: "KPL" };
 let D = null;
 
 const luku = (x, d = 2) => (x == null || Number.isNaN(x) ? "–" : x.toFixed(d).replace(".", ",").replace("-", "−"));
@@ -23,8 +23,14 @@ function pesaIkoni(tila) {
 export async function nayta(main) {
   const { data, error } = await sb.from("analyysit").select("data,paivitetty").eq("avain", "juoksuodotus_2026").maybeSingle();
   if (error) throw error;
+  const [tt, vp] = await Promise.all([
+    sb.from("tilastot").select("nimi,joukkue,data").eq("kausi", 2026).eq("vaihe", "runko").eq("tyyppi", "pelaaja"),
+    sb.from("vastustajapelaajat").select("nimi,joukkue,aktiivinen").eq("aktiivinen", true),
+  ]);
   if (!data) { main.innerHTML = `<h1>Juoksuodotus</h1><div class="paneeli tyhja-iso"><p>Juoksuodotusta ei ole vielä laskettu. Jarvis laskee sen skriptillä juoksuodotus.py.</p></div>`; return; }
-  D = { ...data.data, paivitetty: data.paivitetty };
+  const kokoonpano = new Map();
+  (vp.data || []).forEach((p) => (kokoonpano.get(p.joukkue) || kokoonpano.set(p.joukkue, []).get(p.joukkue)).push(p.nimi));
+  D = { ...data.data, paivitetty: data.paivitetty, tilastot: tt.data || [], kokoonpano };
   piirra(main);
 }
 
@@ -46,7 +52,7 @@ function piirra(main) {
         <li>Tilanne luetaan lyöntivuoron alussa: etenijät pesillä ja vuoroparin palot siihen asti. Supervuoroparit ja kotiutuskilpailut eivät ole mukana.</li>
         <li>Jos ottelu ratkesi kesken jakson viimeisen vuoron, sitä vuoroa ei lasketa, koska se jäi kesken.</li>
         <li>Lyöntivuoron arvo = juoksuodotus vuoron jälkeen + vuoron aikana tehdyt juoksut − juoksuodotus ennen. Sarjan keskimääräinen lyöntivuoro on 0. Arvo kirjataan lyöjälle, vaikka siihen vaikuttavat myös etenijät ja ulkopelin virheet.</li>
-        <li>Kärkilyönnin kynnys: onnistumisprosentti, jolla kärkilyöntiä yrittänyt lyöntivuoro on keskimäärin yhtä arvokas kuin tavallinen lyöntivuoro samasta tilanteesta. Epäonnistunut tarkoittaa vuoroa, jossa kärkilyönti epäonnistui eikä yksikään onnistunut.</li>
+        <li>Kärkilyönti: onnistunut = lyöntivuoro, jossa vähintään yksi kärkilyönti onnistui; epäonnistunut = kärkilyönti epäonnistui eikä yksikään onnistunut. Tarvittava onnistuminen = epäonnistumisen hinta / (onnistumisen hyöty + epäonnistumisen hinta). 0-tilanteessa kärkilyönti tarkoittaa lyöjän pääsyä kentälle etenijäksi.</li>
       </ul></details>`;
   piirraMatriisi(joukkueet);
   piirraKL();
@@ -96,25 +102,83 @@ function piirraMatriisi(joukkueet) {
   $$("[data-ero]", el).forEach((b) => (b.onclick = () => { s.ero = b.dataset.ero === "1"; piirraMatriisi(joukkueet); }));
 }
 
-// ---------- kärkilyönnin kannattavuus ----------
+// ---------- kärkilyönti: mitä onnistuminen tuo, mitä epäonnistuminen maksaa ----------
+const karkiPesa = (t) => (t === "0" ? 0 : Math.max(...t.split("–").map(Number)));
+const RYHMAT = [
+  [0, "0-tilanne: lyöjä pyrkii kentälle etenijäksi"],
+  [1, "Kärkietenijä ykkösellä: 1-tilanteen purku"],
+  [2, "Kärkietenijä kakkosella: 2-tilanteen purku"],
+  [3, "Kärkietenijä kolmosella: kotiutus"],
+];
+const KL_MIN = 10; // lyöjän yrityksiä vähintään
+
+function kokoonpanonLyojat(joukkue) {
+  const pt = new Map();
+  D.tilastot.forEach((t) => { const n = norm(t.nimi); if (!pt.has(n) || (t.data.O || 0) > (pt.get(n).data.O || 0)) pt.set(n, t); });
+  return [...(D.kokoonpano.get(joukkue) || [])].map((nimi) => ({ nimi, t: pt.get(norm(nimi))?.data || null })).filter((x) => x.t);
+}
+const norm = (x) => (x || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+const klPros = (t, b) => (t[`KLY${b}`] >= KL_MIN ? t[`KL${b}`] / t[`KLY${b}`] : null);
+
+// Painotettu kynnys kärkietenijän pesän mukaan (lyöjätaulukon vertailukohta)
+function pesaKynnys(b) {
+  let a = 0, n = 0;
+  Object.entries(D.karkilyonti).forEach(([k, v]) => { if (karkiPesa(k.split("|")[0]) !== b || v.kynnys == null) return; const m = v.n_onnistui + v.n_epaonnistui; a += v.kynnys * m; n += m; });
+  return n ? a / n : null;
+}
+
 function piirraKL() {
-  const rivit = D.tilanteet.flatMap((t) => [0, 1, 2].map((p) => ({ t, p, k: D.karkilyonti[`${t}|${p}`] }))).filter((r) => r.k);
-  $("#jo-kl").innerHTML = `
-    <h2>Milloin kärkilyönti kannattaa</h2>
-    <p class="ingressi">Kynnys kertoo, kuinka usein kärkilyönnin pitää onnistua, jotta sitä yrittävä lyöntivuoro on keskimäärin yhtä arvokas kuin tavallinen lyöntivuoro samasta tilanteesta. Kun sarjan toteutunut onnistuminen on kynnyksen yläpuolella, yrittäminen on kannattanut.</p>
+  const el = $("#jo-kl");
+  const joukkueet = [...D.kokoonpano.keys()].sort((a, b) => (a === "KPL" ? -1 : b === "KPL" ? 1 : a.localeCompare(b)));
+  const lyojat = kokoonpanonLyojat(s.klJoukkue);
+  const esim = D.karkilyonti["1|0"];
+  const skaala = (x) => Math.max(0, Math.min(100, ((x - 0.2) / 0.7) * 100)); // 20–90 %
+  const rivi = (t, p, k) => {
+    const b = karkiPesa(t);
+    const pisteet = lyojat.map((l) => ({ nimi: l.nimi, v: klPros(l.t, b), y: l.t[`KLY${b}`] })).filter((x) => x.v != null);
+    const yli = pisteet.filter((x) => x.v >= k.kynnys).length;
+    const n = k.n_onnistui + k.n_epaonnistui;
+    return `<tr>
+      <td><span class="jo-tilanne">${pesaIkoni(t)}${esc(NIMI[t])}</span>${n < 120 ? `<span class="pieni-otos-merkki" title="Alle 120 lyöntivuoroa"> *</span>` : ""}</td><td class="n">${p}</td>
+      <td class="n jo-plus-teksti">${etumerkki(k.onnistui)}</td><td class="n jo-miinus-teksti">${etumerkki(k.epaonnistui)}</td>
+      <td class="n jo-tarvitaan">${pros(k.kynnys)}</td>
+      <td><div class="jo-strip" title="Tarvitaan ${pros(k.kynnys)}, sarjassa onnistui ${pros(k.toteutunut)}">
+        <span class="jo-strip-yli" style="left:${skaala(k.kynnys)}%"></span>
+        <span class="jo-strip-kynnys" style="left:${skaala(k.kynnys)}%"></span>
+        <span class="jo-strip-sarja" style="left:${skaala(k.toteutunut)}%" title="Sarja ${pros(k.toteutunut)}"></span>
+        ${pisteet.map((x) => `<span class="jo-piste ${x.v >= k.kynnys ? "yli" : "ali"}" style="left:${skaala(x.v)}%" title="${esc(x.nimi)}: ${pros(x.v)} (${x.y} yritystä)"></span>`).join("")}
+      </div></td>
+      <td class="n jo-yli-lkm">${pisteet.length ? `${yli}/${pisteet.length}` : "–"}</td></tr>`;
+  };
+  const taulu = RYHMAT.map(([b, otsikko]) => {
+    const rr = D.tilanteet.filter((t) => karkiPesa(t) === b).flatMap((t) => [0, 1, 2].map((p) => [t, p, D.karkilyonti[`${t}|${p}`]])).filter((r) => r[2]);
+    return rr.length ? `<tr class="jo-ryhma"><th colspan="7">${esc(otsikko)}</th></tr>${rr.map((r) => rivi(...r)).join("")}` : "";
+  }).join("");
+  const kynnykset = [0, 1, 2, 3].map(pesaKynnys);
+  el.innerHTML = `
+    <h2>Kärkilyönti: mitä onnistuminen tuo ja mitä epäonnistuminen maksaa</h2>
+    <p class="ingressi">Esimerkki: 1-tilanteessa ilman paloja onnistunut purku nostaa juoksuodotusta keskimäärin <b>${luku(esim.onnistui)}</b> juoksua ja epäonnistuminen laskee sitä <b>${luku(-esim.epaonnistui)}</b>. Koska menetys on suurempi kuin hyöty, lyöjän pitää onnistua vähintään <b>${pros(esim.kynnys)}</b> kerroista, jotta yrittäminen on plussalla. Sarja onnistui ${pros(esim.toteutunut)}.</p>
+    <div class="jo-ohjaus">
+      <label class="kentta">Lyöjät, kokoonpano 2027 <select id="jo-klj">${joukkueet.map((j) => `<option${j === s.klJoukkue ? " selected" : ""}>${esc(j)}</option>`).join("")}</select></label>
+      <p class="pieni jo-strip-selite"><span class="jo-piste yli"></span> lyöjä yli tarvittavan <span class="jo-piste ali"></span> alle <span class="jo-strip-kynnys-merkki"></span> tarvitaan <span class="jo-strip-sarja-merkki"></span> sarjan toteutunut</p>
+    </div>
     <div class="taulu-wrap"><table class="jo-kl">
-      <thead><tr><th>Tilanne</th><th class="n">Palot</th><th class="n jo-mob-pois" title="Juoksuarvo, kun kärkilyönti onnistui">Onnistui</th><th class="n jo-mob-pois" title="Juoksuarvo, kun kärkilyönti epäonnistui">Epäonnistui</th><th class="jo-palkkisarake">Onnistuminen ja kynnys</th><th class="n" title="Toteutunut onnistuminen miinus kynnys">Ero</th></tr></thead>
-      <tbody>${rivit.map(({ t, p, k }) => {
-        const m = k.toteutunut - k.kynnys, n = k.n_onnistui + k.n_epaonnistui;
-        return `<tr>
-          <td><span class="jo-tilanne">${pesaIkoni(t)}${esc(NIMI[t])}</span></td><td class="n">${p}</td>
-          <td class="n jo-plus-teksti jo-mob-pois">${etumerkki(k.onnistui)}</td><td class="n jo-miinus-teksti jo-mob-pois">${etumerkki(k.epaonnistui)}</td>
-          <td><div class="jo-kynnys" title="Kynnys ${pros(k.kynnys)}, toteutunut ${pros(k.toteutunut)} (${n} lyöntivuoroa)">
-            <span class="jo-kp" style="width:${Math.round(k.toteutunut * 100)}%"></span><span class="jo-km" style="left:${Math.round(k.kynnys * 100)}%"><i>${pros(k.kynnys)}</i></span>
-            <b class="num">${pros(k.toteutunut)}</b></div></td>
-          <td class="n ${m >= 0.05 ? "jo-plus-teksti" : m <= -0.05 ? "jo-miinus-teksti" : ""}">${m >= 0 ? "+" : "−"}${Math.abs(Math.round(m * 100))} %-yks.${n < 120 ? `<span class="pieni-otos-merkki" title="Alle 120 lyöntivuoroa"> *</span>` : ""}</td></tr>`;
-      }).join("")}</tbody></table></div>
-    <p class="vihje">Palkki = sarjan toteutunut onnistumisprosentti, pystyviiva = kynnys. Onnistui ja Epäonnistui ovat lyöntivuoron keskimääräiset juoksuarvot. * = alle 120 lyöntivuoroa, suuntaa-antava. Taulukossa ovat tilanteet, joissa kumpaakin lopputulosta on vähintään 20.</p>`;
+      <thead><tr><th>Tilanne</th><th class="n">Palot</th><th class="n jo-mob-pois">Onnistuminen tuo</th><th class="n jo-mob-pois">Epäonnistuminen maksaa</th><th class="n">Tarvitaan</th><th class="jo-palkkisarake">Lyöjien onnistumis-% (20–90 %)</th><th class="n" title="Lyöjiä yli tarvittavan / lyöjiä, joilla vähintään ${KL_MIN} yritystä">Yli</th></tr></thead>
+      <tbody>${taulu}</tbody></table></div>
+    <p class="vihje">Lyöjän piste = hänen kauden 2026 onnistumis-%:nsa samasta tilanteesta (0-tilanne = kentälle pääsy, muuten kärkietenijän pesä), vähintään ${KL_MIN} yritystä. Juoksuarvot ovat lyöntivuoron keskiarvoja. * = alle 120 lyöntivuoroa, suuntaa-antava.</p>
+
+    <h3>${esc(s.klJoukkue)}: lyöjät tilanteittain</h3>
+    <p class="pieni">Vertailukohta on tilanteiden painotettu tarvittava onnistuminen: 0-tilanne ${pros(kynnykset[0])}, 1-tilanne ${pros(kynnykset[1])}, kärkietenijä kakkosella ${pros(kynnykset[2])}, kolmosella ${pros(kynnykset[3])}.</p>
+    <div class="taulu-wrap"><table class="jo-lyojamatriisi">
+      <thead><tr><th>Pelaaja</th>${["0-tilanne", "1-tilanne", "2-tilanne", "3-tilanne"].map((n) => `<th class="n">${n}</th>`).join("")}</tr></thead>
+      <tbody>${lyojat.sort((a, b) => a.nimi.split(" ").at(-1).localeCompare(b.nimi.split(" ").at(-1), "fi")).map((l) => `<tr><td>${esc(l.nimi)}</td>${[0, 1, 2, 3].map((b) => {
+        const v = klPros(l.t, b), y = l.t[`KLY${b}`];
+        if (v == null) return `<td class="n jo-ei">${y ? `<span title="${y} yritystä">–</span>` : ""}</td>`;
+        const ero = v - kynnykset[b];
+        return `<td class="n ${ero >= 0 ? "yli" : "ali"}" title="${esc(l.nimi)}: ${pros(v)} (${l.t[`KL${b}`]}/${y}), tarvitaan ${pros(kynnykset[b])}"><b>${pros(v)}</b><small>${ero >= 0 ? "+" : "−"}${Math.abs(Math.round(ero * 100))}</small></td>`;
+      }).join("")}</tr>`).join("") || `<tr><td colspan="5" class="tyhja">Kokoonpanon pelaajilla ei ole Superpesis-tilastoja 2026.</td></tr>`}</tbody></table></div>
+    <p class="vihje">Pieni luku = ero tarvittavaan prosenttiyksikköinä. Tyhjä = alle ${KL_MIN} yritystä.</p>`;
+  $("#jo-klj", el).onchange = (e) => { s.klJoukkue = e.target.value; piirraKL(); };
 }
 
 // ---------- lyöjät ----------

@@ -40,7 +40,7 @@ let D = null; // ladattu data
 export async function nayta(main, joukkue) {
   if (!joukkue || !VASTUSTAJAT.includes(joukkue)) return valitse(main, joukkue);
   main.innerHTML = `<p class="lataa">Kootaan vastustajakorttia…</p>`;
-  const [sm, pelaajat, tilastot, tekstit, kuviot, huomiot, koosteet] = await Promise.all([
+  const [sm, pelaajat, tilastot, tekstit, kuviot, huomiot, koosteet, , jo] = await Promise.all([
     haeSiirtomarkkinat().catch(() => null),
     haePelaajat(),
     sb.from("tilastot").select("tyyppi,ref_id,nimi,joukkue,data").eq("kausi", KAUSI).eq("vaihe", "runko"),
@@ -49,6 +49,7 @@ export async function nayta(main, joukkue) {
     sb.from("huomiot").select("id,otsikko,teksti,luokka,vastustaja,tyyppi,pelaaja_id,tiedot,ottelu_pvm,kirjoittaja,luotu").eq("luokka", "vastustaja").eq("vastustaja", joukkue).order("luotu", { ascending: false }).limit(2000),
     haeKoosteet().catch(() => []),
     lataaNimet().catch(() => null),
+    sb.from("analyysit").select("data").eq("avain", "juoksuodotus_2026").maybeSingle(),
   ]);
   for (const r of [tilastot, tekstit, kuviot, huomiot]) if (r.error) throw r.error;
   D = {
@@ -58,6 +59,7 @@ export async function nayta(main, joukkue) {
     kuviot: (kuviot.data || []).sort((a, b) => (a.luotu || "").localeCompare(b.luotu || "")),
     huomiot: huomiot.data || [],
     kooste: koosteet.find((k) => k.aihe === `vastustaja:${joukkue}`),
+    kynnys: kynnyksetTilanteittain(jo?.data?.data),
   };
   piirra(main);
 }
@@ -112,7 +114,16 @@ function joukkueData() {
 }
 const rooliIndeksi = (p) => { const i = SARAKKEET.findIndex((t) => (p.roolit || []).includes(t)); return i < 0 ? 99 : i; };
 
-// Sarjan KL% lähtöpesittäin (kaikkien joukkueiden vastustajasummista = koko sarjan kärkilyönnit)
+// Kärkilyönnin kynnys (juoksuodotus 2026) kärkietenijän pesän mukaan: painotettu keskiarvo tilanteista ja paloista
+export function kynnyksetTilanteittain(jo) {
+  if (!jo?.karkilyonti) return null;
+  const karki = (t) => (t === "0" ? 0 : Math.max(...t.split("–").map(Number)));
+  const sum = [0, 0, 0, 0], n = [0, 0, 0, 0];
+  Object.entries(jo.karkilyonti).forEach(([k, v]) => { if (v.kynnys == null) return; const b = karki(k.split("|")[0]), m = v.n_onnistui + v.n_epaonnistui; sum[b] += v.kynnys * m; n[b] += m; });
+  return sum.map((x, b) => (n[b] ? x / n[b] : null));
+}
+
+// Sarjan KL% tilanteittain (kärkietenijän pesä) (kaikkien joukkueiden vastustajasummista = koko sarjan kärkilyönnit)
 function sarjanKL(kaikki) {
   return [0, 1, 2, 3].map((b) => osuus(kaikki.reduce((s, j) => s + (j[`pe_total_b${b}_opponent`] || 0), 0), kaikki.reduce((s, j) => s + (j[`pe_tries_b${b}_opponent`] || 0), 0)));
 }
@@ -211,7 +222,7 @@ function tilastoLohko(J) {
   const sija = (avain, pieni = false) => { const a = kaikkiJ.map((j) => j[avain]).filter((x) => x != null).sort((x, y) => (pieni ? x - y : y - x)); return a.indexOf(jt[avain]) + 1; };
   const vastKL = osuus(jt.pe_total_opponent, jt.pe_tries_total_opponent);
   const vastSija = kaikkiJ.map((j) => osuus(j.pe_total_opponent, j.pe_tries_total_opponent)).sort((a, b) => a - b).indexOf(vastKL) + 1;
-  const pesa = ["kotipesältä", "1. pesältä", "2. pesältä", "3. pesältä"];
+  const pesa = ["0-tilanne", "1-tilanne", "2-tilanne", "3-tilanne"];
   const kaavio = (arvot, otsikko, selite, alhaalla) => `
     <figure class="kt-kaavio">
       <figcaption><b>${otsikko}</b><span>${selite}</span></figcaption>
@@ -228,13 +239,13 @@ function tilastoLohko(J) {
       <div><b class="num">${jt.voitot ?? "–"}</b><span>voittoa ${jt.O} ottelusta</span></div>
       <div><b class="num">${jt.runs}<i>–</i>${jt.runs_opponent}</b><span>juoksut, tehty–päästetty</span></div>
       <div><b class="num">${pros(jt["KL%"])}</b><span>KL %, sarjan ${sija("KL%")}. (ka ${pros(sarjaKL)})</span></div>
-      <div><b class="num">${pros(jt["KL%3"])}</b><span>kotiutus-%, KL% 3. pesältä, ${sija("KL%3")}.</span></div>
+      <div><b class="num">${pros(jt["KL%3"])}</b><span>kotiutus-% (3-tilanne), sarjan ${sija("KL%3")}.</span></div>
       <div><b class="num">${pros(vastKL)}</b><span>vastustajien KL %, sarjan ${vastSija}. paras</span></div>
       <div><b class="num">${jt.homeruns}<i>–</i>${jt.homeruns_opponent}</b><span>kunnarit, lyöty–päästetty</span></div>
     </div>
     <div class="kt-kaaviot">
-      ${kaavio(oma, "Sisäpeli: kärkilyönnit lähtöpesittäin", "KL %, viiva = sarjan keskiarvo, oikealla ero siihen", false)}
-      ${kaavio(vast, "Ulkopeli: vastustajien kärkilyönnit", "Mitä pienempi, sitä paremmin he pysäyttävät", true)}
+      ${kaavio(oma, "Sisäpeli: onnistuminen tilanteittain", "0-tilanteessa kentälle pääsy, muuten kärkietenijän eteneminen. Viiva = sarjan keskiarvo, oikealla ero siihen.", false)}
+      ${kaavio(vast, "Ulkopeli: vastustajien onnistuminen tilanteittain", "Mitä pienempi, sitä paremmin he pysäyttävät", true)}
     </div>
     <p class="kt-huom">Runkosarja ${KAUSI}, ${jt.O} ottelua. Kokoonpano on muuttunut siirroissa, joten joukkueen luvut kuvaavat viime kauden pelitapaa, eivät kauden 2027 tasoa.</p>
   </section>`;
@@ -247,7 +258,9 @@ function lyojaLohko(J) {
     const s = b == null ? t.KL : t[`KL${b}`], y = b == null ? t.KLY : t[`KLY${b}`];
     if (!y) return `<td class="n kt-ei">–</td>`;
     const v = (100 * s) / y, pieni = y < 10;
-    return `<td class="n${pieni ? " kt-pieni-otos" : ""}${!pieni && v >= 65 ? " kt-hyva" : ""}" title="${s}/${y}${pieni ? ", pieni otos" : ""}">${pros(v, 0)}<small>${y}</small></td>`;
+    const raja = b == null ? null : D.kynnys?.[b];
+    const yli = !pieni && raja != null && v >= raja * 100;
+    return `<td class="n${pieni ? " kt-pieni-otos" : ""}${yli ? " kt-hyva" : ""}" title="${s}/${y}${pieni ? ", pieni otos" : ""}${raja != null ? `, kynnys ${Math.round(raja * 100)} %` : ""}">${pros(v, 0)}<small>${y}</small></td>`;
   };
   const roolit = (p) => SARAKKEET.filter((t) => (p.roolit || []).includes(t)).map((t) => `<span class="kt-rooli">${esc(lyhyt(t))}</span>`).join("");
   const kirjatut = (hs) => {
@@ -265,12 +278,12 @@ function lyojaLohko(J) {
     return "";
   };
   return `<section class="kt-lohko kt-lyojat">
-    <h3>Kokoonpano 2027 ja lyöjät <span class="kt-lisa">Tilastot runkosarja ${KAUSI}. KL-sarakkeet: onnistumis-% ja pienellä yritykset. Harmaa = alle 10 yritystä.</span></h3>
+    <h3>Kokoonpano 2027 ja lyöjät <span class="kt-lisa">Tilastot runkosarja ${KAUSI}. Tilanteittain: 0 = kentälle pääsy, 1–3 = kärkietenijän pesä; pienellä yritykset. Keltainen alleviivaus = yli kärkilyönnin kynnyksen (juoksuodotus). Harmaa = alle 10 yritystä.</span></h3>
     <table class="kt-taulu">
-      <thead><tr>
+      <thead><tr class="kt-ryhma"><th colspan="8"></th><th colspan="4" class="kt-ryhma-otsikko">KL % tilanteittain</th></tr><tr>
         <th class="n">#</th><th class="kt-nimi">Pelaaja</th><th>Rooli</th>
         <th class="n" title="Ottelut">O</th><th class="n" title="Kunnarit + lyödyt">K+L</th><th class="n" title="Tuodut">T</th><th class="n" title="Yhteensä">YHT</th>
-        <th class="n" title="Kärkilyöntiprosentti">KL %</th><th class="n" title="Kärkilyönti kotipesältä">KL0</th><th class="n" title="Kärkilyönti 1. pesältä">KL1</th><th class="n" title="Kärkilyönti 2. pesältä">KL2</th><th class="n" title="Kärkilyönti 3. pesältä (kotiutus)">KL3</th>
+        <th class="n" title="Kärkilyöntiprosentti">KL %</th><th class="n" title="0-tilanne: lyöjä pääsee kentälle etenijäksi">0</th><th class="n" title="1-tilanne: kärkietenijä ykköseltä eteenpäin">1</th><th class="n" title="2-tilanne: kärkietenijä kakkoselta eteenpäin">2</th><th class="n" title="3-tilanne: kotiutus">3</th>
       </tr></thead>
       <tbody>${rivit.map((r) => `<tr>
         <td class="n kt-nro">${r.p.numero ?? ""}</td>

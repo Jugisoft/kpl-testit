@@ -45,7 +45,7 @@ export async function nayta(main) {
     <p><a class="btn ensisij" href="#/juoksuodotus">Avaa juoksuodotus</a></p>
 
     <h2>Vastustajakortit</h2>
-    <p>Tulostettava tiivistelmä ottelupäivää varten: lyöjät tilastoineen ja rooleineen, joukkueen kärkilyönnit lähtöpesittäin, ulkopelin kuviot ja valmennuksen havainnot.</p>
+    <p>Tulostettava tiivistelmä ottelupäivää varten: lyöjät tilastoineen ja rooleineen, joukkueen onnistuminen tilanteittain, ulkopelin kuviot ja valmennuksen havainnot.</p>
     <ul class="kt-valinta">${["IPV", "JoMa", "KeKi", "KiPa", "Manse", "PattU", "PuMu", "SoJy", "Tahko", "Ura", "ViVe"].map((j) => `<li><a class="btn" href="#/kortti/${j}">${j}</a></li>`).join("")}</ul>
 
     <h2>Työn alla</h2>

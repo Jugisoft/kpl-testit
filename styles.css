@@ -1028,3 +1028,27 @@ td.n.kt-ei { font-style: normal; }
   .jo-jr { grid-template-columns: 48px 1fr; } .jo-jr .pieni { display: none; }
 }
 @media (max-width: 560px) { .jo-mob-pois { display: none; } .jo-palkkisarake { min-width: 110px; width: auto; } .jo-kl, .jo-lyojat { font-size: 13px; } .jo-kl td, .jo-kl th, .jo-lyojat td, .jo-lyojat th { padding-left: 6px; padding-right: 6px; } .jo-km i { display: none; } }
+.kt-taulu tr.kt-ryhma th { border-bottom: 0; padding-bottom: 0; }
+.kt-ryhma-otsikko { text-align: center !important; border-bottom: 1px solid var(--p-line) !important; }
+.jo-kl tr.jo-ryhma th { text-align: left; font: 600 17px/1.2 var(--num); color: var(--kpl); padding-top: 14px; background: var(--surface); }
+.jo-tarvitaan { font: 700 17px var(--num); }
+.jo-strip { position: relative; height: 26px; background: var(--surface-2); border-radius: 4px; }
+.jo-strip-yli { position: absolute; top: 0; bottom: 0; right: 0; background: color-mix(in oklab, var(--jo-plus) 12%, transparent); border-radius: 0 4px 4px 0; }
+.jo-strip-kynnys { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ink); }
+.jo-strip-sarja { position: absolute; bottom: -1px; width: 0; height: 0; margin-left: -5px; border: 5px solid transparent; border-bottom: 7px solid var(--ink-3); border-top: 0; }
+.jo-piste { position: absolute; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; border: 2px solid var(--surface); }
+.jo-piste.yli { background: var(--jo-plus); }
+.jo-piste.ali { background: var(--jo-miinus); }
+.jo-yli-lkm { font: 600 15px var(--num); white-space: nowrap; }
+.jo-strip-selite { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; }
+.jo-strip-selite .jo-piste { position: static; display: inline-block; margin: 0; }
+.jo-strip-kynnys-merkki { display: inline-block; width: 2px; height: 14px; background: var(--ink); }
+.jo-strip-sarja-merkki { display: inline-block; border: 5px solid transparent; border-bottom: 7px solid var(--ink-3); border-top: 0; }
+.jo-lyojamatriisi { width: auto; min-width: min(640px, 100%); }
+.jo-lyojamatriisi td.n { min-width: 92px; }
+.jo-lyojamatriisi td.n b { font: 700 16px var(--num); }
+.jo-lyojamatriisi td.n small { margin-left: 6px; font-size: 12px; }
+.jo-lyojamatriisi td.yli { background: color-mix(in oklab, var(--jo-plus) 18%, transparent); }
+.jo-lyojamatriisi td.yli small { color: var(--jo-plus); }
+.jo-lyojamatriisi td.ali small { color: var(--jo-miinus); }
+.jo-ei { color: var(--ink-3); }

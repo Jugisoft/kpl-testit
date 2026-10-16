@@ -7,7 +7,7 @@ export const LUOKAT = [
   ["fysiikka", "Fysiikka", "Räjähtävä voima, maksimivoima, lihaskestävyys ja kestävyys"],
   ["voima", "Lyönti- ja heittovoima", "Tutkamittaukset: heitot ja lyönnit"],
   ["nopeus", "Nopeus", "Pikanopeus, ketteryys ja nopeuskestävyys"],
-  ["lajitaito", "Lajitaito", "Lyöntitaito ja kiinniotto"],
+  ["lajitaito", "Lajitaito", "Lyöntitaito: näpyt, lyöntitestit ja kovat lyönnit"],
 ];
 export const LUOKKANIMI = Object.fromEntries(LUOKAT.map(([k, n]) => [k, n]));
 const ALAJARJ = ["Räjähtävä voima", "Maksimivoima", "Lihaskestävyys", "Kestävyys", "Lyöntivoima", "Heittovoima", "Pikanopeus", "Ketteryys", "Nopeuskestävyys", "Lyöntitaito", "Kiinniotto"];

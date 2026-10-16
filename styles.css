@@ -1220,3 +1220,32 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 .syotto .yritysrivi th { font-size: 12px; color: var(--ink-3); padding-bottom: 0; }
 .syotto .yritys-ots { text-align: center; border-left: 1px solid var(--line); }
 .syotto th.pari-alku { border-left: 1px solid var(--line); }
+
+/* ===== Pärnäsen korjaamo (16.10.2026) ===== */
+.kj-paa { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: flex-end; }
+.kj-luvut { display: flex; gap: 26px; margin-bottom: 20px; }
+.kj-luvut div { display: flex; flex-direction: column; }
+.kj-luvut .num { font: 700 38px/1 var(--num); color: var(--kpl); }
+.kj-luvut small { color: var(--ink-3); font-size: 13px; }
+.kj-uusi { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.kj-uusi textarea { width: 100%; }
+.kj-sivu { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-3); margin-left: auto; }
+.kj-tabit { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.kj-tabit button { background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 9px 14px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.kj-tabit button[aria-selected="true"] { color: var(--kpl); border-bottom-color: var(--kpl); }
+.kj-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.kj-rivi { border: 1px solid var(--line); border-left: 4px solid var(--kpl); border-radius: 10px; padding: 12px 14px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; }
+.kj-rivi.kj-tyon_alla { border-left-color: #7DD3FC; }
+.kj-rivi.kj-korjattu { border-left-color: var(--green); opacity: .85; }
+.kj-rivi.kj-ei_muutosta { border-left-color: var(--ink-3); opacity: .75; }
+.kj-merkit { display: flex; flex-wrap: wrap; gap: 6px; }
+.kj-merkit span { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--line); color: var(--ink-2); }
+.kj-merkit .kj-tila { background: rgba(245,168,0,.15); color: var(--kpl); }
+.kj-tyon_alla .kj-tila { background: rgba(125,211,252,.15); color: #7DD3FC; }
+.kj-korjattu .kj-tila { background: var(--green-bg); color: var(--green); }
+.kj-teksti { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; }
+.kj-vastaus { border-left: 3px solid var(--green); padding-left: 10px; color: var(--ink-2); font-size: 15px; }
+.kj-hallinta { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin-top: 4px; }
+.kj-hallinta label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-3); }
+.kj-kasvaa { flex: 1; min-width: 220px; }
+.kj-kasvaa input { width: 100%; }

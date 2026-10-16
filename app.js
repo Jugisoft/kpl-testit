@@ -17,6 +17,7 @@ import * as kortti from "./js/views/kortti.js";
 import * as juoksuodotus from "./js/views/juoksuodotus.js";
 import * as lyonnit from "./js/views/lyonnit.js";
 import * as ohje from "./js/views/ohje.js";
+import * as korjaamo from "./js/views/korjaamo.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -42,6 +43,7 @@ const reitit = [
   { polku: /^\/pelaajat$/, nakyma: pelaajat, osio: "testit" },
   { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja, osio: "testit" },
   { polku: /^\/ohje(?:\/([\w-]+))?$/, nakyma: ohje },
+  { polku: /^\/korjaamo$/, nakyma: korjaamo },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
 ];
 
@@ -59,6 +61,7 @@ const IK = {
   ohje: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 17h.01"/>',
   hallinta: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   valikko: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  korjaamo: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5a1.4 1.4 0 0 0 0 2l1 1a1.4 1.4 0 0 0 2 0l5.8-5.8a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.3-.5-.5-2.3z"/>',
   ulos: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
 };
 const ikoni = (n) => `<svg class="ikoni" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IK[n]}</svg>`;
@@ -99,10 +102,10 @@ function piirraNav(polku, r) {
   document.body.classList.toggle("kirjautunut", !!tila.jasen);
   let aktiivinenNimi = "";
   if (tila.jasen) {
-    const kaikki = [...RYHMAT.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
+    const kaikki = [...RYHMAT.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
     aktiivinenNimi = kaikki.find((l) => l[3](polku, r))?.[0] || "";
     $("#nav").innerHTML = RYHMAT.map(([otsikko, linkit]) => `<div class="nav-ryhma">${otsikko ? `<div class="nav-otsikko">${otsikko}</div>` : ""}${linkit.map(linkki).join("")}</div>`).join("")
-      + `<div class="nav-ryhma nav-ala">${linkki(["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)])}${tila.admin ? linkki(["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]) : ""}</div>`;
+      + `<div class="nav-ryhma nav-ala">${linkki(["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)])}${linkki(["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"])}${tila.admin ? linkki(["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]) : ""}</div>`;
     $("#alapalkki").innerHTML = ALAPALKKI.map(([t, h, ik]) => `<a href="${h}"${kaikki.find((l) => l[1] === h)?.[3](polku, r) ? ' aria-current="page"' : ""}>${ikoni(ik)}<span>${t}</span></a>`).join("")
       + `<button type="button" id="avaa-valikko" aria-controls="sivupalkki" aria-expanded="false">${ikoni("valikko")}<span>Valikko</span></button>`;
     $("#avaa-valikko").onclick = () => avaaValikko(true);

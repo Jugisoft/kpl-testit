@@ -82,6 +82,13 @@ const SIVUT = [
       ["Koodisana", "Kutsu kentällä."],
       ["Toisen kuvio", "Muutokset toisen tekemään kuvioon tulevat voimaan vasta, kun tallennat ja vahvistat ne. Omat tallentuvat heti."],
     ] },
+  { id: "korjaamo", nimi: "Pärnäsen korjaamo", linkki: "#/korjaamo",
+    mita: "Korjausehdotukset ja kehitysideat Keskukseen, erillään Muistiosta. Kirjaa mikä ei toimi tai mitä kaipaat, valitse tyyppi (Korjaus / Idea) ja sivu, ja seuraa tilaa.",
+    kohdat: [
+      ["Tila", "Avoin = odottaa käsittelyä, Työn alla, Korjattu, Ei muutosta (vastauksessa perustelu)."],
+      ["Vastaus", "Mitä tehtiin. Jarvis käsittelee avoimet ehdotukset pyynnöstä ja kirjaa vastauksen."],
+      ["Oma ehdotus", "Avoimen oman ehdotuksen voi poistaa. Ylläpitäjä vaihtaa tilan ja vastaa."],
+    ] },
   { id: "lyonnit", nimi: "Lyöntipäiväkirja", linkki: "#/lyonnit",
     mita: "Pelaajan oma lyöntipäiväkirja. Pelaaja asettaa missiot ja kirjaa lyöntiensä määrän lajeittain, löi hän yhteisissä treeneissä tai omalla ajalla. Valmentajat näkevät Seuranta-välilehdellä kaikkien edistymisen, mutta eivät muokkaa.",
     kohdat: [

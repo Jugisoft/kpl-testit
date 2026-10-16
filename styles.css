@@ -1111,3 +1111,37 @@ td.n.kt-ei { font-style: normal; }
 .ly-seuranta .palkki { max-width: 240px; }
 @media (max-width: 600px) { .ly-yht .num { font-size: 32px; } .ly-maara input { width: 100%; order: -1; } .ly-pm { flex: 1; } .ly-tallenna { width: 100%; } }
 .ly-uusi[hidden] { display: none; }
+
+/* ===== Ohje (16.10.2026) ===== */
+.ly-selite { margin: 10px 0 4px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--surface); }
+.ly-selite summary { cursor: pointer; font-weight: 600; color: var(--kpl); }
+.ly-selite dl { display: grid; gap: 10px; margin: 12px 0 6px; }
+.ly-selite dt { font-weight: 600; }
+.ly-selite dd { margin: 2px 0 0; color: var(--ink-2); font-size: 15px; }
+.oh-runko { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+.oh-sisallys { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 2px; }
+.oh-sisallys input { margin-bottom: 10px; width: 100%; }
+.oh-sisallys a { padding: 7px 10px; border-radius: 7px; color: var(--ink-2); text-decoration: none; border-left: 2px solid transparent; }
+.oh-sisallys a:hover { background: var(--surface); color: var(--ink); }
+.oh-sisallys a[aria-current="true"] { color: var(--kpl); border-left-color: var(--kpl); background: rgba(245,168,0,.08); }
+.oh-sisalto { display: flex; flex-direction: column; gap: 36px; min-width: 0; }
+.oh-sivu { scroll-margin-top: 16px; }
+.oh-paa { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--kpl); padding-bottom: 6px; margin-bottom: 10px; }
+.oh-paa h2 { margin: 0; }
+.oh-avaa { padding: 5px 12px; font-size: 13px; }
+.oh-mita { color: var(--ink-2); max-width: 75ch; margin: 0 0 12px; }
+.oh-sivu h3 { margin: 22px 0 6px; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.oh-lista { margin: 0; display: grid; border-top: 1px solid var(--line); }
+.oh-lista > div { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); gap: 4px 20px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.oh-lista dt { font-weight: 600; }
+.oh-lista dd { margin: 0; color: var(--ink-2); max-width: 75ch; }
+.oh-lyh dt { font: 700 18px/1.2 var(--num); color: var(--kpl); letter-spacing: .02em; }
+@media (max-width: 800px) {
+  .oh-runko { grid-template-columns: minmax(0, 1fr); }
+  .oh-sisallys { position: static; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .oh-sisallys input { flex-basis: 100%; }
+  .oh-sisallys a { border: 1px solid var(--line); border-radius: 99px; padding: 5px 11px; font-size: 14px; }
+  .oh-lista > div { grid-template-columns: minmax(0, 1fr); }
+}
+.oh-sivu[hidden], .oh-lista > div[hidden] { display: none; }
+.oh-ryhma[hidden] { display: none; }

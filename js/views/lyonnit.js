@@ -169,6 +169,16 @@ async function paivakirja(main, email, muokattava) {
       <div class="rivi"><button class="btn ensisij">Luo missio</button><button type="button" class="btn" id="ly-peru-m">Peru</button></div>
       <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä.</p>
     </form>` : ""}
+    <details class="ly-selite"><summary>Mitä missiokortti näyttää?</summary>
+      <dl>
+        <div><dt>Iso luku / tavoite ja %</dt><dd>Tehdyt lyönnit mission lajissa mission aikavälillä ja osuus tavoitteesta.</dd></div>
+        <div><dt>Edellä / jäljessä aikataulusta</dt><dd>Tehdyt lyönnit verrattuna tasaiseen tahtiin: tavoite × kuluneet päivät / mission päivät. Esimerkki: 2000 lyönnin missiossa puolivälissä tasainen tahti on 1000.</dd></div>
+        <div><dt>Tahti 4 vk</dt><dd>Lajin lyönnit viimeiseltä neljältä viikolta jaettuna neljällä (lyhyemmässä missiossa kuluneilla viikoilla).</dd></div>
+        <div><dt>Tarvitaan /vk</dt><dd>Jäljellä oleva määrä jaettuna jäljellä olevilla viikoilla. Kun tahti 4 vk on tätä suurempi, tavoite täyttyy nykymenolla.</dd></div>
+        <div><dt>Kertymäkäyrä</dt><dd>Oranssi porrasviiva = kertyneet lyönnit, katkoviiva = tasainen tahti alusta tavoitteeseen, pystyviiva = tänään.</dd></div>
+      </dl>
+      <p class="pieni">Kaikki Keskuksen laskurit ja lyhenteet: <a href="#/ohje/lyonnit">Ohje</a>.</p>
+    </details>
     <div class="ly-missiot">${aktiiviset.map((m) => missioKortti(m, laske(m, kirjaukset), muokattava)).join("") || `<p class="tyhja">${muokattava ? "Ei vielä missiota. Aseta esimerkiksi 2000 lyöntiä pieneen 2-rajaan talvikaudelle." : "Ei aktiivisia missioita."}</p>`}</div>
 
     <div class="ly-alaosa">

@@ -16,6 +16,7 @@ import * as testit from "./js/views/testit.js";
 import * as kortti from "./js/views/kortti.js";
 import * as juoksuodotus from "./js/views/juoksuodotus.js";
 import * as lyonnit from "./js/views/lyonnit.js";
+import * as ohje from "./js/views/ohje.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -40,6 +41,7 @@ const reitit = [
   { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta, osio: "testit" },
   { polku: /^\/pelaajat$/, nakyma: pelaajat, osio: "testit" },
   { polku: /^\/pelaaja\/([\w-]+)$/, nakyma: pelaaja, osio: "testit" },
+  { polku: /^\/ohje(?:\/([\w-]+))?$/, nakyma: ohje },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
 ];
 
@@ -64,7 +66,7 @@ let navId = 0;
 function piirraNav(polku, r) {
   const linkki = ([teksti, href, aktiivinen]) => `<a href="${href}"${aktiivinen(polku, r) ? ' aria-current="page"' : ""}>${teksti}</a>`;
   if (tila.jasen) {
-    $("#nav").innerHTML = PAAVALIKKO.map(linkki).join("") + `<a href="pelikirja.html">Pelikirja</a>` + (tila.admin ? linkki(["Hallinta", "#/hallinta", (p) => p === "/hallinta"]) : "");
+    $("#nav").innerHTML = PAAVALIKKO.map(linkki).join("") + `<a href="pelikirja.html">Pelikirja</a>` + linkki(["Ohje", "#/ohje", (p) => /^\/ohje/.test(p)]) + (tila.admin ? linkki(["Hallinta", "#/hallinta", (p) => p === "/hallinta"]) : "");
   } else {
     $("#nav").innerHTML = "";
   }

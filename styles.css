@@ -1212,3 +1212,11 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 .ok-pieni-ots { font: 700 17px var(--num); letter-spacing: .03em; text-transform: uppercase; }
 .ok-pieni .kp-piste { stroke-width: .15; }
 @media (max-width: 900px) { .ok-runko { grid-template-columns: minmax(0, 1fr); } .ok-pienet { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Syöttö: monta saraketta (esim. 9 × 30 m, 6 × 10 + 30 m) mahtuu ruutuun sivupalkin kanssa (16.10.2026) */
+.syotto.tiivis th, .syotto.tiivis td { padding: 3px 3px; }
+.syotto.tiivis .solu input { width: 60px; padding: 7px 3px; font-size: 19px; }
+.syotto.tiivis td.pelaaja { min-width: 130px; }
+.syotto .yritysrivi th { font-size: 12px; color: var(--ink-3); padding-bottom: 0; }
+.syotto .yritys-ots { text-align: center; border-left: 1px solid var(--line); }
+.syotto th.pari-alku { border-left: 1px solid var(--line); }

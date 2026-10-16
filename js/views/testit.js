@@ -4,13 +4,13 @@ import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, pelaajaLinkki, mediaani, keskiarvo, piirra, vari, SARJAVARIT, miniPylvaat } from "../util.js";
 
 export const LUOKAT = [
-  ["fysiikka", "Fysiikka", "Räjähtävä voima, maksimivoima ja lihaskestävyys"],
+  ["fysiikka", "Fysiikka", "Räjähtävä voima, maksimivoima, lihaskestävyys ja kestävyys"],
   ["voima", "Lyönti- ja heittovoima", "Tutkamittaukset: heitot ja lyönnit"],
   ["nopeus", "Nopeus", "Pikanopeus, ketteryys ja nopeuskestävyys"],
   ["lajitaito", "Lajitaito", "Lyöntitaito ja kiinniotto"],
 ];
 export const LUOKKANIMI = Object.fromEntries(LUOKAT.map(([k, n]) => [k, n]));
-const ALAJARJ = ["Räjähtävä voima", "Maksimivoima", "Lihaskestävyys", "Lyöntivoima", "Heittovoima", "Pikanopeus", "Ketteryys", "Nopeuskestävyys", "Lyöntitaito", "Kiinniotto"];
+const ALAJARJ = ["Räjähtävä voima", "Maksimivoima", "Lihaskestävyys", "Kestävyys", "Lyöntivoima", "Heittovoima", "Pikanopeus", "Ketteryys", "Nopeuskestävyys", "Lyöntitaito", "Kiinniotto"];
 const RYHMAT = [["superpesis", "Superpesis", "Edustus"], ["juniorit", "Juniorit", "Ikäluokittain"]];
 const LT = ["lt_napyt", "lt_1raja_pomppu", "lt_2raja_pomppu", "lt_keskipomppu", "lt_kumura", "lt_viistari", "lt_koppi"];
 const MAILAT = ["oma", "Optima", "Ultima"];

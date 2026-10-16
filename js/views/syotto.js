@@ -78,13 +78,15 @@ function rakennaValilehdet() {
   const t = new Set(k.testit);
   rivit.forEach((r) => t.add(r.testi));
   valilehdet = [];
+  // Yritysten oletusmäärä testin määrittelystä (Hallinta → testit), esim. 10 m ja 30 m 6, nopeuskestävyys 9 (Anssi Lammila 16.10.2026)
+  const oletus = (testit) => Math.max(1, ...testit.map((x) => tila.testi[x]?.yrityksia || 1));
   const maxY = (testit) => Math.max(0, ...[...rivit.values()].filter((r) => testit.includes(r.testi)).map((r) => r.yritys));
   if (t.has("10m") || t.has("30m")) {
     const testit = ["10m", "30m"].filter((x) => t.has(x));
-    valilehdet.push({ nimi: "Nopeus 10 + 30 m", testit, yrityksia: Math.max(3, maxY(testit)), paras: "30m", lentava: testit.length === 2 });
+    valilehdet.push({ nimi: "Nopeus 10 + 30 m", testit, yrityksia: Math.max(oletus(testit), maxY(testit)), paras: "30m", lentava: testit.length === 2 });
     t.delete("10m"); t.delete("30m");
   }
-  if (t.has("nok_30m")) { valilehdet.push({ nimi: "Nopeuskestävyys 9×30 m", testit: ["nok_30m"], yrityksia: Math.max(9, maxY(["nok_30m"])), paras: "nok_30m", ka: true }); t.delete("nok_30m"); }
+  if (t.has("nok_30m")) { valilehdet.push({ nimi: "Nopeuskestävyys 9×30 m", testit: ["nok_30m"], yrityksia: Math.max(oletus(["nok_30m"]), maxY(["nok_30m"])), paras: "nok_30m", ka: true }); t.delete("nok_30m"); }
   for (const p of PAKETIT) {
     const testit = p.testit.filter((x) => t.has(x));
     if (!testit.length) continue;
@@ -93,7 +95,7 @@ function rakennaValilehdet() {
     testit.forEach((x) => t.delete(x));
   }
   for (const x of t) if (tila.testi[x] && !tila.testi[x].johdettu)
-    valilehdet.push({ nimi: tila.testi[x].nimi, testit: [x], yrityksia: Math.max(tila.testi[x].yrityksia > 1 ? 3 : 1, maxY([x])), paras: x });
+    valilehdet.push({ nimi: tila.testi[x].nimi, testit: [x], yrityksia: Math.max(oletus([x]), maxY([x])), paras: x });
   if (aktiivinen >= valilehdet.length) aktiivinen = 0;
 }
 
@@ -109,9 +111,12 @@ function piirraRuudukko() {
   if (!v) { tbl.innerHTML = `<tr><td class="tyhja">Testikertaan ei ole valittu testejä.</td></tr>`; return; }
   const sar = sarakkeet(v);
   const otsikko = (c) => v.testit.length > 1 && v.yrityksia > 1 ? `${c.yritys}. ${lyhyt(c.testi)}` : v.yrityksia > 1 ? `${c.yritys}.` : lyhyt(c.testi);
+  tbl.classList.toggle("tiivis", sar.length > 6);
+  const kaksirivinen = v.testit.length > 1 && v.yrityksia > 1;   // esim. 1. yritys: 10 m | 30 m
   tbl.innerHTML = `
-    <thead><tr><th class="pelaaja">Pelaaja</th>${v.paras ? `<th class="n">Paras</th><th class="n mob-pois">Ennätys</th>` : ""}${v.lentava ? `<th class="n mob-pois">Lentävä 20</th>` : ""}${v.ka ? `<th class="n mob-pois">Ka</th>` : ""}${v.summa ? `<th class="n">Yht.</th>` : ""}
-      ${sar.map((c) => `<th style="text-align:center">${esc(otsikko(c))}</th>`).join("")}</tr></thead>
+    <thead>${kaksirivinen ? `<tr class="yritysrivi"><th class="pelaaja"></th>${v.paras ? `<th></th><th class="mob-pois"></th>` : ""}${v.lentava ? `<th class="mob-pois"></th>` : ""}${v.ka ? `<th class="mob-pois"></th>` : ""}${v.summa ? `<th></th>` : ""}${Array.from({ length: v.yrityksia }, (_, i) => `<th colspan="${v.testit.length}" class="yritys-ots">${i + 1}. yritys</th>`).join("")}</tr>` : ""}
+      <tr><th class="pelaaja">Pelaaja</th>${v.paras ? `<th class="n">Paras</th><th class="n mob-pois">Ennätys</th>` : ""}${v.lentava ? `<th class="n mob-pois">Lentävä 20</th>` : ""}${v.ka ? `<th class="n mob-pois">Ka</th>` : ""}${v.summa ? `<th class="n">Yht.</th>` : ""}
+      ${sar.map((c) => `<th style="text-align:center"${kaksirivinen && c.testi === v.testit[0] ? ' class="pari-alku"' : ""}>${esc(kaksirivinen ? lyhyt(c.testi) : otsikko(c))}</th>`).join("")}</tr></thead>
     <tbody>${osallistujat.map((o, ri) => {
       const p = tila.pelaaja[o.pelaaja_id];
       return `<tr data-p="${p.id}"><td class="pelaaja"><div class="nimi">${kuva(p)}<div><div class="nm">${esc(nimi(p))}</div><div class="sv">${p.syntymavuosi || ""}</div></div></div></td>

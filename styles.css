@@ -1052,3 +1052,62 @@ td.n.kt-ei { font-style: normal; }
 .jo-lyojamatriisi td.yli small { color: var(--jo-plus); }
 .jo-lyojamatriisi td.ali small { color: var(--jo-miinus); }
 .jo-ei { color: var(--ink-3); }
+
+/* ===== Lyöntipäiväkirja (16.10.2026) ===== */
+.ly-tabit { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+.ly-tabit a { padding: 10px 14px; color: var(--ink-2); text-decoration: none; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.ly-tabit a[aria-selected="true"] { color: var(--kpl); border-bottom-color: var(--kpl); }
+.ly-otsikko { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: flex-end; }
+.ly-otsikko h1 { margin-bottom: 4px; }
+.ly-yht { display: flex; gap: 28px; margin-bottom: 20px; }
+.ly-yht div { display: flex; flex-direction: column; }
+.ly-yht .num { font: 700 40px/1 var(--num); color: var(--kpl); font-variant-numeric: tabular-nums; }
+.ly-yht small { color: var(--ink-3); font-size: 13px; }
+.ly-kirjaus { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.ly-kirjaus h2 { margin: 0; }
+.ly-lajit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ly-lajit .chip { min-height: 40px; }
+.ly-oma-laji { width: 150px; min-height: 40px; }
+.ly-maara { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.ly-maara input { width: 130px; font: 700 34px/1 var(--num); text-align: center; padding: 6px 8px; font-variant-numeric: tabular-nums; }
+.ly-pm { min-width: 58px; min-height: 52px; justify-content: center; font: 700 20px/1 var(--num); }
+.ly-kentta { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink-3); }
+.ly-kasvaa { flex: 1; min-width: 200px; }
+.ly-kasvaa input { width: 100%; }
+.ly-tallenna { justify-content: center; min-height: 46px; align-self: flex-end; padding-inline: 26px; }
+.ly-uusi { margin: 12px 0; display: flex; flex-direction: column; gap: 12px; }
+.ly-missiot { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); margin: 12px 0 28px; }
+.ly-missio { display: flex; flex-direction: column; gap: 6px; }
+.ly-m-paa { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.ly-m-paa h3 { margin: 0; font: 700 22px/1.1 var(--num); letter-spacing: .02em; text-transform: uppercase; }
+.ly-m-paa .pieni { margin: 2px 0 0; }
+.ly-pieni { padding: 5px 10px; font-size: 13px; }
+.ly-m-luvut { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; }
+.ly-iso { font: 700 46px/1 var(--num); font-variant-numeric: tabular-nums; }
+.ly-yks { font: 500 20px var(--num); color: var(--ink-3); margin-left: 6px; }
+.ly-pct { font: 700 26px/1 var(--num); color: var(--kpl); }
+.ly-m-ala { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 6px; }
+.ly-tila { font-size: 13px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
+.ly-tila.hyva { background: var(--green-bg); color: var(--green); }
+.ly-tila.heikko { background: var(--red-bg); color: var(--red); }
+.ly-kertyma { width: 100%; height: auto; margin-top: 8px; display: block; }
+.ly-alaosa { display: grid; gap: 28px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); }
+.ly-viikot { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; height: 190px; align-items: end; padding-top: 8px; }
+.ly-vk { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; gap: 4px; min-width: 0; }
+.ly-vk-p { width: 100%; max-width: 34px; background: linear-gradient(180deg, var(--kpl), var(--kpl-tumma)); border-radius: 4px 4px 0 0; opacity: .6; }
+.ly-vk.nyt .ly-vk-p { opacity: 1; box-shadow: 0 0 10px rgba(245,168,0,.5); }
+.ly-vk-n { font: 600 13px var(--num); color: var(--ink-2); }
+.ly-vk-l { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.ly-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 420px; overflow: auto; }
+.ly-hist li { display: grid; grid-template-columns: 86px 1fr auto auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.ly-h-pvm { color: var(--ink-3); font-size: 14px; }
+.ly-h-laji small { display: block; color: var(--ink-3); font-size: 12px; }
+.ly-h-maara { font: 700 20px var(--num); }
+.ly-poista { background: none; border: 1px solid transparent; color: var(--ink-3); cursor: pointer; border-radius: 6px; padding: 4px 8px; font-size: 13px; }
+.ly-poista:hover, .ly-poista.vahvista { color: var(--red); border-color: var(--red); }
+.ly-arkisto { margin-top: 28px; }
+.ly-arkisto summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
+.ly-seuranta td { vertical-align: top; }
+.ly-seuranta .palkki { max-width: 240px; }
+@media (max-width: 600px) { .ly-yht .num { font-size: 32px; } .ly-maara input { width: 100%; order: -1; } .ly-pm { flex: 1; } .ly-tallenna { width: 100%; } }
+.ly-uusi[hidden] { display: none; }

@@ -7,6 +7,7 @@ import { kortti, kytkeKortit, asetaKonteksti, kontekstinHuomiot } from "./muisti
 import { haeLiitteet, lataaTiedostot, tiedostoValitsin } from "../liitteet.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 import { haeProfiili, profiiliKehys, kytkeKehys, piirraVikalista, poistuVikalista } from "../profiili.js";
+import { piirraOttelulyonnit } from "../lyontikartta.js";
 
 let kanava = null;
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } poistuVikalista(); }
@@ -46,7 +47,7 @@ export async function nayta(main, id, valilehti) {
       </div></div>
     </div>
     <div class="valilehdet" role="tablist">
-      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
+      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ottelut", "Ottelulyönnit 2026", ""], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/vp/${id}/${k}" aria-selected="${valilehti === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>
     <div id="vp-sisalto"></div>`;
@@ -63,6 +64,7 @@ export async function nayta(main, id, valilehti) {
   const piirraValilehti = () => {
     const el = $("#vp-sisalto"); if (!el) return;
     if (valilehti === "profiili") return piirraProfiili(el, p, profiili);
+    if (valilehti === "ottelut") return piirraOttelulyonnit(el, p);
     if (valilehti === "ulkopeli") return piirraUlkopeli(el, p, lista, lisaa, poista);
     if (valilehti === "muistiinpanot") return piirraMuistiinpanot(el, p, lista, lisaa);
     return piirraLyonnit(el, p, lista, lisaa, poista);

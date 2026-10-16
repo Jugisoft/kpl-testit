@@ -27,7 +27,7 @@ const Y = (y) => 100 - y;
 const pts = (a) => a.map(([x, y]) => `${x},${Y(y)}`).join(" ");
 
 // pisteet: [{x, y, vari, otsikko, id}], valittu: {x,y} | null
-export function kenttaSvg({ pisteet = [], valittu = null, id = "kentta", aktiivinen = false } = {}) {
+export function kenttaSvg({ pisteet = [], valittu = null, id = "kentta", aktiivinen = false, r = 1.25 } = {}) {
   const pesat = Object.entries(FIELD.bases).map(([n, [x, y]]) =>
     `<rect x="${x - 1.2}" y="${Y(y) - 1.2}" width="2.4" height="2.4" class="kp-pesa" transform="rotate(45 ${x} ${Y(y)})"/><text x="${x + (x > 0 ? -3.2 : 3.2)}" y="${Y(y) + 1}" class="kp-teksti" text-anchor="middle">${n}</text>`).join("");
   const kaari = Array.from({ length: 13 }, (_, i) => { const a = Math.PI + (i / 12) * Math.PI; return `${(Math.cos(a) * FIELD.kotipesa).toFixed(2)},${(Y(0) - Math.sin(a) * FIELD.kotipesa).toFixed(2)}`; }).join(" ");
@@ -41,7 +41,7 @@ export function kenttaSvg({ pisteet = [], valittu = null, id = "kentta", aktiivi
     <text x="0" y="${Y(96) - 1.5}" class="kp-teksti" text-anchor="middle">takaraja</text>
     <text x="24" y="${Y(70)}" class="kp-teksti" transform="rotate(90 24 ${Y(70)})" text-anchor="middle">2-raja</text>
     <text x="-24" y="${Y(70)}" class="kp-teksti" transform="rotate(-90 -24 ${Y(70)})" text-anchor="middle">3-raja</text>
-    ${pisteet.map((p) => `<circle cx="${p.x}" cy="${Y(p.y)}" r="1.25" fill="${p.vari}" class="kp-piste"${p.id ? ` data-id="${esc(p.id)}"` : ""}><title>${esc(p.otsikko || "")}</title></circle>`).join("")}
+    ${pisteet.map((p) => `<circle cx="${p.x}" cy="${Y(p.y)}" r="${r}" fill="${p.vari}" class="kp-piste"${p.id ? ` data-id="${esc(p.id)}"` : ""}><title>${esc(p.otsikko || "")}</title></circle>`).join("")}
     ${valittu ? `<g class="kp-valittu"><circle cx="${valittu.x}" cy="${Y(valittu.y)}" r="2.2"/><circle cx="${valittu.x}" cy="${Y(valittu.y)}" r=".7"/></g>` : ""}
   </svg>`;
 }

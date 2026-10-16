@@ -1189,3 +1189,26 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .sivupalkki { transition: none; } }
 @media print { .sivupalkki, .mobiilipalkki, .alapalkki, .verho { display: none !important; } body.kirjautunut main { margin: 0 !important; padding: 0 !important; } }
+
+/* ===== Ottelulyönnit 2026 (16.10.2026) ===== */
+.ok-suod { display: flex; flex-direction: column; gap: 8px; margin: 6px 0 14px; }
+.ok-suod .erotin { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
+.ok-runko { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(260px, 1fr); gap: 24px; align-items: start; }
+.kentta-kehys.ok-iso .kenttakuva { max-width: 520px; }
+.ok-jakauma h3 { margin-top: 0; }
+.ok-jakauma ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.ok-tulos { display: grid; grid-template-columns: auto 1fr auto 46px; grid-template-rows: auto auto; gap: 2px 8px; align-items: center; width: 100%; background: none; border: 1px solid transparent; border-radius: 8px; padding: 6px 8px; cursor: pointer; text-align: left; color: var(--ink); }
+.ok-tulos:hover { background: rgba(255,255,255,.04); }
+.ok-tulos.pois { opacity: .35; }
+.ok-tulos.pois .ok-nimi { text-decoration: line-through; }
+.ok-n { font-size: 18px; font-weight: 700; text-align: right; }
+.ok-p { color: var(--ink-3); text-align: right; }
+.ok-palkki { grid-column: 2 / -1; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.ok-palkki span { display: block; height: 100%; border-radius: 2px; }
+.ok-pienet { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ok-pieni { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; color: var(--ink); text-align: left; }
+.ok-pieni:hover { border-color: var(--ink-3); }
+.ok-pieni.valittu { border-color: var(--kpl); box-shadow: 0 0 0 1px var(--kpl) inset; }
+.ok-pieni-ots { font: 700 17px var(--num); letter-spacing: .03em; text-transform: uppercase; }
+.ok-pieni .kp-piste { stroke-width: .15; }
+@media (max-width: 900px) { .ok-runko { grid-template-columns: minmax(0, 1fr); } .ok-pienet { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

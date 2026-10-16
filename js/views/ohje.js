@@ -23,6 +23,7 @@ const SIVUT = [
     kohdat: [
       ["Suunniteltu rooli", "Missä tilanteessa vastustaja todennäköisesti käyttää pelaajaa, esim. 0-tilanne (kentälle pääsy), 1-tilanne (1-tilanteen purku), jokeri."],
       ["Roolitaulukko", "Koko joukkue: pelaajat × tilanteet. Korostettu ruutu = suunniteltu rooli, luku = kirjatut lyönnit, väri = yleisin lyöntityyppi."],
+      ["Ottelulyönnit 2026", "Pelaajan kaikki Superpesis-lyönnit kaudelta 2026 pesistulokset.fi:n ottelutapahtumista. Väri = lopputulos: juoksu/kunnari (vihreä), kärkietenijä eteni (keltainen), palo (punainen), koppi (sininen), haava (violetti), laiton (harmaa, rajojen ulkopuolella), ei edennyt ja muu (tummat). Suodattimet: tilanne (kansiot 0, 1, 2, Takatilanne tai tarkka pesätilanne), palot, monesko lyönti, runkosarja/pudotuspelit. Tulosta napauttamalla sen voi piilottaa. Pisteet ovat pöytäkirjanpitäjän merkitsemiä, likimääräisiä."],
       ["Lyöntikartta", "Jokainen kirjattu lyönti pisteenä kentällä. x = sivusuunta (3-raja − / 2-raja +), y = syvyys kotirajasta metreinä."],
       ["Lyönnin kirjaus", "Tilanne, palot, monesko lyönti, lyöntityyppi ja lopputulos (onnistui / ei / palo / haava) sekä napautus kentälle."],
       ["Ulkopelin liike", "Pelipaikka, tilanne, painon suunta (eteen, taakse, 2-raja, 3-raja, paikallaan) ja sijainti."],

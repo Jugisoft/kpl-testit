@@ -1,9 +1,11 @@
-// Ottelulyönnit kentällä (16.10.2026): pesistulokset.fi:n kauden 2026 ottelutapahtumista, Jarvis vie
-// skriptillä 05 Jarvis/Työkalut/lyontikartat.py tauluun analyysit (lyonnit_2026 + lyonnit_2026_p<id>).
-// Väri = lyönnin lopputulos, suodattimet tilanne / palot / monesko lyönti / vaihe. Lisäksi pienet kartat tilannekansioittain.
-import { sb } from "./db.js";
+// Ottelulyönnit kentällä (16.10.2026): pesistulokset.fi:n ottelutapahtumista. YDIN 2027 hakee jokaisen päättyneen
+// ottelun kerran iltaajossa klo 21.30 ja kirjoittaa lyönnit julkiseen repoon (data/out/lyonnit_<kausi>/), josta tämä lukee.
+// Väri = lyönnin lopputulos, suodattimet kausi / tilanne / palot / monesko lyönti / vaihe. Lisäksi pienet kartat tilannekansioittain.
 import { $$, esc } from "./util.js";
 import { kenttaSvg } from "./kentta.js";
+
+const LAHDE = "https://raw.githubusercontent.com/Jugisoft/ydin-2027/main/data/out";
+const KAUDET = [2027, 2026];   // lisää uusi kausi alkuun
 
 export const TULOS = {
   kunnari: ["Kunnari", "#2EE59D"], juoksu: ["Juoksu", "#2EE59D"], eteni: ["Kärkietenijä eteni", "#F5A800"],
@@ -12,42 +14,48 @@ export const TULOS = {
 };
 const JARJ = ["juoksu", "kunnari", "eteni", "palo", "koppi", "haava", "laiton", "ei_edennyt", "muu"];
 const KANSIOT = [["0-tilanne", ["0"]], ["1-tilanne", ["1"]], ["2-tilanne", ["2", "1–2"]], ["Takatilanne", ["3", "1–3", "2–3", "1–2–3"]]];
-const norm = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+const norm = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 
-let hakemisto = null;
-const valimuisti = new Map();
-const s = { tilanne: "", palot: "", lyonti: "", vaihe: "0", piilossa: new Set(["muu"]) };
+const hakemistot = new Map();   // kausi -> hakemisto | null
+const valimuisti = new Map();   // kausi:id -> lyönnit
+const s = { kausi: null, tilanne: "", palot: "", lyonti: "", vaihe: "0", piilossa: new Set(["muu"]) };
 
-export async function haeHakemisto() {
-  if (hakemisto) return hakemisto;
-  const { data } = await sb.from("analyysit").select("data").eq("avain", "lyonnit_2026").maybeSingle();
-  hakemisto = data?.data || null;
-  return hakemisto;
+async function hae(polku) {
+  try { const r = await fetch(`${LAHDE}/${polku}`, { cache: "no-cache" }); return r.ok ? await r.json() : null; } catch { return null; }
 }
-// Pelaaja nimellä (siirtyneet pelaajat löytyvät 2026-joukkueestaan); kaksi samannimistä → saman joukkueen ensin
-export async function etsiPelaaja(nimi, joukkue) {
-  const h = await haeHakemisto(); if (!h) return null;
+export async function haeHakemisto(kausi) {
+  if (!hakemistot.has(kausi)) hakemistot.set(kausi, await hae(`lyonnit_${kausi}/hakemisto.json`));
+  return hakemistot.get(kausi);
+}
+// Pelaaja nimellä (siirtyneet pelaajat löytyvät kauden joukkueestaan); kaksi samannimistä → saman joukkueen ensin
+export async function etsiPelaaja(kausi, nimi, joukkue) {
+  const h = await haeHakemisto(kausi); if (!h) return null;
   const ehd = h.pelaajat.filter((p) => norm(p.nimi) === norm(nimi));
   return ehd.find((p) => p.joukkue === joukkue) || ehd[0] || null;
 }
-async function haeLyonnit(id) {
-  if (valimuisti.has(id)) return valimuisti.get(id);
-  const { data } = await sb.from("analyysit").select("data").eq("avain", `lyonnit_2026_p${id}`).maybeSingle();
-  valimuisti.set(id, data?.data || null);
-  return data?.data || null;
+async function haeLyonnit(kausi, id) {
+  const k = `${kausi}:${id}`;
+  if (!valimuisti.has(k)) valimuisti.set(k, await hae(`lyonnit_${kausi}/p${id}.json`));
+  return valimuisti.get(k);
 }
 
 const chip = (ryhma, k, n, arvo) => `<button type="button" class="chip" data-r="${ryhma}" data-k="${k}" aria-pressed="${arvo === k}">${n}</button>`;
 
 export async function piirraOttelulyonnit(el, pelaaja) {
   el.innerHTML = `<p class="lataa">Ladataan lyöntejä…</p>`;
-  const h = await haeHakemisto();
-  const loydetty = h && await etsiPelaaja(pelaaja.nimi, pelaaja.joukkue);
-  if (!loydetty) { el.innerHTML = `<p class="tyhja">Pelaajalla ei ole Superpesiksen ottelulyöntejä kaudelta 2026${pelaaja.joukkue === "Ura" || pelaaja.joukkue === "PuMu" ? " (nousijajoukkue, Ykköspesis)" : ""}.</p>`; return; }
-  const d = await haeLyonnit(loydetty.id);
-  if (!d) { el.innerHTML = `<p class="tyhja">Lyöntejä ei saatu ladattua.</p>`; return; }
-  const L = d.l.map(([x, y, t, palot, lyonti, tulos, vaihe]) => ({ x, y, tilanne: h.tilanteet[t], palot, lyonti, tulos: h.tulokset[tulos], vaihe }));
+  const kaudet = [];
+  for (const k of KAUDET) {
+    const p = await etsiPelaaja(k, pelaaja.nimi, pelaaja.joukkue);
+    if (!p) continue;
+    const d = await haeLyonnit(k, p.id);
+    if (d) kaudet.push({ kausi: k, p, d, h: await haeHakemisto(k) });
+  }
+  if (!kaudet.length) { el.innerHTML = `<p class="tyhja">Pelaajalla ei ole Superpesiksen ottelulyöntejä${pelaaja.joukkue === "Ura" || pelaaja.joukkue === "PuMu" ? " (nousijajoukkue, Ykköspesis)" : ""}.</p>`; return; }
+  if (!kaudet.some((k) => String(k.kausi) === s.kausi) && s.kausi !== "kaikki") s.kausi = String(kaudet[0].kausi);
+  const kaikki = kaudet.flatMap(({ kausi, d, h }) => d.l.map(([x, y, t, palot, lyonti, tulos, vaihe]) => ({ kausi, x, y, tilanne: h.tilanteet[t], palot, lyonti, tulos: h.tulokset[tulos], vaihe })));
   const piirra = () => {
+    const L = kaikki.filter((l) => s.kausi === "kaikki" || String(l.kausi) === s.kausi);
+    const kd = kaudet.find((k) => String(k.kausi) === s.kausi) || kaudet[0];
     const pohja = L.filter((l) => (s.palot === "" || l.palot === +s.palot) && (s.lyonti === "" || l.lyonti === +s.lyonti) && (s.vaihe === "" || l.vaihe === +s.vaihe));
     const valitut = pohja.filter((l) => s.tilanne === "" || KANSIOT.find(([k]) => k === s.tilanne)?.[1].includes(l.tilanne) || l.tilanne === s.tilanne);
     const nakyvat = valitut.filter((l) => !s.piilossa.has(l.tulos));
@@ -57,10 +65,11 @@ export async function piirraOttelulyonnit(el, pelaaja) {
       .map((l) => ({ x: l.x, y: l.y, vari: TULOS[l.tulos][1], otsikko: `${TULOS[l.tulos][0]} · ${l.tilanne === "0" ? "0" : l.tilanne}-tilanne, ${l.palot} paloa, ${l.lyonti}. lyönti` }));
     el.innerHTML = `
       <div class="ok-paa">
-        <p class="pieni">${esc(d.nimi)} · ${esc(d.joukkue)} 2026 · ${L.length} lyöntiä ${loydetty.joukkue !== pelaaja.joukkue ? `(pelasi 2026 joukkueessa ${esc(loydetty.joukkue)})` : ""} · lähde pesistulokset.fi</p>
+        <p class="pieni">${esc(kd.d.nimi)} · ${L.length} lyöntiä${s.kausi === "kaikki" ? "" : ` · ${esc(kd.d.joukkue)} ${kd.kausi}${kd.p.joukkue !== pelaaja.joukkue ? " (silloinen joukkue)" : ""}`} · lähde pesistulokset.fi</p>
       </div>
       <div class="ok-suod">
-        <div class="chipit pieni-chipit" aria-label="Tilanne">${chip("tilanne", "", "Kaikki tilanteet", s.tilanne)}${KANSIOT.map(([k]) => chip("tilanne", k, k, s.tilanne)).join("")}<span class="erotin"></span>${h.tilanteet.map((t) => chip("tilanne", t, t === "0" ? "0" : t, s.tilanne)).join("")}</div>
+        ${kaudet.length > 1 ? `<div class="chipit pieni-chipit" aria-label="Kausi">${kaudet.map((k) => chip("kausi", String(k.kausi), `Kausi ${k.kausi}`, s.kausi)).join("")}${chip("kausi", "kaikki", "Kaikki kaudet", s.kausi)}</div>` : ""}
+        <div class="chipit pieni-chipit" aria-label="Tilanne">${chip("tilanne", "", "Kaikki tilanteet", s.tilanne)}${KANSIOT.map(([k]) => chip("tilanne", k, k, s.tilanne)).join("")}<span class="erotin"></span>${kd.h.tilanteet.map((t) => chip("tilanne", t, t === "0" ? "0" : t, s.tilanne)).join("")}</div>
         <div class="chipit pieni-chipit">${chip("palot", "", "Kaikki palot", s.palot)}${[0, 1, 2].map((n) => chip("palot", String(n), `${n} paloa`.replace("1 paloa", "1 palo"), s.palot)).join("")}
           <span class="erotin"></span>${chip("lyonti", "", "Kaikki lyönnit", s.lyonti)}${[1, 2, 3].map((n) => chip("lyonti", String(n), `${n}. lyönti`, s.lyonti)).join("")}
           <span class="erotin"></span>${chip("vaihe", "0", "Runkosarja", s.vaihe)}${chip("vaihe", "1", "Pudotuspelit", s.vaihe)}${chip("vaihe", "", "Molemmat", s.vaihe)}</div>

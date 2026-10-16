@@ -47,7 +47,7 @@ export async function nayta(main, id, valilehti) {
       </div></div>
     </div>
     <div class="valilehdet" role="tablist">
-      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ottelut", "Ottelulyönnit 2026", ""], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
+      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ottelut", "Ottelulyönnit", ""], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/vp/${id}/${k}" aria-selected="${valilehti === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>
     <div id="vp-sisalto"></div>`;

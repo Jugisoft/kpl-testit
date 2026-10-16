@@ -4,7 +4,7 @@ import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita, palkki } from "../util.js";
 import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 
-const LAJIT = ["Pomppu", "1-raja näpy", "2-raja näpy", "Ohitusnäpy", "Keskinäpy", "Kumura", "Viistari", "Pystäri", "Koppi", "Läpilyönti", "Säilytys"];
+const LAJIT = ["Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 
@@ -159,17 +159,17 @@ async function paivakirja(main, email, muokattava) {
     <div class="osio-paa"><h2>Missiot</h2>${muokattava ? `<button class="btn" id="ly-uusi-m">+ Uusi missio</button>` : ""}</div>
     ${muokattava ? `<form id="ly-missio" class="paneeli ly-uusi" hidden>
       <div class="rivi">
-        <label class="ly-kentta">Laji <input type="text" name="laji" list="ly-lajilista" required maxlength="60" placeholder="esim. Pomppu"></label>
+        <label class="ly-kentta">Laji <input type="text" name="laji" list="ly-lajilista" required maxlength="60" placeholder="esim. Pieni 2-raja"></label>
         <label class="ly-kentta">Tavoite (lyöntiä) <input name="tavoite" type="number" min="1" required placeholder="2000" style="width:130px"></label>
         <label class="ly-kentta">Alkaa <input name="alku" type="date" value="${t}" required></label>
         <label class="ly-kentta">Päättyy <input name="loppu" type="date" value="${kaudenLoppu()}" required></label>
-        <label class="ly-kentta ly-kasvaa">Nimi (vapaaehtoinen) <input type="text" name="nimi" maxlength="80" placeholder="esim. Talven pomppumissio"></label>
+        <label class="ly-kentta ly-kasvaa">Nimi (vapaaehtoinen) <input type="text" name="nimi" maxlength="80" placeholder="esim. Talven 2-rajat"></label>
       </div>
       <datalist id="ly-lajilista">${lajit.map((l) => `<option value="${esc(l)}">`).join("")}</datalist>
       <div class="rivi"><button class="btn ensisij">Luo missio</button><button type="button" class="btn" id="ly-peru-m">Peru</button></div>
       <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä.</p>
     </form>` : ""}
-    <div class="ly-missiot">${aktiiviset.map((m) => missioKortti(m, laske(m, kirjaukset), muokattava)).join("") || `<p class="tyhja">${muokattava ? "Ei vielä missiota. Aseta esimerkiksi 2000 pomppua talvikaudelle." : "Ei aktiivisia missioita."}</p>`}</div>
+    <div class="ly-missiot">${aktiiviset.map((m) => missioKortti(m, laske(m, kirjaukset), muokattava)).join("") || `<p class="tyhja">${muokattava ? "Ei vielä missiota. Aseta esimerkiksi 2000 lyöntiä pieneen 2-rajaan talvikaudelle." : "Ei aktiivisia missioita."}</p>`}</div>
 
     <div class="ly-alaosa">
       <section><h2>Lyönnit viikoittain</h2>${viikkoPylvaat(kirjaukset)}</section>

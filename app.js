@@ -45,44 +45,90 @@ const reitit = [
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
 ];
 
-// Päävalikko: [teksti, osoite, aktiivinen kun polku täsmää]
-const PAAVALIKKO = [
-  ["Keskus", "#/", (p) => p === "/"],
-  ["Muistio", "#/muistio", (p) => /^\/(muistio|huomio|vp\/|kortti)/.test(p)],
-  ["Siirtomarkkinat", "#/siirtomarkkinat", (p) => p === "/siirtomarkkinat"],
-  ["Analyysi", "#/analyysi", (p) => p === "/analyysi" || p === "/juoksuodotus"],
-  ["Testit", "#/testit", (p, r) => r?.osio === "testit"],
-  ["Lyöntipäiväkirja", "#/lyonnit", (p) => /^\/lyonnit/.test(p)],
+// Sivupalkki (16.10.2026, YDIN 2027:n mallin mukaan): ryhmät, kuvakkeet, Testien alasivut sisennettynä.
+const IK = {
+  koti: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  lyonnit: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  testit: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.5 2M9.5 2.5h5M12 2.5V6"/>',
+  muistio: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  vastustajat: '<path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  pelikirja: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/>',
+  analyysi: '<path d="M4 20V11M10 20V5M16 20v-6M2.5 20.5h19"/>',
+  juoksuodotus: '<path d="m3 17 6-6 4 4 8-8M15 7h6v6"/>',
+  siirrot: '<path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"/>',
+  ohje: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 17h.01"/>',
+  hallinta: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  valikko: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  ulos: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
+};
+const ikoni = (n) => `<svg class="ikoni" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IK[n]}</svg>`;
+const onVastustaja = (p) => /^\/(vp\/|kortti)/.test(p) || /^\/muistio\/(vastustajat|IPV|JoMa|KeKi|KiPa|Manse|PattU|PuMu|SoJy|Tahko|Ura|ViVe)\b/.test(p);
+// [teksti, osoite, kuvake, aktiivinen]
+const RYHMAT = [
+  [null, [["Keskus", "#/", "koti", (p) => p === "/"]]],
+  ["Oma harjoittelu", [
+    ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p)],
+    ["Testit", "#/testit", "testit", (p, r) => r?.osio === "testit", [
+      ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
+      ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
+      ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)]]],
+  ]],
+  ["Valmennus", [
+    ["Muistio", "#/muistio", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
+    ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
+    ["Pelikirja", "pelikirja.html", "pelikirja", () => false],
+  ]],
+  ["Analyysi", [
+    ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
+    ["Juoksuodotus", "#/juoksuodotus", "juoksuodotus", (p) => p === "/juoksuodotus"],
+    ["Siirtomarkkinat", "#/siirtomarkkinat", "siirrot", (p) => p === "/siirtomarkkinat"],
+  ]],
 ];
-const TESTIVALIKKO = [
-  ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
-  ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
-  ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
-];
+// Puhelimen alapalkki: neljä tärkeintä + Valikko
+const ALAPALKKI = [["Keskus", "#/", "koti"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit", "testit"], ["Muistio", "#/muistio", "muistio"]];
 
 let nykyinen = null;
 let navId = 0;
 
 function piirraNav(polku, r) {
-  const linkki = ([teksti, href, aktiivinen]) => `<a href="${href}"${aktiivinen(polku, r) ? ' aria-current="page"' : ""}>${teksti}</a>`;
+  const linkki = ([teksti, href, ik, aktiivinen, ali]) => {
+    const on = aktiivinen(polku, r);
+    return `<a class="nav-linkki" href="${href}"${on ? ' aria-current="page"' : ""}>${ikoni(ik)}<span>${teksti}</span></a>`
+      + (ali && on ? `<div class="nav-ali">${ali.map(([t, h, a]) => `<a href="${h}"${a(polku, r) ? ' aria-current="page"' : ""}>${t}</a>`).join("")}</div>` : "");
+  };
+  document.body.classList.toggle("kirjautunut", !!tila.jasen);
+  let aktiivinenNimi = "";
   if (tila.jasen) {
-    $("#nav").innerHTML = PAAVALIKKO.map(linkki).join("") + `<a href="pelikirja.html">Pelikirja</a>` + linkki(["Ohje", "#/ohje", (p) => /^\/ohje/.test(p)]) + (tila.admin ? linkki(["Hallinta", "#/hallinta", (p) => p === "/hallinta"]) : "");
+    const kaikki = [...RYHMAT.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
+    aktiivinenNimi = kaikki.find((l) => l[3](polku, r))?.[0] || "";
+    $("#nav").innerHTML = RYHMAT.map(([otsikko, linkit]) => `<div class="nav-ryhma">${otsikko ? `<div class="nav-otsikko">${otsikko}</div>` : ""}${linkit.map(linkki).join("")}</div>`).join("")
+      + `<div class="nav-ryhma nav-ala">${linkki(["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)])}${tila.admin ? linkki(["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]) : ""}</div>`;
+    $("#alapalkki").innerHTML = ALAPALKKI.map(([t, h, ik]) => `<a href="${h}"${kaikki.find((l) => l[1] === h)?.[3](polku, r) ? ' aria-current="page"' : ""}>${ikoni(ik)}<span>${t}</span></a>`).join("")
+      + `<button type="button" id="avaa-valikko" aria-controls="sivupalkki" aria-expanded="false">${ikoni("valikko")}<span>Valikko</span></button>`;
+    $("#avaa-valikko").onclick = () => avaaValikko(true);
   } else {
-    $("#nav").innerHTML = "";
+    $("#nav").innerHTML = ""; $("#alapalkki").innerHTML = "";
   }
-  const ali = $("#alinav");
-  ali.hidden = !(tila.jasen && r?.osio === "testit");
-  ali.innerHTML = ali.hidden ? "" : TESTIVALIKKO.map(linkki).join("");
+  $("#mp-sivu").textContent = aktiivinenNimi;
+  avaaValikko(false);
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;
-    k.innerHTML = `<span title="${esc(email)}">${esc(email.split("@")[0])}</span><button id="ulos">Kirjaudu ulos</button>`;
+    k.innerHTML = `<span class="k-nimi" title="${esc(email)}">${esc(email.split("@")[0])}</span><button id="ulos" title="Kirjaudu ulos">${ikoni("ulos")}<span>Kirjaudu ulos</span></button>`;
     $("#ulos").onclick = async () => { await sb.auth.signOut(); location.hash = "#/"; location.reload(); };
   } else {
     k.innerHTML = `<a class="btn" style="padding:4px 12px" href="#/kirjaudu">Kirjaudu</a>`;
   }
 }
+function avaaValikko(auki) {
+  document.body.classList.toggle("valikko-auki", auki);
+  $("#verho").hidden = !auki;
+  $("#avaa-valikko")?.setAttribute("aria-expanded", auki);
+}
+document.addEventListener("click", (e) => { if (e.target.id === "verho") avaaValikko(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") avaaValikko(false); });
 
+let edellinenPolku = null;
 async function reititä() {
   const polku = location.hash.replace(/^#/, "") || "/";
   const r = reitit.find((x) => x.polku.test(polku)) || reitit[0];
@@ -97,6 +143,10 @@ async function reititä() {
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
   nykyinen?.poistu?.();
   tuhoaKaaviot();
+  // uusi sivu alkaa ylhäältä (ei saman sivun sisäisissä vaihdoissa, esim. Ohjeen osiot)
+  const juuri = polku.split("/")[1] || "";
+  if (edellinenPolku !== null && edellinenPolku !== juuri) window.scrollTo(0, 0);
+  edellinenPolku = juuri;
   const id = ++navId;
   const sivu = $("#sisalto");
   const main = document.createElement("div");

@@ -15,12 +15,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 </head>
 <body>
-<header class="topbar">
+<aside class="sivupalkki" id="sivupalkki" aria-label="Päävalikko">
   <a class="brand" href="#/"><img src="img/kpl-logo-64.png" alt="" width="34" height="34"><span>KPL <em>Keskus</em></span></a>
-  <nav id="nav" aria-label="Päävalikko"></nav>
+  <nav id="nav"></nav>
   <div id="kayttaja" class="kayttaja"></div>
+</aside>
+<header class="mobiilipalkki">
+  <a class="brand" href="#/"><img src="img/kpl-logo-64.png" alt="" width="30" height="30"><span>KPL <em>Keskus</em></span></a>
+  <span class="mp-sivu" id="mp-sivu"></span>
 </header>
-<nav id="alinav" class="alinav" aria-label="Testit" hidden></nav>
+<nav class="alapalkki" id="alapalkki" aria-label="Pikavalikko"></nav>
+<div class="verho" id="verho" hidden></div>
 <main id="sisalto" tabindex="-1"><p class="lataa">Ladataan…</p></main>
 <div id="ilmoitus" class="ilmoitus" role="status" aria-live="polite"></div>
 <script type="module" src="app.js"></script>

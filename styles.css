@@ -1249,3 +1249,20 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 .kj-hallinta label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-3); }
 .kj-kasvaa { flex: 1; min-width: 220px; }
 .kj-kasvaa input { width: 100%; }
+
+/* ===== Kuka hoitaa mitäkin tilannetta (16.10.2026) ===== */
+.tilannejako { margin: 18px 0 28px; }
+.tj-taulu { width: 100%; border-collapse: collapse; }
+.tj-taulu th, .tj-taulu td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+.tj-taulu thead th { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.tj-taulu thead th span { display: block; font-size: 11px; color: var(--ink-3); font-weight: 400; }
+.tj-nimi { min-width: 190px; }
+.tj-nimi .rm-kuvaus { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; }
+.tj-solu { position: relative; min-width: 120px; }
+.tj-palkki { position: absolute; left: 0; top: 4px; bottom: 4px; background: linear-gradient(90deg, rgba(245,168,0,.10), rgba(245,168,0,.26)); border-radius: 0 4px 4px 0; }
+.tj-osuus, .tj-ala { position: relative; display: block; }
+.tj-osuus { font: 700 20px/1.1 var(--num); }
+.tj-ala { font-size: 12px; color: var(--ink-3); }
+.tj-ala .yla { color: var(--green); } .tj-ala .ala { color: var(--red); } .tj-ala .pieni-otos { color: var(--ink-3); font-weight: 500; }
+.tj-taulu tfoot th, .tj-taulu tfoot td { font-size: 13px; color: var(--ink-2); border-bottom: 0; }
+.pki-ottelut { margin: 8px 0 28px; }

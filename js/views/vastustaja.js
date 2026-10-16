@@ -9,9 +9,10 @@ import { kortti, kytkeKortit, kontekstinHuomiot } from "./muistio.js";
 import { piirraFlappi, onLuonnosta } from "./flappi.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 import { profiiliIdt } from "../profiili.js";
+import { piirraOttelulyonnit } from "../lyontikartta.js";
 
 // Välimuisti valitun joukkueen rakenteisista kirjauksista, jaetuista teksteistä ja Pelikirjan kuvioista
-const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "", profiilit: new Map() };
+const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "", profiilit: new Map(), tilastot: null };
 // Valinnat säilyvät uudelleenpiirroissa
 const s = { pelaaja: "", tilanne: "", roolitila: false };
 const lyv = { pelaaja: "", tilanne: "", palot: "", lyonti: "", tyyppi: "", tulos: "", piste: null };
@@ -31,7 +32,8 @@ export async function lataaVastustaja(joukkue) {
     sb.from("vastustaja_kuviot").select("*").eq("joukkue", joukkue),
     haeSiirtomarkkinat().catch(() => null),
     profiiliIdt().catch(() => new Map()),
-  ]);
+    V.tilastot ? null : sb.from("tilastot").select("tyyppi,nimi,joukkue,data").eq("kausi", 2026).eq("vaihe", "runko").eq("tyyppi", "pelaaja"),
+  ]).then((r) => { if (r[5]?.data) V.tilastot = r[5].data; return r; });
   V.profiilit = profiilit;
   if (kirj.error) throw kirj.error;
   V.joukkue = joukkue;
@@ -104,6 +106,46 @@ function kytkeTekstit(el, piirra) {
 }
 
 // ======================= SISÄPELI =======================
+// Kuka hoiti mitäkin tilannetta (16.10.2026, Jugi): kokoonpano 2027:n pelaajien kärkilyöntiyritykset
+// lähtöpesittäin runkosarjasta 2026 (pesistulokset.fi, taulu tilastot) ja osuus kokoonpanon yhteismäärästä.
+const TJ = [["0", "0-tilanne", "kentälle pääsy"], ["1", "1-tilanne", "purku kakkoselle"], ["2", "2-tilanne", "purku kolmoselle"], ["3", "Takatilanne", "kotiutus"]];
+const nrm = (x) => (x || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
+function tilannejako(rivit) {
+  if (!V.tilastot) return `<p class="lataa">Ladataan tilastoja…</p>`;
+  const ind = new Map(); V.tilastot.forEach((t) => { const k = nrm(t.nimi); (ind.get(k) || ind.set(k, []).get(k)).push(t); });
+  const tilasto = (nimi) => (ind.get(nrm(nimi)) || []).sort((a, b) => (b.data.O || 0) - (a.data.O || 0))[0] || null;
+  const sarja = TJ.map(([i]) => { let kl = 0, kly = 0; V.tilastot.forEach((t) => { kl += t.data["KL" + i] || 0; kly += t.data["KLY" + i] || 0; }); return kly ? (100 * kl) / kly : null; });
+  const r = rivit.filter((p) => p.aktiivinen).map((p) => ({ p, t: tilasto(p.nimi) }));
+  const yht = TJ.map(([i]) => r.reduce((a, x) => a + (x.t?.data["KLY" + i] || 0), 0));
+  const maxOsuus = TJ.map(([i], c) => Math.max(1, ...r.map((x) => (yht[c] ? (100 * (x.t?.data["KLY" + i] || 0)) / yht[c] : 0))));
+  r.sort((a, b) => (b.t?.data.KLY || -1) - (a.t?.data.KLY || -1));
+  const pros = (v) => (v == null ? "–" : `${v.toFixed(0)} %`);
+  const solu = (x, i, c) => {
+    const kly = x.t?.data["KLY" + i] || 0, kl = x.t?.data["KL" + i] || 0;
+    if (!x.t) return `<td class="tj-solu tyhja-solu"></td>`;
+    const osuus = yht[c] ? (100 * kly) / yht[c] : 0, klp = kly ? (100 * kl) / kly : null;
+    const luokka = kly < 10 ? "pieni-otos" : klp >= sarja[c] ? "yla" : "ala";
+    return `<td class="tj-solu" title="${esc(x.p.nimi)}, ${TJ[c][1]}: ${kly} yritystä (${osuus.toFixed(1)} % kokoonpanon yrityksistä), onnistui ${kl} (${klp == null ? "–" : klp.toFixed(1) + " %"}), sarja ${sarja[c].toFixed(1)} %">
+      <span class="tj-palkki" style="width:${(100 * osuus) / maxOsuus[c]}%"></span>
+      <span class="tj-osuus num">${kly ? osuus.toFixed(0) + " %" : "–"}</span>
+      <span class="tj-ala">${kly ? `${kly} kpl · <b class="${luokka}">${pros(klp)}</b>` : "ei yrityksiä"}</span></td>`;
+  };
+  return `<section class="tilannejako">
+    <div class="osio-paa"><h2>Kuka hoitaa mitäkin tilannetta</h2></div>
+    <p class="pieni">Kokoonpano 2027. Iso luku = pelaajan osuus kokoonpanon kärkilyöntiyrityksistä tilanteessa, alla yritykset ja onnistumis-% (vihreä = yli sarjan, punainen = alle, harmaa = alle 10 yritystä). Runkosarja 2026, pesistulokset.fi. Napauta pelaajaa nähdäksesi hänen ottelulyöntinsä kentällä.</p>
+    <div class="taulu-wrap"><table class="tj-taulu">
+      <thead><tr><th class="tj-nimi">Pelaaja</th>${TJ.map(([, n, a]) => `<th>${n}<span>${a}</span></th>`).join("")}<th class="n">KLY<span>yht.</span></th></tr></thead>
+      <tbody>${r.map((x) => `<tr>
+        <th class="tj-nimi"><button type="button" class="rm-pelaaja" data-valitse="${x.p.id}">${x.p.numero != null ? `<span class="num">${x.p.numero}</span> ` : ""}${esc(x.p.nimi)}</button>${x.t && x.t.joukkue && x.t.joukkue !== V.joukkue ? `<span class="rm-kuvaus">2026 ${esc(x.t.joukkue)}</span>` : !x.t ? `<span class="rm-kuvaus">ei Superpesis-lukuja 2026</span>` : ""}</th>
+        ${TJ.map(([i], c) => solu(x, i, c)).join("")}
+        <td class="n num">${x.t?.data.KLY ?? ""}</td></tr>`).join("") || `<tr><td colspan="6" class="tyhja">Ei pelaajia kokoonpanossa.</td></tr>`}</tbody>
+      <tfoot><tr><th class="tj-nimi">Kokoonpano yhteensä</th>${TJ.map((_, c) => `<td class="num">${yht[c]} kpl</td>`).join("")}<td class="n num">${yht.reduce((a, b) => a + b, 0)}</td></tr>
+        <tr><th class="tj-nimi">Sarjan onnistumis-%</th>${sarja.map((v) => `<td class="num">${pros(v)}</td>`).join("")}<td></td></tr></tfoot>
+    </table></div>
+  </section>`;
+}
+
+
 // Valitaan pelaaja pomppuvalikosta: kuva ja tiedot (roolit, mitä lyö tilanteittain). "Koko joukkue" näyttää roolitaulukon.
 export function piirraSisapeli(el, pelaajat) {
   const piirra = () => piirraSisapeli(el, pelaajat);
@@ -177,19 +219,9 @@ export function piirraSisapeli(el, pelaajat) {
         ${ryhmaYhteenveto(omat, (h) => h.tiedot?.tilanne || "Tilanne ei kirjattu", "Tilanne", "Tilanteittain")}
         ${muistiinpanot.length ? `<div class="pki-osa"><span class="osa-nimi">Muistiinpanot</span><ul class="pki-mp">${muistiinpanot.map((h) => `<li><a href="#/huomio/${h.id}">${esc(h.otsikko)}</a> <span class="pieni harmaa">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></li>`).join("")}</ul></div>` : ""}
       </div>
-    </section>` : `
-    <section class="roolimatriisi-osio">
-      <div class="osio-paa"><h2>Roolit ja lyönnit tilanteittain</h2>
-        <button type="button" class="btn pieni-nappi${s.roolitila ? " ensisij" : ""}" id="roolitila" aria-pressed="${s.roolitila}">${s.roolitila ? "Valmis" : "Merkitse roolit"}</button></div>
-      <p class="pieni">${s.roolitila ? "Napauta ruutua merkitäksesi, missä tilanteessa pelaajaa on suunniteltu käytettävän. Napauta uudelleen poistaaksesi." : "Korostettu ruutu = suunniteltu rooli. Luku = kirjatut lyönnit ja väri yleisin lyönti. Napauta ruutua avataksesi pelaajan."}</p>
-      <div class="taulu-wrap"><table class="roolimatriisi${s.roolitila ? " muokkaus" : ""}">
-        <thead><tr><th class="rm-nimi">Pelaaja</th>${SARAKKEET.map((t) => `<th><button type="button" class="rm-sarake${s.tilanne === t ? " valittu" : ""}" data-sarake="${esc(t)}" title="${esc(t)}">${esc(lyhyt(t))}</button></th>`).join("")}<th class="n">Yht.</th></tr></thead>
-        <tbody>${rivit.map((p) => `<tr class="${p.aktiivinen ? "" : "ei-akt"}">
-          <th class="rm-nimi"><button type="button" class="rm-pelaaja" data-valitse="${p.id}">${p.numero != null ? `<span class="num">${p.numero}</span> ` : ""}${esc(p.nimi)}</button>${p.kuvaus ? `<span class="rm-kuvaus">${esc(p.kuvaus)}</span>` : ""}</th>
-          ${SARAKKEET.map((t) => solu(p, t)).join("")}
-          <td class="n">${lyonnit.filter((h) => h.pelaaja_id === p.id).length || ""}</td></tr>`).join("") || `<tr><td colspan="${SARAKKEET.length + 2}" class="tyhja">Ei pelaajia. Lisää pelaaja alta.</td></tr>`}
-        </tbody></table></div>
-    </section>`}
+    </section>
+    <section class="pki-ottelut"><div class="osio-paa"><h2>Ottelulyönnit</h2><a class="pieni" href="#/vp/${valittuP.id}/ottelut">Avaa pelaajasivulla</a></div><div id="pki-ok"></div></section>` : `
+    ${tilannejako(rivit)}`}
 
     <div class="kirjaus-ruudukko" id="lyonnit">
       <form class="paneeli kirjauslomake" id="vly-lomake">
@@ -242,6 +274,7 @@ export function piirraSisapeli(el, pelaajat) {
   $$("[data-valitse]", el).forEach((b) => (b.onclick = () => valitse(b.dataset.valitse)));
 
   if (valittuP) {
+    piirraOttelulyonnit($("#pki-ok", el), valittuP);
     kytkeKuva(el, valittuP, piirra);
     $("#pki-kuvaus", el).onchange = async (e) => {
       const kuvaus = e.target.value.trim() || null;
@@ -258,21 +291,7 @@ export function piirraSisapeli(el, pelaajat) {
       const opt = $(`#pv-valinta option[value="${p.id}"]`, el); if (opt) opt.textContent = `${nro(p)}${p.nimi}${roolitLyhyt(p) ? ` · ${roolitLyhyt(p)}` : ""}`;
     }));
   } else {
-    $("#roolitila", el).onclick = () => { s.roolitila = !s.roolitila; piirra(); };
-    $$(".rm-solu button", el).forEach((b) => (b.onclick = async () => {
-      const p = pelaajat.get(b.dataset.p), t = b.dataset.t;
-      if (s.roolitila) {
-        const roolit = (p.roolit || []).includes(t) ? p.roolit.filter((x) => x !== t) : [...(p.roolit || []), t];
-        const { error } = await sb.from("vastustajapelaajat").update({ roolit }).eq("id", p.id);
-        if (error) return ilmoita(error.message, true);
-        p.roolit = roolit; return piirra();
-      }
-      valitse(p.id, t === "Jokeri" ? "" : t);
-    }));
-    $$("[data-sarake]", el).forEach((b) => (b.onclick = () => {
-      if (b.dataset.sarake === "Jokeri") return;
-      s.tilanne = s.tilanne === b.dataset.sarake ? "" : b.dataset.sarake; piirra();
-    }));
+    // Tilannejako: rivin napautus valitsee pelaajan (data-valitse yllä)
   }
   $$("#s-tilanne .chip", el).forEach((b) => (b.onclick = () => { s.tilanne = b.dataset.s; if (s.tilanne) lyv.tilanne = s.tilanne; piirra(); }));
   $("#uusi-pelaaja", el).onsubmit = async (e) => {

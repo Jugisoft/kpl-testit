@@ -1266,3 +1266,4 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 .tj-ala .yla { color: var(--green); } .tj-ala .ala { color: var(--red); } .tj-ala .pieni-otos { color: var(--ink-3); font-weight: 500; }
 .tj-taulu tfoot th, .tj-taulu tfoot td { font-size: 13px; color: var(--ink-2); border-bottom: 0; }
 .pki-ottelut { margin: 8px 0 28px; }
+.osiot { overflow-x: hidden; top: 16px; }

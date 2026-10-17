@@ -4,8 +4,21 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 export const SUPABASE_URL = "https://xytpwmzcghixulnzdakv.supabase.co";
 export const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dHB3bXpjZ2hpeHVsbnpkYWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NjMyNTgsImV4cCI6MjEwNzAzOTI1OH0.d3eiBFma8eT3nq-NhPmH2lurROo7XC0MXMkqDXVm3rs"; // julkinen anon-avain, oikeudet hoitaa RLS
 
+// Kirjautumisen lukko välilehtien välillä (17.10.2026): jos lukko on varattu (esim. jäätynyt tai taustalle
+// jäädytetty välilehti pitää sitä), jatketaan heti ilman lukkoa, ettei sivu jää "Ladataan…"-tilaan.
+// Pelikirja käyttää vastaavasti lukotonta istuntoa.
+async function lukko(nimi, _aika, fn) {
+  if (!globalThis.navigator?.locks) return await fn();
+  let ajettu = false;
+  const tulos = await navigator.locks.request(nimi, { mode: "exclusive", ifAvailable: true }, async (l) => {
+    if (!l) return undefined;              // varattu → ajetaan alla ilman lukkoa
+    ajettu = true; return await fn();
+  });
+  return ajettu ? tulos : await fn();
+}
+
 export const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true },
+  auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, lock: lukko },
 });
 
 export const tila = {

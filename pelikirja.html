@@ -32,7 +32,14 @@ header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:14p
 .arena{font:600 12px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 header h1{font:700 30px/1 var(--display);letter-spacing:.03em;margin:0;text-transform:uppercase}
 header .sub{color:var(--muted);font-size:13px}
-.wrap{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+/* Isoilla näytöillä käyttöliittymä kasvaa näytön mukana (17.10.2026): kenttä täyttää leveyden, valikot ja tekstit skaalautuvat --z:llä */
+:root{--z:1}
+@media (min-width:1700px){:root{--z:1.2}}
+@media (min-width:2100px){:root{--z:1.45}}
+@media (min-width:2600px){:root{--z:1.75}}
+@media (min-width:3200px){:root{--z:2.1}}
+header,.lib,.bar,.meta,.legend,.vika,.luonnos,.titleplate,.phasebadge,.toast,.gate{zoom:var(--z)}
+.wrap{display:grid;grid-template-columns:calc(290px * var(--z)) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}.lib{order:2}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .lib{padding:12px;display:flex;flex-direction:column;gap:10px}

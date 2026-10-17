@@ -40,8 +40,8 @@ const SIVUT = [
   { id: "siirtomarkkinat", nimi: "Siirtomarkkinat", linkki: "#/siirtomarkkinat",
     mita: "Miesten Superpesiksen sopimukset, siirrot ja pelinjohtajat kaudelle 2027. Jarvis päivittää illalla seurojen tiedotteista.",
     kohdat: [
-      ["Vaikutuspalkki", "Paljonko joukkueen sisäpelin tuotosta (YHT ja kärkilyönnit, runkosarja 2026) lähti ja tuli siirroissa. Vasemmalle = menetti, oikealle = vahvistui."],
-      ["Netto %", "Netto YHT % = (tulleiden YHT − lähteneiden YHT) / joukkueen YHT 2026, Netto KL % samoin kärkilyönneille. Netto yhteensä = näiden keskiarvo, ja arvio (esim. aukko) perustuu siihen. Ykköspesiksestä tulevan luvut kerrotaan tasokertoimella."],
+      ["Siirtopörssi", "Sama näkymä kuin YDIN 2027:n etusivulla. Joka joukkueella on yksi rivi: punainen palkki vasemmalla = lähteneiden pelaajien YHT runkosarjassa 2026, vihreä palkki oikealla = tulleiden. Kasvokuvat ovat siirtyneitä pelaajia, ja katkoviivareunus tarkoittaa, että siirrosta on vain yksi lähde. Klikkaa riviä, niin näet pelaajat ja pelinjohtajan."],
+      ["Netto", "Pörssin netto = tulleiden YHT − lähteneiden YHT (vain Superpesis 2026). Prosentti on suhteessa joukkueen omaan YHT:hen 2026. Nousijoilla (Ura, PuMu) vertailua ei ole. Keskuksen kortin netto % ottaa huomioon myös kärkilyönnit ja Ykköspesiksen tasokertoimen."],
       ["Varmuus", "Vahvistettu = seuran tiedote. Koonti = Supervuoron sopimuskoonti, tarkka päivä ei aina tiedossa. Huhu = ei vahvistettu."],
       ["Rajoitus", "Luvut eivät huomioi pelipaikkaa, ulkopeliä eikä nuorten kehitystä: ne kertovat mittakaavan, eivät joukkueen tasoa."],
     ] },

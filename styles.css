@@ -1270,3 +1270,98 @@ body:not(.kirjautunut) .sivupalkki { display: none; }
 .luokkanapit { margin: 0 0 14px; }
 .luokkanapit .lkm { font-size: 12px; color: var(--ink-3); }
 .luokkanapit .lukko { font-size: 10px; }
+
+/* ---------- Siirtopörssi (17.10.2026), YDIN 2027:n etusivun mallin mukaan ---------- */
+.sp { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--glow); }
+.sp-head { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.25fr); gap: 20px; align-items: end; }
+.sp-head h2 { font: 700 52px/.9 var(--num); margin: 0; }
+.sp-head p { margin: 8px 0 0; color: var(--ink-2); font-size: 14px; max-width: 56ch; }
+.sp-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.sp-fact { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.sp-fact:hover { border-color: var(--ink-3); }
+.sp-fact .k { font-size: 12px; color: var(--ink-3); }
+.sp-fact .v { display: flex; align-items: center; gap: 8px; font: 700 21px/1.05 var(--num); min-width: 0; }
+.sp-fact .v img, .sp-fact .v .sp-ph { width: 26px; height: 26px; object-fit: contain; flex: none; }
+.sp-fact .v span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-fact .s { font-size: 12.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-fact.up .v b { color: var(--green); } .sp-fact.dn .v b { color: #ff8f86; }
+.sp-axis, .sp-row { display: grid; grid-template-columns: 160px minmax(0,1fr) minmax(0,1fr) 96px; gap: 0 10px; }
+.sp-axis { font-size: 12px; color: var(--ink-3); padding: 0 8px; }
+.sp-axis span:nth-child(1) { grid-column: 2; text-align: right; padding-right: 6px; }
+.sp-axis span:nth-child(2) { padding-left: 6px; }
+.sp-axis span:nth-child(3) { text-align: right; }
+.sp-board { display: flex; flex-direction: column; gap: 2px; }
+.sp-row { align-items: center; padding: 7px 8px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; background: none; color: inherit; font: inherit; text-align: left; width: 100%; }
+.sp-row:hover, .sp-row[aria-expanded="true"] { background: var(--surface-2); }
+.sp-row.oma { border-color: rgba(245,168,0,.45); background: rgba(245,168,0,.06); }
+.sp-tn { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.sp-tn img, .sp-ph { width: 30px; height: 30px; object-fit: contain; flex: none; background: #fff; border-radius: 7px; padding: 2px; }
+.sp-ph { display: grid; place-items: center; font: 700 11px var(--num); color: #111; }
+.sp-tn b { font: 700 20px/1 var(--num); }
+.sp-tn small { display: block; color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-sd { display: flex; align-items: center; gap: 6px; min-width: 0; height: 34px; }
+.sp-sd.o { flex-direction: row-reverse; border-right: 2px solid rgba(255,255,255,.22); padding-right: 6px; }
+.sp-sd.i { padding-left: 6px; }
+.sp-bar { height: 14px; border-radius: 4px; flex: none; transform-origin: left center; }
+.sp-sd.o .sp-bar { background: linear-gradient(90deg,#c2413a,#e0645c); transform-origin: right center; }
+.sp-sd.i .sp-bar { background: linear-gradient(90deg,#1fa874,var(--green)); }
+.sp-sd .num { font-weight: 700; font-size: 17px; flex: none; }
+.sp-sd.o .num { color: #ff8f86; } .sp-sd.i .num { color: var(--green); }
+.sp-faces { display: flex; flex: none; }
+.sp-faces span { width: 26px; height: 26px; border-radius: 50%; background: #2c2925; border: 2px solid var(--surface); margin-left: -7px; display: grid; place-items: center; font: 700 10px var(--num); color: var(--ink); overflow: hidden; }
+.sp-faces span img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.sp-faces span.yksi { border-style: dashed; border-color: var(--ink-3); }
+.sp-sd.o .sp-faces { margin-right: 8px; }
+.sp-sd.o .sp-faces span { margin-left: 0; margin-right: -7px; }
+.sp-faces .sp-more { background: none; border: 0; font-size: 12px; color: var(--ink-3); width: auto; margin-left: 10px !important; margin-right: 0 !important; }
+.sp-nt { text-align: right; display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
+.sp-nt b { font-size: 26px; }
+.sp-nt small { color: var(--ink-3); font-size: 12px; margin-top: 3px; }
+.sp-nt.up b { color: var(--green); } .sp-nt.dn b { color: #ff8f86; } .sp-nt.eq b { color: var(--ink-3); }
+.sp-zero { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 12px; padding: 2px 8px; }
+.sp-zero::before, .sp-zero::after { content: ""; flex: 1; border-top: 1px dashed rgba(255,255,255,.18); }
+.sp-det { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; padding: 6px 8px 14px 178px; }
+.sp-det h4 { margin: 0 0 6px; font: 700 16px var(--num); color: var(--ink-2); }
+.sp-det .pl { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line-2); }
+.sp-det .pl:last-child { border-bottom: 0; }
+.sp-det .av, .sp-lc .av { border-radius: 50%; background: #2c2925; overflow: hidden; display: grid; place-items: center; font: 700 12px var(--num); color: var(--kpl); }
+.sp-det .av { width: 34px; height: 34px; }
+.sp-det .av img, .sp-lc .av img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.sp-det .pl b { display: block; font-weight: 600; font-size: 14px; }
+.sp-det .pl small { color: var(--ink-3); font-size: 12px; }
+.sp-det .y { font-size: 19px; font-weight: 700; text-align: right; }
+.sp-det .y small { display: block; font: 500 11px var(--text); }
+.sp-det .pj { grid-column: 1 / -1; font-size: 14px; color: var(--ink-2); }
+.sp-det .pj b { color: var(--ink); }
+.sp-det .go { grid-column: 1 / -1; display: flex; gap: 18px; font-size: 14px; }
+.sp-det .go a, .sp-det .go .linkki { color: var(--kpl); background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-decoration: none; }
+.sp-det .go a:hover, .sp-det .go .linkki:hover { text-decoration: underline; }
+.sp-note { margin: 0; font-size: 12.5px; color: var(--ink-3); }
+@media (prefers-reduced-motion: no-preference) { .sp.valmis .sp-bar { animation: sp-kasva .7s cubic-bezier(.2,.7,.2,1) both; } @keyframes sp-kasva { from { transform: scaleX(0); } } }
+.sp-lt h3 { font: 700 19px var(--num); letter-spacing: .04em; text-transform: uppercase; margin: 22px 0 10px; }
+.sp-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.sp-lc { flex: 0 0 236px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 4px 10px; text-decoration: none; color: inherit; }
+a.sp-lc[href]:hover { border-color: var(--kpl); }
+.sp-lc .av { grid-row: 1 / span 3; width: 52px; height: 52px; font-size: 15px; }
+.sp-lc .d { font-size: 12px; color: var(--ink-3); }
+.sp-lc b { font-weight: 700; line-height: 1.15; }
+.sp-lc .mv { font: 700 17px var(--num); display: flex; gap: 6px; align-items: center; }
+.sp-lc .mv i { font-style: normal; color: var(--ink-3); }
+.sp-lc .mv .to { color: var(--green); } .sp-lc .mv .gone { color: #ff8f86; }
+.sp-lc .st { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-3); border-top: 1px solid var(--line-2); padding-top: 6px; margin-top: 4px; }
+.sp-lc.eka { border-color: var(--kpl); box-shadow: inset 0 0 0 1px var(--kpl); }
+@media (max-width: 1100px) { .sp-head { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 760px) {
+  .sp { padding: 16px 10px 12px; }
+  .sp-head h2 { font-size: 40px; }
+  .sp-axis, .sp-row { grid-template-columns: 92px minmax(0,1fr) minmax(0,1fr) 54px; gap: 0 6px; }
+  .sp-axis { padding: 0 4px; } .sp-row { padding: 7px 4px; }
+  .sp-tn img, .sp-ph { width: 22px; height: 22px; }
+  .sp-tn b { font-size: 17px; }
+  .sp-tn small, .sp-faces { display: none; }
+  .sp-nt b { font-size: 20px; } .sp-nt small { font-size: 10px; white-space: nowrap; }
+  .sp-facts { gap: 6px; } .sp-fact { padding: 8px; }
+  .sp-fact .v { font-size: 17px; gap: 5px; } .sp-fact .v img, .sp-fact .v .sp-ph, .sp-fact .s { display: none; }
+  .sp-fact .k { font-size: 11px; }
+  .sp-det { grid-template-columns: minmax(0,1fr); padding: 6px 4px 12px; }
+}

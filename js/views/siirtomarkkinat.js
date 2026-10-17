@@ -1,8 +1,14 @@
-// Siirtomarkkinat 2027: Jarvisin kooste (Siirrot, Pelinjohtajat, Kokoonpanot, vaikutus).
+// Siirtomarkkinat 2027: Jarvisin kooste (Siirrot, Pelinjohtajat, Kokoonpanot). Etusivuna Siirtopörssi (17.10.2026),
+// sama näkymä kuin YDIN 2027:n etusivulla: kasvokuvat ja logot luetaan YDINin julkisesta reposta.
 import { $, $$, esc } from "../util.js";
 import { haeSiirtomarkkinat, md, aikaSitten } from "../keskus.js";
 
-let valilehti = "tilanne";
+let valilehti = "porssi";
+let auki = null;            // Siirtopörssissä avattu joukkue
+const LAHDE = "https://raw.githubusercontent.com/Jugisoft/ydin-2027/main/data/out";
+const TEAMS27 = ["ViVe", "SoJy", "KPL", "Manse", "Tahko", "KiPa", "JoMa", "PattU", "KeKi", "IPV", "Ura", "PuMu"];
+const NOUSIJAT = new Set(["Ura", "PuMu"]);
+let ydin = null;            // { kuvat: nimi -> url, logot: lyh -> url } YDIN 2027:n julkisesta reposta
 let joukkue = "KPL";
 let siirtoSuodatin = "";
 
@@ -25,36 +31,121 @@ export async function nayta(main) {
       <p class="pieni paivitys">Päivitetty ${esc(d.tilannekatsaus_paivitetty || aikaSitten(d.paivitetty))}</p>
     </div>
     <div class="valilehdet" role="tablist">
-      ${[["tilanne", "Tilanne"], ["vaikutus", "Vaikutus joukkueisiin"], ["siirrot", `Siirrot <span class="lkm">${d.siirrot.length}</span>`], ["joukkueet", "Kokoonpanot"], ["pj", "Pelinjohtajat"]]
+      ${[["porssi", "Siirtopörssi"], ["tilanne", "Tilanne"], ["siirrot", `Siirrot <span class="lkm">${d.siirrot.length}</span>`], ["joukkueet", "Kokoonpanot"], ["pj", "Pelinjohtajat"]]
         .map(([k, v]) => `<button role="tab" class="valilehti" data-v="${k}" aria-selected="${valilehti === k}">${v}</button>`).join("")}
     </div>
     <div id="sm"></div>`;
-  $$(".valilehti", main).forEach((b) => (b.onclick = () => { valilehti = b.dataset.v; $$(".valilehti", main).forEach((x) => x.setAttribute("aria-selected", x === b)); piirra(d); }));
+  if (valilehti === "vaikutus") valilehti = "porssi";
+  $$(".valilehti", main).forEach((b) => (b.onclick = () => vaihda(b.dataset.v)));
+  vaihda = (v) => { valilehti = v; $$(".valilehti", main).forEach((x) => x.setAttribute("aria-selected", x.dataset.v === v)); piirra(d); };
+  ydin = ydin || await haeYdin();
   piirra(d);
+}
+
+let vaihda = () => {};
+
+async function haeYdin() {
+  const hae = async (f) => { try { const r = await fetch(`${LAHDE}/${f}`); return r.ok ? await r.json() : null; } catch { return null; } };
+  const [k, p] = await Promise.all([hae("kuvat.json"), hae("pelaajat_2026_runko.json")]);
+  const kuvat = {};
+  for (const x of p || []) if (k?.pelaajat?.[x.id] && !kuvat[x.nimi]) kuvat[x.nimi] = k.pelaajat[x.id];
+  return { kuvat, logot: k?.logot || {} };
+}
+
+// ---------- Siirtopörssi (sama näkymä kuin YDIN 2027:n etusivulla) ----------
+const tm = (x) => String(x || "").split(/[\s(]/)[0];
+const yht = (s) => (s.Data === "SP 2026" ? s.YHT || 0 : 0);
+const yksi = (s) => /yksi/i.test(s.Varmuus);
+const pvm = (s) => (/koonti/.test(s.Pvm) ? "koonti" : String(s.Pvm).replace(/\.20\d\d$/, ""));
+const minne = (s) => (s.Mihin && s.Mihin !== "–" ? s.Mihin : /lopet/i.test(s["Mihin (tieto)"] || "") ? "lopettaa" : "ei jatka");
+const ini = (n) => esc(n.split(" ").map((x) => x[0]).slice(0, 2).join(""));
+const kasvo = (n) => { const u = ydin?.kuvat[n]; return u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${ini(n)}'))">` : ini(n); };
+const logo = (t) => (ydin?.logot[t] ? `<img src="${esc(ydin.logot[t])}" alt="">` : `<span class="sp-ph">${esc(t.slice(0, 3))}</span>`);
+const statRivi = (s) => (s.Data === "SP 2026" ? `2026: ${s.YHT} YHT (${s.K}+${s.L}+${s.T}), KL ${s.KL}/${s.KLY}` : s.Data === "YP 2026" ? `Ykköspesis 2026: ${s.YHT} YHT` : "Ei otteluita 2026");
+
+function porssiData(d) {
+  return TEAMS27.map((t) => {
+    const ins = d.siirrot.filter((s) => tm(s.Mihin) === t), outs = d.siirrot.filter((s) => tm(s.Mistä) === t);
+    const yi = ins.reduce((a, s) => a + yht(s), 0), yo = outs.reduce((a, s) => a + yht(s), 0);
+    const v = d.vaikutus.find((x) => x.Joukkue === t), jy = NOUSIJAT.has(t) ? null : v?.["Joukkueen YHT 2026"];
+    return { t, ins, outs, yi, yo, net: yi - yo, pct: jy ? (100 * (yi - yo)) / jy : null, pj: d.pelinjohtajat.find((p) => p.Joukkue === t) };
+  }).sort((a, b) => b.net - a.net || (b.ins.length - b.outs.length) - (a.ins.length - a.outs.length));
+}
+const kasvot = (rivit, max = 5) => {
+  const r = [...rivit].sort((a, b) => yht(b) - yht(a));
+  return `<span class="sp-faces">${r.slice(0, max).map((s) => `<span class="${yksi(s) ? "yksi" : ""}" title="${esc(s.Pelaaja)}: ${esc(statRivi(s))}">${kasvo(s.Pelaaja)}</span>`).join("")}${r.length > max ? `<span class="sp-more">+${r.length - max}</span>` : ""}</span>`;
+};
+
+function porssi(d, el) {
+  const P = porssiData(d), mx = Math.max(...P.flatMap((p) => [p.yi, p.yo]), 1);
+  const ylin = P[0], alin = P[P.length - 1], vilkkain = [...P].sort((a, b) => b.ins.length + b.outs.length - (a.ins.length + a.outs.length))[0];
+  const tuoreet = d.siirrot.filter((s) => !/koonti/.test(s.Pvm)).slice(0, 10);
+  let rivit = "", raja = false;
+  for (const p of P) {
+    if (!raja && p.net < 0) { raja = true; rivit += `<div class="sp-zero">paperilla heikompi kuin 2026</div>`; }
+    const pjNimi = p.pj ? String(p.pj["PJ 2027"] || "").split(" ").slice(-1)[0] : "";
+    const pjTxt = !p.pj ? "" : !p.pj["PJ 2027"] || p.pj["PJ 2027"] === "?" ? "PJ auki" : p.pj.Muutos === "Jatkaa" ? `PJ ${esc(pjNimi)}` : `Uusi PJ ${esc(pjNimi)}`;
+    const cls = p.net > 0 ? "up" : p.net < 0 ? "dn" : "eq";
+    rivit += `<button type="button" class="sp-row${p.t === "KPL" ? " oma" : ""}" data-t="${p.t}" aria-expanded="${auki === p.t}">
+      <span class="sp-tn">${logo(p.t)}<span><b>${esc(p.t)}</b><small>${NOUSIJAT.has(p.t) ? "nousija · " : ""}${pjTxt}</small></span></span>
+      <span class="sp-sd o">${p.yo ? `<span class="sp-bar" style="width:${(70 * p.yo) / mx}%"></span><span class="num">−${p.yo}</span>` : ""}${kasvot(p.outs)}</span>
+      <span class="sp-sd i">${p.yi ? `<span class="sp-bar" style="width:${(70 * p.yi) / mx}%"></span><span class="num">+${p.yi}</span>` : ""}${kasvot(p.ins)}</span>
+      <span class="sp-nt ${cls}"><b class="num">${p.net > 0 ? "+" : ""}${p.net}</b><small>${p.pct != null ? `${p.pct > 0 ? "+" : ""}${p.pct.toFixed(0)} % YHT` : "ei vertailua"}</small></span>
+    </button>`;
+    if (auki === p.t) rivit += detalji(p);
+  }
+  el.innerHTML = `
+    <section class="sp">
+      <div class="sp-head">
+        <div><h2>Siirtopörssi</h2>
+          <p>Palkit näyttävät, kuinka paljon tulleet ja lähteneet pelaajat tekivät tulosta runkosarjassa 2026 (YHT = K+L+T). Klikkaa joukkuetta nähdäksesi pelaajat.</p></div>
+        <div class="sp-facts">${[["up", "Vahvistunut eniten", ylin, `${ylin.net > 0 ? "+" : ""}${ylin.net}`, `${ylin.ins.length} tullutta, ${ylin.outs.length} lähtenyttä`],
+          ["dn", "Menettänyt eniten", alin, `${alin.net}`, `${alin.outs.length} lähtenyttä, ${alin.ins.length} tullutta`],
+          ["", "Vilkkain joukkue", vilkkain, `${vilkkain.ins.length + vilkkain.outs.length}`, "muutosta pelaajistoon"]]
+          .map(([c, k, p, v, s]) => `<button type="button" class="sp-fact ${c}" data-t="${p.t}"><span class="k">${k}</span><span class="v">${logo(p.t)}<span>${esc(p.t)}</span><b class="num">${v}</b></span><span class="s">${s}</span></button>`).join("")}</div>
+      </div>
+      <div class="sp-axis" aria-hidden="true"><span>Lähteneet</span><span>Tulleet</span><span>Netto</span></div>
+      <div class="sp-board" role="list">${rivit}</div>
+      <p class="sp-note">Ykköspesiksestä tulleilla ei ole Superpesis-tehoja 2026, joten ne näkyvät vain kasvokuvina. Katkoviiva = yksi lähde. Huhut eivät ole mukana.</p>
+    </section>
+    <section class="sp-lt">
+      <h3>Tuoreimmat siirrot</h3>
+      <div class="sp-strip">${tuoreet.map((s, i) => { const ok = TEAMS27.includes(tm(s.Mihin)); const u = s.Lähde?.url;
+        return `<a class="sp-lc${i === 0 ? " eka" : ""}" ${u ? `href="${esc(u)}" target="_blank" rel="noopener"` : ""}>
+          <span class="av">${kasvo(s.Pelaaja)}</span><span class="d">${pvm(s)} · ${yksi(s) ? "yksi lähde" : "vahvistettu"}</span>
+          <b>${esc(s.Pelaaja)}</b><span class="mv">${esc(tm(s.Mistä) || s.Mistä)}<i>→</i><span class="${ok ? "to" : "gone"}">${esc(ok ? tm(s.Mihin) : minne(s))}</span></span>
+          <span class="st">${esc(statRivi(s))}</span></a>`; }).join("")}</div>
+    </section>`;
+  requestAnimationFrame(() => el.querySelector(".sp")?.classList.add("valmis"));
+  $$(".sp-row, .sp-fact", el).forEach((b) => (b.onclick = () => {
+    const t = b.dataset.t, fakta = b.classList.contains("sp-fact");
+    auki = auki === t && !fakta ? null : t; porssi(d, el);
+    const r = el.querySelector(`.sp-row[data-t="${t}"]`);
+    if (r) fakta ? r.scrollIntoView({ block: "center", behavior: "smooth" }) : r.focus({ preventScroll: true });
+  }));
+  $$("[data-kok]", el).forEach((b) => (b.onclick = () => { joukkue = b.dataset.kok; vaihda("joukkueet"); }));
+}
+
+function detalji(p) {
+  const rivi = (s) => { const tulo = tm(s.Mihin) === p.t;
+    const suunta = tulo ? `${esc(tm(s.Mistä) || s.Mistä)} → ${esc(p.t)}` : `→ ${esc(minne(s))}`;
+    return `<div class="pl"><span class="av">${kasvo(s.Pelaaja)}</span><span><b>${esc(s.Pelaaja)}</b><small>${suunta} · ${pvm(s)}${yksi(s) ? " · yksi lähde" : ""}</small></span><span class="y num">${s.Data === "SP 2026" ? s.YHT : "–"}<small>${s.Data === "SP 2026" ? "YHT 2026" : s.Data === "YP 2026" ? "Ykköspesis" : "ei dataa"}</small></span></div>`; };
+  const jarj = (r) => [...r].sort((a, b) => yht(b) - yht(a));
+  const pj = !p.pj ? "" : p.pj.Muutos === "Jatkaa" ? `Pelinjohtaja <b>${esc(p.pj["PJ 2027"])}</b> jatkaa.` : !p.pj["PJ 2027"] || p.pj["PJ 2027"] === "?" ? `Pelinjohtaja ${esc(p.pj["PJ 2026"])} lähtee, <b>seuraaja auki</b>.` : `Pelinjohtaja vaihtuu: ${esc(p.pj["PJ 2026"])} → <b>${esc(p.pj["PJ 2027"])}</b>.`;
+  return `<div class="sp-det" role="region" aria-label="${esc(p.t)}: siirrot">
+    <div><h4>Tulleet (${p.ins.length})</h4>${jarj(p.ins).map(rivi).join("") || `<p class="sp-note">Ei vielä uusia pelaajia.</p>`}</div>
+    <div><h4>Lähteneet (${p.outs.length})</h4>${jarj(p.outs).map(rivi).join("") || `<p class="sp-note">Ei lähtijöitä.</p>`}</div>
+    ${pj ? `<div class="pj">${pj}</div>` : ""}
+    <div class="go"><button type="button" class="linkki" data-kok="${p.t}">Kokoonpano 2027 →</button>${p.t !== "KPL" ? `<a href="#/muistio/${p.t}">Vastustajasivu →</a>` : ""}</div></div>`;
 }
 
 function piirra(d) {
   const el = $("#sm");
-  if (valilehti === "tilanne") {
+  if (valilehti === "porssi") porssi(d, el);
+  else if (valilehti === "tilanne") {
     el.innerHTML = `<div class="kaksi-saraketta">
       <section><h2>Tärkeimmät muutokset</h2><div class="md uutislista">${md(d.tarkeimmat)}</div></section>
       <section><h2>Seurattavat asiat</h2><div class="md uutislista hiljainen">${md(d.seurattavat)}</div></section></div>`;
-  } else if (valilehti === "vaikutus") {
-    const rivit = [...d.vaikutus].sort((a, b) => (b["Netto yhteensä %"] ?? 0) - (a["Netto yhteensä %"] ?? 0));
-    const max = Math.max(...rivit.map((r) => Math.abs(r["Netto yhteensä %"] || 0)), 0.05);
-    el.innerHTML = `
-      <p class="vihje" style="margin-top:0">Palkki näyttää, paljonko joukkueen sisäpelin tuotosta (YHT ja kärkilyönnit, runkosarja 2026) lähti ja tuli siirroissa. Vasemmalle = menetti, oikealle = vahvistui. Ykköspesiksestä nousevan pelaajan luvut on kerrottu tasokertoimella.</p>
-      <div class="vaikutus">${rivit.map((r) => {
-        const n = r["Netto yhteensä %"] || 0, lev = (Math.abs(n) / max) * 50;
-        return `<div class="v-rivi${r.Joukkue === "KPL" ? " oma" : ""}">
-          <span class="v-nimi">${esc(r.Joukkue)}</span>
-          <span class="v-palkki" aria-hidden="true"><span class="${n < 0 ? "miinus" : "plus"}" style="${n < 0 ? `right:50%;width:${lev}%` : `left:50%;width:${lev}%`}"></span></span>
-          <span class="v-luku num">${pct(n)}</span>
-          <span class="v-arvio">${esc(r.Arvio || "")}</span>
-          <span class="v-tiedot pieni">Tuli ${r.Tulleet}, lähti ${r.Lähteneet}. YHT ${Math.round(r["YHT tuli"])} sisään / ${Math.round(r["YHT lähti"])} ulos (koko joukkue ${r["Joukkueen YHT 2026"]}). PJ 2027: ${esc(r["PJ 2027"] || "?")}</span>
-        </div>`;
-      }).join("")}</div>
-      <p class="vihje">YHT = kunnarit + lyödyt + tuodut juoksut. Luvut eivät huomioi pelipaikkaa, ulkopeliä eikä nuorten kehitystä, joten ne kertovat mittakaavan, eivät joukkueen tasoa.</p>`;
   } else if (valilehti === "siirrot") {
     const joukkueet = [...new Set(d.siirrot.flatMap((s) => [s.Mistä, s.Mihin]).filter((x) => x && x !== "–"))].sort();
     el.innerHTML = `

@@ -10,8 +10,8 @@ const SIVUT = [
       ["Pikalinkkien luvut", "Muistiinpanojen, Pelikirjan kuvioiden, vastustajien pelaajien, siirtojen ja edustuksen testikertojen määrät."],
       ["Tervehdyksen luku", "Valmennuksen omat kirjaukset viimeiseltä 7 päivältä. Jarvisin pelaajaprofiilit mainitaan erikseen."],
     ] },
-  { id: "muistio", nimi: "Muistio", linkki: "#/muistio",
-    mita: "Valmennuksen muistiinpanot osioittain OneNoten tapaan: Ideat, Oma peli, Merkkipeli, Pelaajat, Muut ja jokainen vastustaja. Jarvisin kooste on osion alussa.",
+  { id: "muistio", nimi: "Oma peli", linkki: "#/muistio/KPL/sisapeli",
+    mita: "KPL:n oma sivu (sivupalkissa Oma peli, 17.10.2026). Joukkue ja pelaajat: Sisäpeli-välilehdellä Kuka hoitaa mitäkin tilannetta ja pelaajan valinnalla hänen ottelulyöntinsä kentällä, kuten vastustajilla. Lisäksi Pelaajat, Muistiinpanot ja Ottelumuistiot sekä muistiinpano-osiot (Oma peli, Merkkipeli, Ideat, Pelaajat, Muut). Vastustajat ovat omalla sivullaan.",
     kohdat: [
       ["Valmennus-osio", "Valmentajien reflektio omasta joukkueesta. Näkyy vain valmentajille ja ylläpitäjälle, ei pelaajille."],
       ["Jarvisin kooste", "Jarvis kokoaa osion muistiinpanot pyynnöstä: Mitä tiedetään · Hypoteesit (varmuus heikko / kohtalainen / vahva) · Avoimet kysymykset."],

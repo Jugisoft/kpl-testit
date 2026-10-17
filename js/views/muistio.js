@@ -22,20 +22,23 @@ export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null
 const muista = (o) => { try { localStorage.setItem("kpl-osio", o); } catch { /* */ } };
 const muistettu = () => { try { return localStorage.getItem("kpl-osio"); } catch { return null; } };
 const onJoukkue = (o) => JOUKKUEET.includes(o);
-const VALILEHDET_KPL = [["muistiinpanot", "Muistiinpanot"], ["pelaajat", "Pelaajat"], ["ottelumuistiot", "Ottelumuistiot"]];
+// Kaksi näkymää (17.10.2026): Oma peli (KPL, valmennus, muistiinpanot) ja Vastustajat (11 joukkuetta)
+export const onVastustajaOsio = (o) => o === "vastustajat" || VASTUSTAJAT.includes(o);
+const VALILEHDET_KPL = [["sisapeli", "Sisäpeli"], ["pelaajat", "Pelaajat"], ["muistiinpanot", "Muistiinpanot"], ["ottelumuistiot", "Ottelumuistiot"]];
 const VALILEHDET_V = [["sisapeli", "Sisäpeli"], ["ulkopeli", "Ulkopeli"], ["muistiinpanot", "Muistiinpanot"], ["ottelumuistiot", "Ottelumuistiot"]];
 const RAKENNE_VL = ["pelaajat", "sisapeli", "ulkopeli"];
 function oikeaValilehti(o, v) {
   if (!onJoukkue(o)) return "muistiinpanot";
   const l = (o === "KPL" ? VALILEHDET_KPL : VALILEHDET_V).map((x) => x[0]);
   if (v === "pelaajat" && o !== "KPL") v = "sisapeli";
+  if (v === "ulkopeli" && o === "KPL") v = "sisapeli";
   return l.includes(v) ? v : l[0];
 }
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
 
 export async function nayta(main, osio, valilehti) {
   await lataaNimet();
-  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && (m === "kaikki" || m === "vastustajat" || osiot().includes(m)) ? m : "vastustajat"}`); return; }
+  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && !onVastustajaOsio(m) && (m === "kaikki" || osiot().includes(m)) ? m : "KPL/sisapeli"}`); return; }
   osio = decodeURIComponent(osio);
   if (osio !== "kaikki" && osio !== "vastustajat" && !osiot().includes(osio)) osio = "kaikki";
   muista(osio);
@@ -60,13 +63,12 @@ export async function nayta(main, osio, valilehti) {
 
 function osiolista() {
   const lkm = (o) => K.huomiot.filter((h) => !RAKENTEISET.includes(h.tyyppi) && (o === "kaikki" || huomionOsio(h) === o)).length;
-  const linkki = (o) => `<a href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}><span>${esc(osioNimi(o))}</span><span class="lkm">${lkm(o) || ""}</span></a>`;
+  const linkki = (o, nimi) => `<a href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}><span>${esc(nimi || osioNimi(o))}</span><span class="lkm">${lkm(o) || ""}</span></a>`;
   const otsikko = (o, n) => `<a class="osio-ryhma" href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}>${n}</a>`;
-  return `${linkki("kaikki")}
+  if (onVastustajaOsio(K.osio)) return `${otsikko("vastustajat", "Vastustajat")}<div class="osio-alat">${VASTUSTAJAT.map((o) => linkki(o)).join("")}</div>`;
+  return `<a href="#/muistio/KPL/sisapeli"${K.osio === "KPL" ? ' aria-current="page"' : ""}><span>Joukkue ja pelaajat</span></a>
     ${tila.valmennus ? `<h3 class="valmennus-otsikko" title="Näkyy vain valmentajille, ei pelaajille">Valmennus <span class="lukko">vain valmennus</span></h3>${linkki("valmennus")}` : ""}
-    ${otsikko("vastustajat", "Vastustajat")}<div class="osio-alat">${VASTUSTAJAT.map(linkki).join("")}</div>
-    <h3>Oma joukkue</h3>${linkki("oma_peli")}${linkki("KPL")}
-    <h3>Muut</h3>${["idea", "merkkipeli", "pelaaja", "muu"].map(linkki).join("")}`;
+    <h3>Muistiinpanot</h3>${linkki("kaikki", "Kaikki muistiinpanot")}${linkki("oma_peli")}${["merkkipeli", "idea", "pelaaja", "muu"].map((o) => linkki(o)).join("")}`;
 }
 
 function piirraOsio() {
@@ -78,7 +80,7 @@ function piirraOsio() {
   const lkm = { pelaajat: pelaajia, ottelumuistiot: muistioita, muistiinpanot: mpLkm, sisapeli: lyontienMaara(o) };
   $("#osio").innerHTML = `
     <div class="osio-otsikko">
-      <h1>${esc(osioNimi(o))}</h1>
+      <h1>${o === "KPL" ? "Oma peli" : esc(osioNimi(o))}</h1>
       ${o === "vastustajat" ? "" : `<input type="search" id="haku" placeholder="Hae kaikista muistiinpanoista" value="${esc(K.haku)}" aria-label="Hae muistiinpanoista">`}
     </div>
     ${joukkue ? `<div class="valilehdet" role="tablist">

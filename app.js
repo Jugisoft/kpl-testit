@@ -77,7 +77,7 @@ const RYHMAT = [
       ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)]]],
   ]],
   ["Valmennus", [
-    ["Muistio", "#/muistio", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
+    ["Oma peli", "#/muistio/KPL/sisapeli", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
     ["Pelikirja", "pelikirja.html", "pelikirja", () => false],
   ]],
@@ -88,7 +88,7 @@ const RYHMAT = [
   ]],
 ];
 // Puhelimen alapalkki: neljä tärkeintä + Valikko
-const ALAPALKKI = [["Keskus", "#/", "koti"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit", "testit"], ["Muistio", "#/muistio", "muistio"]];
+const ALAPALKKI = [["Keskus", "#/", "koti"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit", "testit"], ["Oma peli", "#/muistio/KPL/sisapeli", "muistio"]];
 
 let nykyinen = null;
 let navId = 0;

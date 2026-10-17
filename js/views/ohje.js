@@ -17,6 +17,7 @@ const SIVUT = [
       ["Jarvisin kooste", "Jarvis kokoaa osion muistiinpanot pyynnöstä: Mitä tiedetään · Hypoteesit (varmuus heikko / kohtalainen / vahva) · Avoimet kysymykset."],
       ["Ottelumuistio", "Päivätty muistio ottelusta. Siihen voi liittää Word-, Excel-, kuva- tai PDF-tiedoston (enintään 25 Mt)."],
       ["Kommentit", "Kortin alle. Jarvisin kommentit näkyvät nimellä Jarvis."],
+      ["Merkitse tehdyksi", "Kun muistiinpanon asia on hoidettu, paina kortin alalaidasta ✓ Merkitse tehdyksi. Kortti siirtyy listan loppuun avattavaan Tehdyt-osioon, ja siinä näkyy, kuka kuittasi ja milloin. Palauta avoimeksi tuo sen takaisin. Kuka tahansa valmentaja voi kuitata."],
     ] },
   { id: "vastustajat", nimi: "Vastustajat", linkki: "#/muistio/vastustajat",
     mita: "Muistio → Vastustajat → joukkue. Välilehdet Sisäpeli, Ulkopeli, Muistiinpanot ja Ottelumuistiot. Pelaajan sivulla lyönnit, ulkopelin liikkeet ja Jarvisin pelaajaprofiili.",

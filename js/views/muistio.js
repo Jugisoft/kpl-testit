@@ -179,8 +179,11 @@ function piirraLista() {
   else if (K.valilehti === "ottelumuistiot") lista = K.huomiot.filter((h) => h.tyyppi === "ottelumuistio" && h.vastustaja === K.osio).sort((a, b) => (b.ottelu_pvm || "").localeCompare(a.ottelu_pvm || ""));
   else if (K.osio === "kaikki") lista = K.huomiot.filter((h) => muistiinpanoissa(h) && (!K.luokka || huomionOsio(h) === K.luokka));
   else lista = K.huomiot.filter((h) => !RAKENTEISET.includes(h.tyyppi) && huomionOsio(h) === K.osio && !(onJoukkue(K.osio) && h.tyyppi === "ottelumuistio"));
-  el.innerHTML = lista.map((h) => kortti(h, { osio: !!q || (K.osio === "kaikki" && !K.luokka) })).join("") ||
+  const nayta = { osio: !!q || (K.osio === "kaikki" && !K.luokka) };
+  const tehdyt = lista.filter((h) => h.tehty), avoimet = lista.filter((h) => !h.tehty);
+  el.innerHTML = (avoimet.map((h) => kortti(h, nayta)).join("") + (tehdyt.length ? `<li class="m-tehdyt"><details${K.tehdytAuki ? " open" : ""}><summary>Tehdyt (${tehdyt.length})</summary><ul class="muistiinpanot">${tehdyt.map((h) => kortti(h, nayta)).join("")}</ul></details></li>` : "")) ||
     `<li class="tyhja">${q ? "Haulla ei löytynyt muistiinpanoja." : K.valilehti === "ottelumuistiot" ? "Ei vielä ottelumuistioita. Lisää ensimmäinen yllä: kirjoita tai liitä tiedosto." : "Tässä osiossa ei ole vielä muistiinpanoja. Kirjoita ensimmäinen yllä olevaan kenttään."}</li>`;
+  el.querySelector(".m-tehdyt details")?.addEventListener("toggle", (e) => (K.tehdytAuki = e.target.open));
   kytkeKortit(el);
 }
 
@@ -189,12 +192,15 @@ export function kortti(h, { osio = true, pelaaja = true } = {}) {
   const m = K.maarat.get(h.id);
   const p = h.pelaaja_id && K.pelaajat.get(h.pelaaja_id);
   const voiPoistaa = h.kirjoittaja === omaEmail() || tila.admin;
-  return `<li class="muistiinpano tyyppi-${esc(h.tyyppi)}" data-id="${h.id}">
+  const kuitattava = h.tyyppi === "muistiinpano";
+  return `<li class="muistiinpano tyyppi-${esc(h.tyyppi)}${h.tehty ? " tehty" : ""}" data-id="${h.id}">
+    ${h.tehty ? `<div class="m-tehty-merkki">✓ Tehty · ${esc(kirjoittajanNimi(h.tehty_kuka))}, ${aikaSitten(h.tehty)}</div>` : ""}
     <div class="m-meta">${osio ? luokkaMerkki(h) : ""}${h.tyyppi !== "muistiinpano" ? `<span class="tyyppimerkki">${TYYPPINIMI[h.tyyppi]}${h.ottelu_pvm ? ` ${pvmFi(h.ottelu_pvm)}` : ""}</span>` : h.tiedot?.osa === "ulkopeli" ? `<span class="tyyppimerkki">Ulkopeli${h.tiedot.tilanne && h.tiedot.tilanne !== "Yleinen" ? `: ${esc(h.tiedot.tilanne)}` : ""}</span>` : ""}${pelaaja && p ? `<a class="pelaajamerkki" href="#/vp/${p.id}">${esc(p.nimi)}</a>` : ""}${h.luokka === "valmennus" ? `<span class="lukko" title="Näkyy vain valmentajille">vain valmennus</span>` : ""}<span>${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}${h.muokattu && new Date(h.muokattu) - new Date(h.luotu) > 60000 ? " (muokattu)" : ""}</span></div>
     <div class="m-sisalto">${sisalto(h)}</div>
     <div class="m-toiminnot">
       ${h.tyyppi === "profiili" ? `<a class="btn pieni-nappi ensisij" href="#/vp/${h.pelaaja_id}/profiili">Avaa profiili ja vikalista</a>` : `${RAKENTEISET.includes(h.tyyppi) ? "" : `<button class="linkkinappi" data-t="muokkaa">Muokkaa</button>`}
       <button class="linkkinappi" data-t="kommentit" aria-expanded="${K.auki.has(h.id)}">${m?.n ? `Kommentit (${m.n})` : "Kommentoi"}</button>`}
+      ${kuitattava ? `<button class="linkkinappi m-kuittaa" data-t="tehty">${h.tehty ? "Palauta avoimeksi" : "✓ Merkitse tehdyksi"}</button>` : ""}
       ${voiPoistaa ? `<button class="linkkinappi" data-t="poista">Poista</button>` : ""}
     </div>
     <div class="m-kommentit" ${K.auki.has(h.id) ? "" : "hidden"}></div>
@@ -214,6 +220,15 @@ export function kytkeKortit(el) {
       k.hidden = !auki; e.currentTarget.setAttribute("aria-expanded", auki);
       if (auki) { K.auki.add(id); lataaKommentit(k, id); } else K.auki.delete(id);
     };
+    li.querySelector("[data-t=tehty]")?.addEventListener("click", async (e) => {
+      const x = h(), tehty = x.tehty ? null : new Date().toISOString();
+      e.currentTarget.disabled = true;
+      const { data, error } = await sb.from("huomiot").update({ tehty }).eq("id", id).select().single();
+      if (error) { e.currentTarget.disabled = false; return ilmoita("Tallennus epäonnistui: " + error.message, true); }
+      Object.assign(x, data);
+      ilmoita(tehty ? "Merkitty tehdyksi" : "Palautettu avoimeksi");
+      K.uudelleenpiirra();
+    });
     li.querySelector("[data-t=poista]")?.addEventListener("click", async () => {
       if (!confirm("Poistetaanko kirjaus, sen kommentit ja liitteet pysyvästi?")) return;
       await poistaHuomionTiedostot(id);

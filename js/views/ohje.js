@@ -10,9 +10,10 @@ const SIVUT = [
       ["Pikalinkkien luvut", "Muistiinpanojen, Pelikirjan kuvioiden, vastustajien pelaajien, siirtojen ja edustuksen testikertojen määrät."],
       ["Tervehdyksen luku", "Valmennuksen omat kirjaukset viimeiseltä 7 päivältä. Jarvisin pelaajaprofiilit mainitaan erikseen."],
     ] },
-  { id: "muistio", nimi: "Oma peli", linkki: "#/muistio/KPL/sisapeli",
+  { id: "muistio", nimi: "Oma peli", linkki: "#/muistio/KPL/yleiskuva",
     mita: "KPL:n oma sivu (sivupalkissa Oma peli, 17.10.2026). Joukkue ja pelaajat: Sisäpeli-välilehdellä Kuka hoitaa mitäkin tilannetta ja pelaajan valinnalla hänen ottelulyöntinsä kentällä, kuten vastustajilla. Lisäksi Pelaajat ja Ottelumuistiot. Muistiinpanot ovat yhdellä sivulla, ja luokka valitaan napeista: Oma peli, Merkkipeli, Ideat, Pelaajat, Muut, Joukkue ja Valmennus (vain valmennus). Vastustajien muistiinpanot ovat kunkin vastustajan sivulla.",
     kohdat: [
+      ["Yleiskuva", "Joukkuesivun ensimmäinen välilehti (18.10.2026), sama kuin YDIN 2027:n joukkuesivu: sijoitus ja pisteet 2026, kehitys 2023–2026, pelaajat 2026 (klikkaa pelaajasivulle), pesäväleittäin sisä- ja ulkopeli, joukkue vs. sarja, kokoonpano 2027 ja siirrot. Tilastot päivittyvät YDINistä iltaisin."],
       ["Valmennus-osio", "Valmentajien reflektio omasta joukkueesta. Näkyy vain valmentajille ja ylläpitäjälle, ei pelaajille."],
       ["Jarvisin kooste", "Jarvis kokoaa osion muistiinpanot pyynnöstä: Mitä tiedetään · Hypoteesit (varmuus heikko / kohtalainen / vahva) · Avoimet kysymykset."],
       ["Ottelumuistio", "Päivätty muistio ottelusta. Siihen voi liittää Word-, Excel-, kuva- tai PDF-tiedoston (enintään 25 Mt)."],
@@ -20,7 +21,7 @@ const SIVUT = [
       ["Merkitse tehdyksi", "Kun muistiinpanon asia on hoidettu, paina kortin alalaidasta ✓ Merkitse tehdyksi. Kortti siirtyy listan loppuun avattavaan Tehdyt-osioon, ja siinä näkyy, kuka kuittasi ja milloin. Palauta avoimeksi tuo sen takaisin. Kuka tahansa valmentaja voi kuitata."],
     ] },
   { id: "vastustajat", nimi: "Vastustajat", linkki: "#/muistio/vastustajat",
-    mita: "Muistio → Vastustajat → joukkue. Välilehdet Sisäpeli, Ulkopeli, Muistiinpanot ja Ottelumuistiot. Pelaajan sivulla lyönnit, ulkopelin liikkeet ja Jarvisin pelaajaprofiili.",
+    mita: "Muistio → Vastustajat → joukkue. Välilehdet Yleiskuva (joukkueen tilastot, kehitys, pelaajat, kokoonpano ja siirrot), Sisäpeli, Ulkopeli, Muistiinpanot ja Ottelumuistiot. Pelaajan sivulla lyönnit, ulkopelin liikkeet ja Jarvisin pelaajaprofiili.",
     kohdat: [
       ["Suunniteltu rooli", "Missä tilanteessa vastustaja todennäköisesti käyttää pelaajaa, esim. 0-tilanne (kentälle pääsy), 1-tilanne (1-tilanteen purku), jokeri."],
       ["Kuka hoitaa mitäkin tilannetta", "Joukkueen Sisäpeli-välilehti, Koko joukkue. Kokoonpano 2027:n pelaajat ja heidän kärkilyöntiyrityksensä runkosarjassa 2026 tilanteittain (0-tilanne = kentälle pääsy, 1- ja 2-tilanteen purku, takatilanne = kotiutus). Iso luku = pelaajan osuus kokoonpanon yrityksistä tilanteessa, alla yritykset ja onnistumis-% (vihreä yli sarjan, punainen alle, harmaa alle 10 yritystä). Pelaajan valinta näyttää hänen ottelulyöntinsä kentällä."],

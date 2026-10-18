@@ -1374,3 +1374,89 @@ a.sp-lc[href]:hover { border-color: var(--kpl); }
 .m-tehdyt { list-style: none; margin-top: 8px; }
 .m-tehdyt > details > summary { cursor: pointer; color: var(--ink-2); font-weight: 600; padding: 8px 0; }
 .m-tehdyt .muistiinpanot { padding: 0; margin: 6px 0 0; }
+
+/* ---------- Joukkueen Yleiskuva (18.10.2026), YDIN 2027:n joukkuesivun mallin mukaan ---------- */
+.yk-band { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; grid-template-columns: minmax(240px, 360px) minmax(0,1fr); gap: 18px; box-shadow: var(--glow); }
+.yk-band > * { min-width: 0; }
+.yk-nimi { display: flex; align-items: center; gap: 14px; }
+.yk-nimi img, .yk-nimi .ph { width: 68px; height: 68px; object-fit: contain; background: #fff; border-radius: 14px; padding: 6px; flex: none; }
+.yk-nimi .ph { display: grid; place-items: center; font: 700 20px var(--num); color: #111; }
+.yk-nimi h2 { font: 700 38px/.95 var(--num); margin: 2px 0 0; }
+.yk-nimi p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; }
+.yk-ylä { font: 600 12px var(--num); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.yk-kpit { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; align-content: center; }
+.yk-kpi { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 12px; }
+.yk-kpi b { display: block; font-size: 32px; line-height: 1; font-weight: 700; }
+.yk-kpi b.mitali { color: var(--kpl); }
+.yk-kpi b.teksti { font-size: 22px; line-height: 32px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yk-kpi span { font: 600 11.5px var(--num); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.yk-sarakkeet { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 16px; align-items: start; margin-top: 16px; }
+.yk-sarake { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.yk-kortti { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.yk-otsa { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.yk-otsa h3 { font: 700 19px var(--num); letter-spacing: .04em; text-transform: uppercase; margin: 0; }
+.yk-otsa .chipit { margin: 0; }
+.yk-kaavio { width: 100%; height: auto; display: block; }
+.yk-kaavio .yk-pa { fill: var(--kpl); opacity: .55; }
+.yk-kaavio .viiva { fill: none; stroke: var(--ink); stroke-width: 2.2; }
+.yk-kaavio .piste { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
+.yk-kaavio text { font: 600 14px var(--num); fill: var(--ink-3); }
+.yk-kaavio .arvo { fill: var(--ink); } .yk-kaavio .sija { fill: var(--ink); font-size: 13px; }
+.yk-kaavio .mitali { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; fill: var(--kpl); }
+.yk-kaavio .pohja { stroke: var(--line); }
+.yk-taulu { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.yk-taulu th { font: 600 11.5px var(--num); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); text-align: right; padding: 6px 7px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.yk-taulu td { padding: 7px; text-align: right; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.yk-taulu .l { text-align: left; } .yk-taulu tr.nyt td { font-weight: 700; }
+.yk-pp { display: inline-block; font: 600 11.5px var(--num); letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; background: var(--surface-2); color: var(--ink-3); }
+.yk-pp.kulta { background: rgba(245,168,0,.18); color: var(--kpl); }
+.yk-pelaajat .yk-p { display: grid; grid-template-columns: 36px minmax(0,1fr) repeat(4, auto); gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line-2); text-decoration: none; color: inherit; font-size: 14px; font-variant-numeric: tabular-nums; border-radius: 6px; }
+.yk-pelaajat a.yk-p:hover { background: var(--surface-2); }
+.yk-p img, .yk-p .av { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; object-position: top; background: #2c2925; display: grid; place-items: center; font: 700 13px var(--num); color: var(--kpl); }
+.yk-p .n { font-weight: 700; min-width: 0; }
+.yk-p .n small { display: block; font-weight: 500; color: var(--ink-3); font-size: 12px; }
+.yk-p .c { text-align: right; min-width: 40px; font-family: var(--num); font-size: 16px; }
+.yk-p .c small { display: block; font: 600 10.5px var(--num); letter-spacing: .08em; color: var(--ink-3); }
+.yk-rk { display: flex; flex-direction: column; gap: 8px; }
+.yk-rr { display: grid; grid-template-columns: 112px minmax(0,1fr) 54px; align-items: center; gap: 10px; font-size: 14px; }
+.yk-rr .k { font: 600 13px var(--num); color: var(--ink-3); text-align: right; }
+.yk-rr .tr { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); }
+.yk-rr .tr i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; opacity: .35; }
+.yk-rr .tr b { position: absolute; top: 50%; min-width: 28px; height: 22px; margin: -11px 0 0 -14px; border-radius: 11px; display: grid; place-items: center; font: 700 12px var(--num); color: #111; border: 2px solid var(--surface); padding: 0 4px; }
+.yk-rr .v { text-align: right; font-weight: 600; font-size: 16px; }
+.yk-kentta { width: 100%; height: auto; display: block; max-width: 460px; margin: 0 auto; }
+.yk-kentta .kenttapinta, .yk-kentta .kp { fill: #3a2f1c; }
+.yk-kentta .raja, .yk-kentta .linja, .yk-kentta .kp, .yk-kentta .kpk { fill: none; stroke: var(--surface); stroke-width: 4; stroke-linejoin: round; }
+.yk-kentta .kp { fill: #3a2f1c; } .yk-kentta .linja, .yk-kentta .kpk { stroke-width: 3; }
+.yk-kentta .pesa { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.5; }
+.yk-kentta .lautanen { fill: var(--ink); }
+.yk-kentta .paluu { fill: none; stroke: var(--ink-3); stroke-width: 2; stroke-dasharray: 5 6; opacity: .7; }
+.yk-kentta .laatikko rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.yk-kentta .laatikko.kuuma rect { fill: #2e2410; stroke: var(--kpl); stroke-width: 2.5; }
+.yk-kentta .lbl { font: 600 12px var(--text); fill: var(--ink-3); }
+.yk-kentta .lbl .k { font: 700 14px var(--num); fill: var(--kpl); }
+.yk-kentta .pct { font: 700 28px var(--num); fill: var(--ink); }
+.yk-kentta .cnt { font: 600 11px var(--text); }
+.yk-kentta .cnt.plus { fill: var(--green); } .yk-kentta .cnt.miinus { fill: #ff8f86; }
+.yk-lab { font: 600 12px var(--num); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); margin-top: 4px; }
+.yk-roster { display: flex; flex-wrap: wrap; gap: 6px; }
+.yk-roster span { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13.5px; background: var(--surface-2); }
+.yk-roster span small { color: var(--ink-3); margin-left: 5px; }
+.yk-roster span.uusi { border-color: var(--green); background: var(--green-bg); }
+.yk-roster span.uusi::before { content: "UUSI "; font: 700 11px var(--num); letter-spacing: .08em; color: var(--green); }
+.yk-pj { margin: 0; font-size: 14px; }
+.yk-io { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.yk-io h4 { margin: 0 0 6px; font: 700 14px var(--num); letter-spacing: .08em; text-transform: uppercase; }
+.yk-io h4.sisaan { color: var(--green); } .yk-io h4.ulos { color: #ff8f86; }
+.yk-io ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 14px; }
+.yk-io li small { display: block; color: var(--ink-3); font-size: 12px; }
+.yk-linkki { color: var(--kpl); font-size: 14px; text-decoration: none; }
+.yk-linkki:hover { text-decoration: underline; }
+@media (max-width: 1100px) { .yk-band { grid-template-columns: minmax(0,1fr); } .yk-sarakkeet { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 600px) {
+  .yk-kpit { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .yk-nimi h2 { font-size: 30px; }
+  .yk-io { grid-template-columns: 1fr; }
+  .yk-pelaajat .yk-p { grid-template-columns: 36px minmax(0,1fr) auto auto; } .yk-p .hs { display: none; }
+  .yk-rr { grid-template-columns: 92px minmax(0,1fr) 46px; }
+}

@@ -6,6 +6,7 @@ import {
   JOUKKUEET, VASTUSTAJAT, AIHEOSIOT, osioNimi, haeSiirtomarkkinat, huomionOsio, koosteAvain, haeHuomiot, kommenttimaarat, haeKoosteet, lataaNimet, haePelaajat,
   kirjoittajanNimi, aikaSitten, md, luokkaMerkki, omaEmail, tallennaMuistiinpano, paivitaMuistiinpano, muistiinpanonTeksti, sukunimiJarjestys, pvmFi,
 } from "../keskus.js";
+import { piirraYleiskuva } from "./yleiskuva.js";
 import { lataaVastustaja, nollaaVastustaja, vastustajaMuutos, lyontienMaara, onLuonnosta, piirraSisapeli, piirraUlkopeli } from "./vastustaja.js";
 import { haeLiitteet, lataaTiedostot, liitteetHtml, aktivoiLiitteet, poistaLiite, poistaHuomionTiedostot, tiedostoValitsin } from "../liitteet.js";
 
@@ -30,9 +31,9 @@ const luokat = () => [...(tila.valmennus ? ["valmennus"] : []), ...LUOKKAJARJ];
 const luokkaNimi = (o) => (o === "KPL" ? "Joukkue" : osioNimi(o));
 const muistiinpanoissa = (h) => !RAKENTEISET.includes(h.tyyppi) && h.tyyppi !== "ottelumuistio" && !VASTUSTAJAT.includes(huomionOsio(h));
 // KPL:n muistiinpanot löytyvät Muistiinpanot-sivulta luokasta Joukkue (17.10.2026)
-const VALILEHDET_KPL = [["sisapeli", "Sisäpeli"], ["pelaajat", "Pelaajat"], ["ottelumuistiot", "Ottelumuistiot"]];
-const VALILEHDET_V = [["sisapeli", "Sisäpeli"], ["ulkopeli", "Ulkopeli"], ["muistiinpanot", "Muistiinpanot"], ["ottelumuistiot", "Ottelumuistiot"]];
-const RAKENNE_VL = ["pelaajat", "sisapeli", "ulkopeli"];
+const VALILEHDET_KPL = [["yleiskuva", "Yleiskuva"], ["sisapeli", "Sisäpeli"], ["pelaajat", "Pelaajat"], ["ottelumuistiot", "Ottelumuistiot"]];
+const VALILEHDET_V = [["yleiskuva", "Yleiskuva"], ["sisapeli", "Sisäpeli"], ["ulkopeli", "Ulkopeli"], ["muistiinpanot", "Muistiinpanot"], ["ottelumuistiot", "Ottelumuistiot"]];
+const RAKENNE_VL = ["yleiskuva", "pelaajat", "sisapeli", "ulkopeli"];
 function oikeaValilehti(o, v) {
   if (!onJoukkue(o)) return "muistiinpanot";
   const l = (o === "KPL" ? VALILEHDET_KPL : VALILEHDET_V).map((x) => x[0]);
@@ -44,7 +45,7 @@ const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/
 
 export async function nayta(main, osio, valilehti) {
   await lataaNimet();
-  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && !onVastustajaOsio(m) && (m === "kaikki" || osiot().includes(m)) ? m : "KPL/sisapeli"}`); return; }
+  if (!osio) { const m = muistettu(); location.replace(`#/muistio/${m && !onVastustajaOsio(m) && (m === "kaikki" || osiot().includes(m)) ? m : "KPL/yleiskuva"}`); return; }
   osio = decodeURIComponent(osio);
   if (osio === "valmennus" || AIHEOSIOT.includes(osio)) { K.luokka = osio; osio = "kaikki"; history.replaceState(null, "", "#/muistio/kaikki"); }
   else if (osio === "kaikki" && valilehti) { K.luokka = valilehti === "kaikki" ? "" : decodeURIComponent(valilehti); valilehti = null; }
@@ -54,7 +55,7 @@ export async function nayta(main, osio, valilehti) {
   K = { ...K, huomiot, maarat, koosteet, pelaajat, liitteet, osio, valilehti: oikeaValilehti(osio, valilehti), auki: K.osio === osio ? K.auki : new Set() };
   K.uudelleenpiirra = () => {
     const o = $(".osiot"); if (o) o.innerHTML = osiolista();
-    if (K.valilehti === "pelaajat") piirraOsio();
+    if (K.valilehti === "pelaajat" || K.valilehti === "yleiskuva") piirraOsio();
     else if (K.valilehti === "sisapeli" || K.valilehti === "ulkopeli") piirraRakenne();
     else piirraLista();
   };
@@ -74,7 +75,7 @@ function osiolista() {
   const linkki = (o, nimi) => `<a href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}><span>${esc(nimi || osioNimi(o))}</span><span class="lkm">${lkm(o) || ""}</span></a>`;
   const otsikko = (o, n) => `<a class="osio-ryhma" href="#/muistio/${o}"${K.osio === o ? ' aria-current="page"' : ""}>${n}</a>`;
   if (onVastustajaOsio(K.osio)) return `${otsikko("vastustajat", "Vastustajat")}<div class="osio-alat">${VASTUSTAJAT.map((o) => linkki(o)).join("")}</div>`;
-  return `<a href="#/muistio/KPL/sisapeli"${K.osio === "KPL" ? ' aria-current="page"' : ""}><span>Joukkue ja pelaajat</span></a>
+  return `<a href="#/muistio/KPL/yleiskuva"${K.osio === "KPL" ? ' aria-current="page"' : ""}><span>Joukkue ja pelaajat</span></a>
     <a href="#/muistio/kaikki"${K.osio === "kaikki" ? ' aria-current="page"' : ""}><span>Muistiinpanot</span><span class="lkm">${K.huomiot.filter(muistiinpanoissa).length || ""}</span></a>`;
 }
 
@@ -103,6 +104,7 @@ function piirraOsio() {
   };
   if (o === "vastustajat") return piirraVastustajat();
   if (joukkue && v === "pelaajat") return piirraPelaajat();
+  if (joukkue && v === "yleiskuva") return piirraYleiskuva($("#valilehti"), o, K.pelaajat);
   if (joukkue && (v === "sisapeli" || v === "ulkopeli")) {
     $("#valilehti").innerHTML = `<p class="pieni">Ladataan…</p>`;
     return lataaVastustaja(o).then(() => { piirraRakenne(); paivitaLkm(); }).catch((e) => ilmoita("Lataus epäonnistui: " + e.message, true));

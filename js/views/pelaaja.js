@@ -2,7 +2,7 @@
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
-const PROFIILI = ["30m", "10m", "lentava20", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
+const PROFIILI = ["30m", "10m", "lentava20", "nok_30m", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
 let valittu = "30m";
 
 export async function nayta(main, id) {
@@ -65,11 +65,11 @@ export async function nayta(main, id) {
     <p class="vihje">Katkoviiva on saman ikäluokan mediaani kullakin testikerralla.</p>
 
     ${profiili ? `<h2>Profiili talvella ${profiili.kausi}</h2>
-    <p class="pieni">T-pisteet verrattuna ${profiili.vertailu}: 50 on keskitaso, 60 selvästi keskitason yläpuolella. Juoksuissa nopeampi aika ja Cooperissa pidempi matka antaa enemmän pisteitä. Jos testiä ei ole tältä talvelta, mukana on edellisen talven tulos (kausi suluissa).</p>
+    <p class="pieni">T-pisteet verrattuna ${profiili.vertailu}: 50 on keskitaso, 60 selvästi keskitason yläpuolella. Juoksuissa (myös 9×30 m keskiarvossa) nopeampi aika ja Cooperissa pidempi matka antaa enemmän pisteitä. Jos testiä ei ole tältä talvelta, mukana on edellisen talven tulos (kausi suluissa).</p>
     <div class="rivi" style="align-items:stretch">
       <div class="paneeli" style="flex:1 1 320px"><div class="kaavio"><canvas id="profiili"></canvas></div></div>
       <div class="taulu-wrap" style="flex:1 1 320px"><table><thead><tr><th>Testi</th><th class="n">Kauden paras</th><th class="n">T-pisteet</th></tr></thead>
-      <tbody>${profiili.rivit.map((r) => `<tr><td>${esc(tila.testi[r.t].nimi)}${r.kausi ? ` <span class="pieni" title="Ei tulosta tältä kaudelta: edellisen kauden tulos verrattuna sen kauden ryhmään">(${r.kausi})</span>` : ""}</td><td class="n">${muotoile(r.arvo, r.t)}</td><td class="n iso" style="font-size:20px">${Math.round(r.T)}</td></tr>`).join("")}</tbody></table></div>
+      <tbody>${profiili.rivit.map((r) => `<tr><td>${esc(tila.testi[r.t].nimi)}${r.t === "nok_30m" ? " (ka)" : ""}${r.kausi ? ` <span class="pieni" title="Ei tulosta tältä kaudelta: edellisen kauden tulos verrattuna sen kauden ryhmään">(${r.kausi})</span>` : ""}</td><td class="n">${muotoile(r.arvo, r.t)}</td><td class="n iso" style="font-size:20px">${Math.round(r.T)}</td></tr>`).join("")}</tbody></table></div>
     </div>` : ""}
 
     <details style="margin-top:36px"><summary><h2 style="display:inline;margin:0">Kaikki tulokset (${omat.length})</h2></summary>
@@ -100,7 +100,7 @@ export async function nayta(main, id) {
 
   if (profiili) piirra($("#profiili"), {
     type: "radar",
-    data: { labels: profiili.rivit.map((r) => tila.testi[r.t].nimi + (r.kausi ? ` (${r.kausi})` : "")), datasets: [
+    data: { labels: profiili.rivit.map((r) => (r.t === "nok_30m" ? "9×30 m (ka)" : tila.testi[r.t].nimi) + (r.kausi ? ` (${r.kausi})` : "")), datasets: [
       { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--cyan"), backgroundColor: "rgba(245,168,0,.18)", pointBackgroundColor: vari("--cyan"), pointRadius: 3 },
       { label: "Keskitaso", data: profiili.rivit.map(() => 50), borderColor: vari("--ink-3"), borderDash: [4, 4], pointRadius: 0, backgroundColor: "transparent" },
     ] },

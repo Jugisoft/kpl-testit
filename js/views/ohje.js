@@ -66,6 +66,7 @@ const SIVUT = [
   { id: "testit", nimi: "Testit", linkki: "#/testit",
     mita: "Edustuksen ja juniorien testitulokset: testikerrat, tulosten syöttö, pelaajakortit ja ikäluokkavertailut. Luokat: Fysiikka, Lyönti- ja heittovoima, Nopeus, Lajitaito.",
     kohdat: [
+      ["Pelaajavertailu", "Testit → Vertailu (tai pelaajakortin Vertaa-painike): kaksi pelaajaa rinnakkain, A kulta ja B sininen, vahvempi korostettu. Testit luokittain (kauden paras tai ennätys; palkki = monenko prosentin testatuista pelaaja ohittaa), pelitilastot (Superpesis 2026 runkosarja), Rooli kentällä (kärkilyöntien jakauma tilanteittain 0–3 sekä tuodut vs. lyödyt → Etenijä / Kotiuttaja / Vaihtaja / Monipuolinen) ja kehitys samassa iässä tai ajan mukaan. Juniorisarjojen tilastoja ei vielä ole Keskuksessa."],
       ["Vertailu (pelaajakortti)", "Pelaaja vs. valittu ryhmä: oma ikäluokka, juniorit, miehet (Superpesis) tai kaikki testatut. Joka testistä sija radalla (vihreä = kärjessä, punainen = hännillä), tulos ja ero ryhmän mediaaniin (+ = parempi). Vertailu on kauden paras vs. ryhmän pelaajien kauden parhaat; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen. Yläosassa keskimääräinen 'parempi kuin %', vahvimmat ja kehitettävät testit."],
       ["Paras tulos", "Pelaajan paras hyväksytty yritys testikerralla. Hylätty (esim. haamu) syötetään h-kirjaimella eikä lasketa."],
       ["Lentävä 20 m", "Laskettu: 30 m aika − 10 m väliaika samasta juoksusta."],

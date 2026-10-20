@@ -1779,3 +1779,5 @@ a.jtt-yla:hover { text-decoration: underline; }
 .vt-sv .chip small { color: var(--ink-3); margin-left: 2px; }
 .vt-sv.a .chip.on { background: rgba(245,168,0,.18); color: #F5A800; border-color: #F5A800; }
 .vt-sv.b .chip.on { background: rgba(125,211,252,.16); color: #7DD3FC; border-color: #7DD3FC; }
+.vt-r .v.pieni-otos { opacity: .55; font-style: italic; }
+.vt-r .bars i b.pieni-otos { opacity: .18 !important; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 3px, transparent 3px 6px); }

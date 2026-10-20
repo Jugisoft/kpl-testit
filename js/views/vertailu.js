@@ -126,11 +126,12 @@ function paivitaHeroJako() {
   const el = $("#vt-hero-jako"); if (!el) return;
   el.innerHTML = [["Testit", JAKO.testit], ["Kenttä", JAKO.peli]].filter(([, j]) => j && j.n).map(([n, j]) => jakauma(j.va, j.vb, j.n, n)).join("");
 }
-function rivi(lab, a, b, { fa = String, sa = "", sb = "", pa = null, pb = null, voittaja = 0 } = {}) {
+function rivi(lab, a, b, { fa = String, sa = "", sb = "", pa = null, pb = null, voittaja = 0, pienia = false, pienib = false } = {}) {
   const wa = voittaja > 0, wb = voittaja < 0;
-  return `<div class="vt-r"><span class="v a${wa ? " voitto" : ""}">${fa(a)}${sa ? `<small>${sa}</small>` : ""}</span>
-    <span class="mid"><span class="lab">${esc(lab)}</span><span class="bars"><i>${pa != null ? `<b class="${wa ? "lead" : ""}" style="width:${Math.max(2, pa)}%"></b>` : ""}</i><i>${pb != null ? `<b class="${wb ? "lead" : ""}" style="width:${Math.max(2, pb)}%"></b>` : ""}</i></span></span>
-    <span class="v b${wb ? " voitto" : ""}">${fa(b)}${sb ? `<small>${sb}</small>` : ""}</span></div>`;
+  const po = (x) => (x ? ` pieni-otos" title="Alle 10 yritystä: suuntaa-antava, ei mukana vertailussa` : "");
+  return `<div class="vt-r"><span class="v a${wa ? " voitto" : ""}${po(pienia)}">${fa(a)}${pienia ? "*" : ""}${sa ? `<small>${sa}</small>` : ""}</span>
+    <span class="mid"><span class="lab">${esc(lab)}</span><span class="bars"><i>${pa != null ? `<b class="${wa ? "lead" : ""}${pienia ? " pieni-otos" : ""}" style="width:${Math.max(2, pa)}%"></b>` : ""}</i><i>${pb != null ? `<b class="${wb ? "lead" : ""}${pienib ? " pieni-otos" : ""}" style="width:${Math.max(2, pb)}%"></b>` : ""}</i></span></span>
+    <span class="v b${wb ? " voitto" : ""}${po(pienib)}">${fa(b)}${pienib ? "*" : ""}${sb ? `<small>${sb}</small>` : ""}</span></div>`;
 }
 
 function testit(kaikki) {
@@ -190,13 +191,17 @@ function peli() {
   const sarjaLista = (d) => (d?.sarjat || []).map((x) => `${esc(x.nimi)} ${x.O}`).join(" · ");
   const y = (p) => (p ? (p.K || 0) + (p.L || 0) + (p.T || 0) : null);
   const pct = (p, k, n, min = 10) => (p && p[n] >= min ? (100 * p[k]) / p[n] : null);
+  const pctKaikki = (p, k, n) => (p && p[n] > 0 ? (100 * p[k]) / p[n] : null); // näytetään myös alle 10 yrityksestä (pieni otos)
+  const pieni = (p, n) => !!p && p[n] > 0 && p[n] < 10;
   const vert = (va, vb, dir = 1) => (va == null || vb == null ? 0 : dir * (va - vb) > 0 ? 1 : dir * (va - vb) < 0 ? -1 : 0);
   const suhde = (va, vb) => { const m = Math.max(Math.abs(va || 0), Math.abs(vb || 0), 1e-9); return [va == null ? null : (100 * Math.abs(va)) / m, vb == null ? null : (100 * Math.abs(vb)) / m]; };
   const voitot = { va: 0, vb: 0, n: 0 };
-  const r = (lab, va, vb, fa, opt = {}) => { const [pa, pb] = opt.sata ? [va, vb] : suhde(va, vb), w = opt.dir === 0 ? 0 : vert(va, vb, opt.dir ?? 1);
-    if (opt.dir !== 0 && va != null && vb != null) { voitot.n++; if (w > 0) voitot.va++; else if (w < 0) voitot.vb++; }
-    return rivi(lab, va, vb, { fa, pa, pb, voittaja: w, sa: opt.sa || "", sb: opt.sb || "" }); };
-  const pr = (lab, k, n) => r(lab, pct(a, k, n), pct(b, k, n), (v) => (v == null ? "–" : fi(v) + " %"), { sata: true, sa: a ? `${a[k] ?? 0}/${a[n] ?? 0}` : "", sb: b ? `${b[k] ?? 0}/${b[n] ?? 0}` : "" });
+  const r = (lab, va, vb, fa, opt = {}) => { const [pa, pb] = opt.sata ? [va, vb] : suhde(va, vb);
+    const vertailtava = opt.dir !== 0 && va != null && vb != null && !opt.pienia && !opt.pienib; // pieni otos ei ratkaise
+    const w = vertailtava ? vert(va, vb, opt.dir ?? 1) : 0;
+    if (vertailtava) { voitot.n++; if (w > 0) voitot.va++; else if (w < 0) voitot.vb++; }
+    return rivi(lab, va, vb, { fa, pa, pb, voittaja: w, sa: opt.sa || "", sb: opt.sb || "", pienia: opt.pienia, pienib: opt.pienib }); };
+  const pr = (lab, k, n) => r(lab, pctKaikki(a, k, n), pctKaikki(b, k, n), (v) => (v == null ? "–" : fi(v) + " %"), { sata: true, sa: a ? `${a[k] ?? 0}/${a[n] ?? 0}` : "", sb: b ? `${b[k] ?? 0}/${b[n] ?? 0}` : "", pienia: pieni(a, n), pienib: pieni(b, n) });
   const puuttuu = [[A, a], [B, b]].filter(([, d]) => !d).map(([p]) => esc(nimi(p)));
   // urataulukko: kaikki kaudet rinnakkain (kaikki sarjat)
   const ura = kaudet.map((k) => { const x = ra.find((q) => q.kausi === k)?.data, z = rb.find((q) => q.kausi === k)?.data, ya = y(x), yb = y(z), kla = pct(x, "KL", "KLY"), klb = pct(z, "KL", "KLY");
@@ -217,7 +222,7 @@ function peli() {
     pr("KL% takatilanne (3)", "KL3", "KLY3"),
   ].join("") + rooliOsio(A, a, B, b)
     + `<h3 class="vt-luokka">Ura kausittain</h3><div class="taulu-wrap vt-ura"><table><thead><tr><th class="l">Kausi</th><th>O</th><th><span class="vt-piste a"></span>YHT <small>/ott.</small></th><th>KL%</th><th>O</th><th><span class="vt-piste b"></span>YHT <small>/ott.</small></th><th>KL%</th></tr></thead><tbody>${ura}</tbody></table></div>`
-    + `<p class="vihje">Lähde pesistulokset.fi, kaikki viralliset sarjat. Valitse kummallekin pelaajalle sarjat erikseen (napit ylhäällä, numero = ottelut): eritasoisten sarjojen luvut eivät ole suoraan vertailukelpoisia. Rooli ja jakauma lasketaan valituista sarjoista; urataulukko on aina kaikista sarjoista. KL% = kärkilyöntien onnistumis-%, tilanne = kärkietenijän lähtöpesä (0 = lyöjä itse kentälle). Prosentit vähintään 10 yrityksestä. Urataulukon riviä klikkaamalla vaihtuu tarkasteltava kausi.</p>`;
+    + `<p class="vihje">Lähde pesistulokset.fi, kaikki viralliset sarjat. Valitse kummallekin pelaajalle sarjat erikseen (napit ylhäällä, numero = ottelut): eritasoisten sarjojen luvut eivät ole suoraan vertailukelpoisia. Rooli ja jakauma lasketaan valituista sarjoista; urataulukko on aina kaikista sarjoista. KL% = kärkilyöntien onnistumis-%, tilanne = kärkietenijän lähtöpesä (0 = lyöjä itse kentälle). Alle 10 yrityksen prosentti on himmennetty ja merkitty tähdellä (*): suuntaa-antava, eikä sitä lasketa vahvemmaksi eikä prosenttijakaumaan. Urataulukon riviä klikkaamalla vaihtuu tarkasteltava kausi.</p>`;
   $("#vt-peli").innerHTML = $("#vt-peli").innerHTML.replace("%%JAKO%%", jakauma(voitot.va, voitot.vb, voitot.n, `Pelitilastot, vahvempi ${PS.kausi}${PS.a || PS.b ? " · valitut sarjat" : ""}`));
   JAKO.peli = voitot; paivitaHeroJako();
   $$("[data-ura]").forEach((tr) => (tr.onclick = () => { PS.kausi = +tr.dataset.ura; peli(); }));

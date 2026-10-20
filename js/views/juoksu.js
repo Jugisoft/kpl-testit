@@ -255,7 +255,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
     const sy = synt(s.pelaaja), jun = ryhmaOf(s.pelaaja) === "juniorit";
     const kpArvo = kpKaikki.get(s.pelaaja)?.[m] ?? v;
     return { s, v, ed: h.ed, pb: h.pb, uusiPb: v != null && h.pb != null && parannus(m, v, h.pb) > 0, ero: h.ed && v != null ? v - h.ed[m] : null,
-      ikaS: jun && sy ? sijoitus(m, kpArvo, ikaArvot(sy)) : null, kaikkiS: sijoitus(m, kpArvo, [...kpKaikki.values()].map((x) => x[m])) };
+      ikaS: jun && sy && kaistaNimi(sy) !== "Muut" ? sijoitus(m, kpArvo, ikaArvot(sy)) : null, kaikkiS: sijoitus(m, kpArvo, [...kpKaikki.values()].map((x) => x[m])) };
   }).sort((a, b) => (a.v == null) - (b.v == null) || (M[m].pp ? a.v - b.v : b.v - a.v));
   const arvot = rivit.map((r) => r.v).filter((x) => x != null);
   rivit.forEach((r) => (r.sija = r.v == null ? null : sijoitus(m, r.v, arvot)));
@@ -338,7 +338,7 @@ function piirraTaulu(fam, m, rivit, md) {
           ${r.ed && r.v != null ? `<i class="jtt-yhd ${plus ? "plus" : miinus ? "miinus" : ""}" style="left:${Math.min(pos(r.ed[m]), pos(r.v))}%;width:${Math.abs(pos(r.v) - pos(r.ed[m]))}%"></i><i class="jtt-pallo haamu" style="left:${pos(r.ed[m])}%" title="Edellinen ${fm(m, r.ed[m])} (${pvmLyhyt(r.ed.pvm)})"></i>` : ""}
           ${r.v != null ? `<i class="jtt-pallo${r.uusiPb ? " pb" : ""}" style="left:${pos(r.v)}%"></i>` : ""}</span>
         <span role="cell" class="n jtt-tulos">${fm(m, r.v)}${r.uusiPb ? `<em class="jtt-pb" title="Uusi ennätys">PB</em>` : ""}</span>
-        <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : "Ei edellistä tulosta"}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : "<span class='pieni'>uusi</span>"}</span>
+        <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : (TESTI[fam].kengat ? `Ei aiempaa tulosta ${r.s.tark === "piikit" ? "piikeillä" : "tossuilla"}` : "Ensimmäinen testi")}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : `<span class='pieni'>${TESTI[fam].kengat ? "ei aiempaa" : "1. testi"}</span>`}</span>
         ${lisat.map((x) => `<span role="cell" class="n jtt-lisa">${x}</span>`).join("")}
         <span role="cell" class="n jtt-lisa2">${r.ikaS ? `<span class="jtt-ikas ${pctLuokka(r.ikaS.pct)}" title="Kauden parhaiden perusteella ikäluokassa ${sy}">${r.ikaS.sija}./${r.ikaS.n}</span>` : "<span class='pieni'>–</span>"}</span>
       </div>`; }).join("")}`;

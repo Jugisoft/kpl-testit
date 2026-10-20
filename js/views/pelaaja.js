@@ -168,7 +168,9 @@ function vertailuRivit(p, kaikki, ryhma) {
       if (kk && kk !== ka) { k = kk; arvot = kausiParhaat(t, kk); }
     }
     const T = tila.testi[t];
-    const rivi = { t, oma, ka, k, luokka: T.luokka, jarj: T.jarjestys ?? 99 };
+    const viim = omat.at(-1), edel = omat.at(-2);
+    const muutos = edel ? { ero: viim.arvo - edel.arvo, parempi: parannus(t, viim.arvo, edel.arvo), pvm: edel.pvm, viimPvm: viim.pvm } : null;
+    const rivi = { t, oma, ka, k, luokka: T.luokka, jarj: T.jarjestys ?? 99, muutos };
     if (arvot.length < 3) return { ...rivi, puuttuu: true };
     const parempia = arvot.filter((v) => parannus(t, v, oma) > 0).length;
     const md = mediaani(arvot);
@@ -191,14 +193,21 @@ function piirraVertailu(p, kaikki) {
   const uusinKausi = R.map((r) => r.ka).sort().at(-1); // kausi näytetään vain, jos rivi poikkeaa uusimmasta
   const fmt = (t, v) => muotoile(v, t === "lentava20" ? "30m" : t);
   const eroTxt = (r) => { const d = tila.testi[r.t]?.desimaalit ?? 2; const a = Math.abs(r.ero); return a < 10 ** -d / 2 ? "±0" : (r.parempi > 0 ? "+" : "−") + a.toFixed(d).replace(".", ","); };
+  const muutosSolu = (r) => {
+    if (!r.muutos) return `<span class="m pieni" title="Ensimmäinen testikerta">uusi</span>`;
+    const d = tila.testi[r.t]?.desimaalit ?? 2, a = Math.abs(r.muutos.ero), nolla = a < 10 ** -d / 2;
+    const luokka = nolla ? "" : r.muutos.parempi > 0 ? "plus" : "miinus";
+    const nuoli = nolla ? "•" : r.muutos.parempi > 0 ? "▲" : "▼";
+    return `<span class="m num ${luokka}" title="Viimeisin ${pvm(r.muutos.viimPvm)} vs. edellinen ${pvm(r.muutos.pvm)}">${nuoli} ${nolla ? "±0" : (r.muutos.ero > 0 ? "+" : "−") + a.toFixed(d).replace(".", ",")}</span>`;
+  };
   const rivi = (r) => {
-    if (r.puuttuu) return `<div class="pv-r tyhja-r"><span class="k">${esc(testinNimi(r.t))}</span><span class="pv-ei">ei vertailuryhmän tuloksia${vertailuValinta === "miehet" ? " – miehet eivät ole tehneet testiä" : ""}</span><span class="v num">${fmt(r.t, r.oma)}</span><span></span></div>`;
+    if (r.puuttuu) return `<div class="pv-r tyhja-r"><span class="k">${esc(testinNimi(r.t))}</span><span class="pv-ei">ei vertailuryhmän tuloksia${vertailuValinta === "miehet" ? " – miehet eivät ole tehneet testiä" : ""}</span><span class="v num">${fmt(r.t, r.oma)}</span><span></span>${muutosSolu(r)}</div>`;
     const pos = r.n > 1 ? ((r.n - r.sij) / (r.n - 1)) * 100 : 50, vari = `color-mix(in srgb, #2EE59D ${pos}%, #FF3B4E)`;
     return `<div class="pv-r" title="${esc(testinNimi(r.t))}: sija ${r.sij}./${r.n}, parempi kuin ${r.pct} % · ryhmän mediaani ${fmt(r.t, r.md)} ${esc(tila.testi[r.t].yksikko)} · kausi ${r.k}">
       <span class="k">${esc(testinNimi(r.t))}${r.k !== r.ka ? `<small>miehet ${r.k}</small>` : r.ka !== uusinKausi ? `<small>${r.ka}</small>` : ""}</span>
       <span class="tr"><i style="width:${pos}%;background:${vari}"></i><em style="left:50%"></em><b style="left:${pos}%;background:${vari}">${r.sij}.</b></span>
       <span class="v num">${fmt(r.t, r.oma)}<small> ${esc(tila.testi[r.t].yksikko)}</small></span>
-      <span class="e num ${r.parempi > 0 ? "plus" : r.parempi < 0 ? "miinus" : ""}">${eroTxt(r)}</span></div>`;
+      <span class="e num ${r.parempi > 0 ? "plus" : r.parempi < 0 ? "miinus" : ""}">${eroTxt(r)}</span>${muutosSolu(r)}</div>`;
   };
   const puuttuvat = R.filter((r) => r.puuttuu); // kootaan yhdeksi riviksi, ettei näkymä täyty tyhjistä riveistä
   const ryhmat = LUOKAT.map(([k, n]) => [n, ok.filter((r) => r.luokka === k).sort((a, b) => a.jarj - b.jarj)]).filter(([, a]) => a.length);
@@ -212,9 +221,10 @@ function piirraVertailu(p, kaikki) {
       <div class="pv-lista"><span class="pieni">Vahvimmat</span>${vahv.map((r) => `<span class="pv-merkki ${r.pct >= 50 ? "plus" : ""}">${esc(testinNimi(r.t))} <b>${r.sij}./${r.n}</b></span>`).join("") || `<span class="pieni">–</span>`}</div>
       <div class="pv-lista"><span class="pieni">Kehitettävät</span>${kehit.map((r) => `<span class="pv-merkki miinus">${esc(testinNimi(r.t))} <b>${r.sij}./${r.n}</b></span>`).join("") || `<span class="pieni">–</span>`}</div>
     </div>` : ""}
-    <div class="pv-ots"><span></span><span class="pieni">heikompi ← sija → parempi</span><span class="pieni n">Tulos</span><span class="pieni n">vs. md</span></div>
-    ${ryhmat.map(([n, a]) => `<div class="pv-ryhma"><h3>${esc(n)}</h3>${a.map(rivi).join("")}</div>`).join("")}
+    <div class="pv-ots"><span></span><span class="pieni">heikompi ← sija → parempi</span><span class="pieni n">Tulos</span><span class="pieni n">vs. md</span><span class="pieni n">Edellisestä</span></div>
+    ${ryhmat.map(([n, a]) => { const pct = Math.round(keskiarvo(a.map((r) => r.pct)));
+      return `<div class="pv-ryhma"><h3><span class="pv-luokka-pct num" style="background:color-mix(in srgb, #2EE59D ${pct}%, #FF3B4E)" title="${esc(n)}: keskimäärin parempi kuin ${pct} % ryhmästä (${a.length} ${a.length === 1 ? "testi" : "testiä"})">${pct} %</span>${esc(n)}<small>${a.length} ${a.length === 1 ? "testi" : "testiä"}</small></h3>${a.map(rivi).join("")}</div>`; }).join("")}
     ${puuttuvat.length ? `<p class="pieni pv-puuttuu">Ei vertailutuloksia ryhmältä ${esc(nimiV)}${vertailuValinta === "miehet" ? " (miehet eivät ole tehneet näitä testejä)" : ""}: ${puuttuvat.map((r) => esc(testinNimi(r.t))).join(", ")}.</p>` : ""}
-    <p class="vihje">Pallo = sija vertailuryhmässä (pelaaja mukaan lukien), vihreä kärjessä, punainen hännillä. Pystyviiva = ryhmän puoliväli. "vs. md" = ero ryhmän mediaaniin: + = parempi kuin ryhmän mediaani (juoksuissa nopeampi). Kausi on pelaajan viimeisin kausi, jolla testi on tehty; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen.</p>`;
+    <p class="vihje">Pallo = sija vertailuryhmässä (pelaaja mukaan lukien), vihreä kärjessä, punainen hännillä. Pystyviiva = ryhmän puoliväli. "vs. md" = ero ryhmän mediaaniin: + = parempi kuin ryhmän mediaani (juoksuissa nopeampi). Luokan prosentti = luokan testien keskimääräinen "parempi kuin %". "Edellisestä" = viimeisin tulos verrattuna edelliseen testikertaan (▲ vihreä = parani). Kausi on pelaajan viimeisin kausi, jolla testi on tehty; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen.</p>`;
   $$("[data-pv]", el).forEach((b) => (b.onclick = () => { vertailuValinta = b.dataset.pv; piirraVertailu(p, kaikki); }));
 }

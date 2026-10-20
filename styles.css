@@ -1656,11 +1656,13 @@ a.jtt-yla:hover { text-decoration: underline; }
 .pv-merkki b { font-family: var(--num); margin-left: 3px; }
 .pv-merkki.plus { border-color: rgba(46,229,157,.45); background: rgba(46,229,157,.08); }
 .pv-merkki.miinus { border-color: rgba(255,59,78,.45); background: rgba(255,59,78,.08); }
-.pv-ots, .pv-r { display: grid; grid-template-columns: 150px minmax(0,1fr) 92px 84px; align-items: center; gap: 12px; }
+.pv-ots, .pv-r { display: grid; grid-template-columns: 150px minmax(0,1fr) 92px 70px 92px; align-items: center; gap: 12px; }
 .pv-ots .n { text-align: right; white-space: nowrap; }
 .pv-ots > span:nth-child(2) { text-align: center; }
 .pv-ryhma { display: grid; gap: 8px; }
-.pv-ryhma h3 { margin: 6px 0 0; font: 700 13px var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+.pv-ryhma h3 { margin: 8px 0 0; font: 700 13px var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); display: flex; align-items: center; gap: 10px; }
+.pv-ryhma h3 small { font: 500 12px var(--text); letter-spacing: 0; text-transform: none; color: var(--ink-3); }
+.pv-luokka-pct { min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px; color: #111; font: 700 16px/1.1 var(--num); letter-spacing: 0; }
 .pv-r .k { font: 600 14px var(--num); color: var(--ink-2); text-align: right; line-height: 1.1; }
 .pv-r .k small { display: block; font: 500 11px var(--text); color: var(--ink-3); }
 .pv-r .tr { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); margin: 0 16px; }
@@ -1671,11 +1673,13 @@ a.jtt-yla:hover { text-decoration: underline; }
 .pv-r .v small { font-size: 11px; color: var(--ink-3); font-weight: 500; }
 .pv-r .e { text-align: right; font-size: 15px; color: var(--ink-3); }
 .pv-r .e.plus { color: var(--green); } .pv-r .e.miinus { color: var(--red); }
+.pv-r .m { text-align: right; font-size: 15px; color: var(--ink-3); white-space: nowrap; }
+.pv-r .m.plus { color: var(--green); } .pv-r .m.miinus { color: var(--red); }
 .pv-r.tyhja-r .k, .pv-r.tyhja-r .v { opacity: .55; }
 .pv-ei { font-size: 12.5px; color: var(--ink-3); font-style: italic; }
 @media (max-width: 760px) {
   .pv-yht { grid-template-columns: 1fr; }
-  .pv-ots, .pv-r { grid-template-columns: minmax(0,1fr) 62px 54px; gap: 4px 8px; }
+  .pv-ots, .pv-r { grid-template-columns: minmax(0,1fr) 56px 48px 62px; gap: 4px 6px; }
   .pv-ots > span:first-child { display: none; }
   .pv-r .k { grid-column: 1 / -1; text-align: left; font-size: 13.5px; display: flex; gap: 8px; align-items: baseline; }
   .pv-r .k small { display: inline; }

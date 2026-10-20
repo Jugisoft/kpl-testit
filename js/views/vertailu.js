@@ -237,7 +237,7 @@ const TILANTEET = [["KLY0", "0", "kentälle pääsy"], ["KLY1", "1", "1-tilanne"
 const TVARIT = ["#94A3B8", "#7DD3FC", "#F5A800", "#2EE59D"];
 // Roolit kärkilyöntien tilannejakauman mukaan (Jugi 20.10.2026): pääosin 0-tilanne = kärkietenijä,
 // 1-tilanne = 1-tilanteen vaihtaja, 2-tilanne = 2-tilanteen vaihtaja, takatilanne = kotiuttaja
-// (jos muita tilanteita on paljon, vaihtaja / kotiuttaja). Mikään ei erotu = monipuolinen.
+// vähintään puolet; jos takatilanne on yleisin mutta alle puolet, vaihtaja / kotiuttaja). Mikään tilanne ei yli 35 % = monipuolinen.
 function rooli(d) {
   if (!d || !d.KLY || d.KLY < 20) return { nimi: "Liian vähän yrityksiä", syy: "alle 20 kärkilyöntiyritystä" };
   const o = [0, 1, 2, 3].map((n) => (d[`KLY${n}`] || 0) / d.KLY), pc = (x) => `${Math.round(x * 100)} %`;
@@ -249,7 +249,7 @@ function rooli(d) {
   if (n === 1) return { nimi: "1-tilanteen vaihtaja", syy: `${pc(o[1])} kärkilyönneistä 1-tilanteessa${lisa}` };
   if (n === 2) return { nimi: "2-tilanteen vaihtaja", syy: `${pc(o[2])} kärkilyönneistä 2-tilanteessa${lisa}` };
   const muut12 = o[1] + o[2];
-  if (o[3] >= 0.5 && muut12 < 0.35) return { nimi: "Kotiuttaja", syy: `${pc(o[3])} kärkilyönneistä takatilanteessa${lisa}` };
+  if (o[3] >= 0.5) return { nimi: "Kotiuttaja", syy: `${pc(o[3])} kärkilyönneistä takatilanteessa${lisa}` };
   return { nimi: "Vaihtaja / kotiuttaja", syy: `takatilanne ${pc(o[3])}, 1- ja 2-tilanne yhteensä ${pc(muut12)}` };
 }
 function rooliOsio(A, a, B, b) {

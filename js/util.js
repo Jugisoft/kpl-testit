@@ -122,7 +122,7 @@ export function mittari(pct, keski, ala = "", koko = 74) {
 export const palkki = (pct) => `<div class="palkki" aria-hidden="true"><span style="width:${Math.max(2, Math.min(100, pct ?? 0))}%"></span></div>`;
 export function miniPylvaat(arvot, pienempiParempi) {
   const v = arvot.filter((x) => x != null);
-  if (v.length < 3) return "";
+  if (v.length < 2) return ""; // kaksi tulosta riittää (esim. Cooper 1–2 kertaa talvessa)
   const min = Math.min(...v), max = Math.max(...v), vali = max - min || 1;
   return `<div class="mini-pylvaat" aria-hidden="true">${v.slice(-12).map((x, i, a) => {
     const suhde = pienempiParempi ? (max - x) / vali : (x - min) / vali;

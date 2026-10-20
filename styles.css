@@ -1714,7 +1714,8 @@ a.jtt-yla:hover { text-decoration: underline; }
 .vt-iso { font: 700 52px/1 var(--num); font-variant-numeric: tabular-nums; }
 .vt-iso i { font-style: normal; } .vt-iso i.a { color: #F5A800; } .vt-iso i.b { color: #7DD3FC; }
 .vt-cols { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 16px; align-items: start; margin-top: 16px; }
-.vt-oikea { display: grid; gap: 16px; min-width: 0; }
+.vt-oikea { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.vt-cols > *, .vt-oikea > * { min-width: 0; }
 .vt-otsa { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .vt-otsa h2 { margin: 0; font: 700 22px var(--num); letter-spacing: .04em; text-transform: uppercase; }
 .vt-otsa .jtt-segmentti button { padding: 6px 11px; font-size: 13px; }

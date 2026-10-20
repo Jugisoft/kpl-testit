@@ -2,7 +2,7 @@
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
-const PROFIILI = ["30m", "10m", "lentava20", "heitto_paikalta", "heitto_vauhti", "lyonti"];
+const PROFIILI = ["30m", "10m", "lentava20", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
 let valittu = "30m";
 
 export async function nayta(main, id) {
@@ -63,11 +63,11 @@ export async function nayta(main, id) {
     <p class="vihje">Katkoviiva on saman ikäluokan mediaani kullakin testikerralla.</p>
 
     ${profiili ? `<h2>Profiili talvella ${profiili.kausi}</h2>
-    <p class="pieni">T-pisteet verrattuna ${profiili.vertailu}: 50 on keskitaso, 60 selvästi keskitason yläpuolella. Juoksuissa nopeampi aika antaa enemmän pisteitä.</p>
+    <p class="pieni">T-pisteet verrattuna ${profiili.vertailu}: 50 on keskitaso, 60 selvästi keskitason yläpuolella. Juoksuissa nopeampi aika ja Cooperissa pidempi matka antaa enemmän pisteitä. Jos testiä ei ole tältä talvelta, mukana on edellisen talven tulos (kausi suluissa).</p>
     <div class="rivi" style="align-items:stretch">
       <div class="paneeli" style="flex:1 1 320px"><div class="kaavio"><canvas id="profiili"></canvas></div></div>
       <div class="taulu-wrap" style="flex:1 1 320px"><table><thead><tr><th>Testi</th><th class="n">Kauden paras</th><th class="n">T-pisteet</th></tr></thead>
-      <tbody>${profiili.rivit.map((r) => `<tr><td>${esc(tila.testi[r.t].nimi)}</td><td class="n">${muotoile(r.arvo, r.t)}</td><td class="n iso" style="font-size:20px">${Math.round(r.T)}</td></tr>`).join("")}</tbody></table></div>
+      <tbody>${profiili.rivit.map((r) => `<tr><td>${esc(tila.testi[r.t].nimi)}${r.kausi ? ` <span class="pieni" title="Ei tulosta tältä kaudelta: edellisen kauden tulos verrattuna sen kauden ryhmään">(${r.kausi})</span>` : ""}</td><td class="n">${muotoile(r.arvo, r.t)}</td><td class="n iso" style="font-size:20px">${Math.round(r.T)}</td></tr>`).join("")}</tbody></table></div>
     </div>` : ""}
 
     <details style="margin-top:36px"><summary><h2 style="display:inline;margin:0">Kaikki tulokset (${omat.length})</h2></summary>
@@ -98,7 +98,7 @@ export async function nayta(main, id) {
 
   if (profiili) piirra($("#profiili"), {
     type: "radar",
-    data: { labels: profiili.rivit.map((r) => tila.testi[r.t].nimi), datasets: [
+    data: { labels: profiili.rivit.map((r) => tila.testi[r.t].nimi + (r.kausi ? ` (${r.kausi})` : "")), datasets: [
       { label: nimi(p), data: profiili.rivit.map((r) => Math.round(r.T)), borderColor: vari("--cyan"), backgroundColor: "rgba(245,168,0,.18)", pointBackgroundColor: vari("--cyan"), pointRadius: 3 },
       { label: "Keskitaso", data: profiili.rivit.map(() => 50), borderColor: vari("--ink-3"), borderDash: [4, 4], pointRadius: 0, backgroundColor: "transparent" },
     ] },
@@ -110,20 +110,30 @@ function laskeProfiili(p, kaikki) {
   const omat = kaikki.filter((x) => x.pelaaja === p.id && PROFIILI.includes(x.testi));
   if (!omat.length) return null;
   const ka = kausi(omat.at(-1).pvm);
-  const kauden = kaikki.filter((x) => kausi(x.pvm) === ka && PROFIILI.includes(x.testi));
-  const kausiParas = (pid, t) => paras(t, kauden.filter((x) => x.pelaaja === pid && x.testi === t).map((x) => x.arvo));
-  const ikatoverit = [...new Set(kauden.map((x) => x.pelaaja))].filter((pid) => tila.pelaaja[pid]?.syntymavuosi === p.syntymavuosi);
-  const vertailuJoukko = ikatoverit.length >= 5 ? ikatoverit : [...new Set(kauden.map((x) => x.pelaaja))];
-  const vertailu = ikatoverit.length >= 5 ? `${p.syntymavuosi} syntyneisiin (${ikatoverit.length} pelaajaa)` : `koko ryhmään (${vertailuJoukko.length} pelaajaa)`;
+  const edellinen = `${+ka.slice(0, 4) - 1}–${ka.slice(2, 4)}`; // esim. 2025–26 → 2024–25
+  // Vertailu tehdään kauden parhaista. Jos testiä ei ole tältä kaudelta (esim. Cooper),
+  // käytetään edellisen kauden tulosta ja sen kauden vertailuryhmää (20.10.2026).
+  const kaudelta = (k) => {
+    const kauden = kaikki.filter((x) => kausi(x.pvm) === k && PROFIILI.includes(x.testi));
+    const kausiParas = (pid, t) => paras(t, kauden.filter((x) => x.pelaaja === pid && x.testi === t).map((x) => x.arvo));
+    const pelaajat = [...new Set(kauden.map((x) => x.pelaaja))];
+    const ikatoverit = pelaajat.filter((pid) => tila.pelaaja[pid]?.syntymavuosi === p.syntymavuosi);
+    return { kausiParas, ikatoverit, joukko: ikatoverit.length >= 5 ? ikatoverit : pelaajat };
+  };
+  const nyt = kaudelta(ka), ed = kaudelta(edellinen);
+  const vertailu = nyt.ikatoverit.length >= 5 ? `${p.syntymavuosi} syntyneisiin (${nyt.ikatoverit.length} pelaajaa)` : `koko ryhmään (${nyt.joukko.length} pelaajaa)`;
   const rivit = [];
   for (const t of PROFIILI) {
-    const oma = kausiParas(p.id, t);
-    if (oma == null) continue;
-    const arvot = vertailuJoukko.map((pid) => kausiParas(pid, t)).filter((x) => x != null);
-    const sd = hajonta(arvot);
-    if (arvot.length < 4 || !sd) continue;
-    const z = (oma - keskiarvo(arvot)) / sd * (tila.testi[t].pienempi_parempi ? -1 : 1);
-    rivit.push({ t, arvo: oma, T: Math.max(10, Math.min(90, 50 + 10 * z)) });
+    for (const [k, K] of [[ka, nyt], [edellinen, ed]]) {
+      const oma = K.kausiParas(p.id, t);
+      if (oma == null) continue;
+      const arvot = K.joukko.map((pid) => K.kausiParas(pid, t)).filter((x) => x != null);
+      const sd = hajonta(arvot);
+      if (arvot.length < 4 || !sd) continue;
+      const z = (oma - keskiarvo(arvot)) / sd * (tila.testi[t].pienempi_parempi ? -1 : 1);
+      rivit.push({ t, arvo: oma, T: Math.max(10, Math.min(90, 50 + 10 * z)), kausi: k === ka ? null : k });
+      break;
+    }
   }
   return rivit.length >= 3 ? { kausi: ka, rivit, vertailu } : null;
 }

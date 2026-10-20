@@ -69,7 +69,7 @@ const SIVUT = [
       ["Paras tulos", "Pelaajan paras hyväksytty yritys testikerralla. Hylätty (esim. haamu) syötetään h-kirjaimella eikä lasketa."],
       ["Lentävä 20 m", "Laskettu: 30 m aika − 10 m väliaika samasta juoksusta."],
       ["Ikäluokan rengas", "Montako prosenttia saman ikäluokan pelaajista pelaaja ylitti viimeisimmällä testikerralla."],
-      ["Indeksi ja T-pisteet", "Pelaajan tulokset muutettuna T-pisteiksi verrattuna vertailuryhmään: 50 = keskitaso, 60 = selvästi yli. Indeksi = T-pisteiden keskiarvo profiilitesteistä (30 m, 10 m, lentävä 20 m, heitot, lyönti). Juoksuissa nopeampi aika = enemmän pisteitä."],
+      ["Indeksi ja T-pisteet", "Pelaajan tulokset muutettuna T-pisteiksi verrattuna vertailuryhmään: 50 = keskitaso, 60 = selvästi yli. Indeksi = T-pisteiden keskiarvo profiilitesteistä (30 m, 10 m, lentävä 20 m, Cooper, heitot, lyönti). Juoksuissa nopeampi aika = enemmän pisteitä."],
       ["Ikä", "Ikä, jonka pelaaja täyttää talven aikana (talvella 2025–26 vuonna 2009 syntynyt on 17)."],
       ["Ontto piste", "Alle viisi pelaajaa, suuntaa-antava."],
     ] },

@@ -1630,3 +1630,8 @@ a.jtt-yla:hover { text-decoration: underline; }
 @media (max-width: 640px) { .jtt-banneri { flex-wrap: wrap; } .jtt-banneri span { flex-basis: 100%; order: 3; } }
 .paneeli.jtt-tyhja { font-style: normal; color: var(--ink); opacity: 1; }
 .paneeli.jtt-tyhja .btn { font-style: normal; }
+/* html { zoom: 1.12 } isoilla näytöillä saa Chart.js:n mittaamaan kankaan 12 % liian leveäksi → kumotaan zoom kaavioiden ympäriltä */
+@media (min-width: 1500px) {
+  .jtt-osio .kaavio, .jtt-pkaavio .kaavio { zoom: calc(1 / 1.12); height: 336px; }
+  .jtt-pkaavio .kaavio.matala { height: 280px; }
+}

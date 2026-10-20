@@ -8,7 +8,9 @@ let valittu = "30m";
 export async function nayta(main, id) {
   const p = tila.pelaaja[id];
   if (!p) throw new Error("Pelaajaa ei löytynyt.");
-  const kaikki = parhaatTulokset(juoksutYhteen(await lataaTulokset()));
+  // Nopeuskestävyys: pääluku on 9 juoksun keskiarvo (vain täydet sarjat), paras juoksu talteen
+  const kaikki = parhaatTulokset(juoksutYhteen(await lataaTulokset()))
+    .flatMap((x) => (x.testi !== "nok_30m" ? [x] : x.n >= 9 ? [{ ...x, arvo: Math.round(x.ka * 1000) / 1000, parasJuoksu: x.arvo }] : []));
   const omat = kaikki.filter((x) => x.pelaaja === id);
   const testit = [...new Set(omat.map((x) => x.testi))].sort((a, b) => tila.testi[a].jarjestys - tila.testi[b].jarjestys);
   if (!testit.includes(valittu)) valittu = testit[0];
@@ -49,7 +51,7 @@ export async function nayta(main, id) {
     <div class="kpi-rivi" style="margin-top:16px">${kortit.filter((x) => (tila.testi[x.t].ryhma !== "taito" || x.t === "napy_1raja") && tuore(x.viim.pvm)).slice(0, 12).map((x) => {
       const T = tila.testi[x.t], muutos = x.edel ? parannus(x.t, x.viim.arvo, x.edel.arvo) : null;
       return `<button class="kpi lukema" data-t="${x.t}" aria-pressed="${x.t === valittu}" style="text-align:left;border:1px solid var(--line)">
-        <div class="otsikko">${esc(T.nimi)}</div>
+        <div class="otsikko">${x.t === "nok_30m" ? "9×30 m, keskiarvo" : esc(T.nimi)}</div>
         <div><div class="arvo">${muotoile(x.pb, x.t)}<small>${T.yksikko}</small></div><div class="pieni">ennätys</div></div>
         ${pct(x) != null ? mittari(pct(x), pct(x) + "%", "ikäluokka", 66) : ""}
         <div class="ala">Viimeisin ${muotoile(x.viim.arvo, x.t)} <span class="pieni">${pvmLyhyt(x.viim.pvm)}</span>${muutos != null ? ` <span class="${muutos > 0 ? "pb" : muutos < 0 ? "huono" : ""}">${muotoileMuutos(x.viim.arvo - x.edel.arvo, x.t)}</span>` : ""}</div>
@@ -58,7 +60,7 @@ export async function nayta(main, id) {
     <p class="vihje">Rengas kertoo, monenko prosentin ikätoverien tuloksen pelaaja ylitti viimeisimmällä testikerralla. Pylväät näyttävät kehityksen testikerroittain, viimeisin punaisella.</p>
 
     <h2>Kehitys</h2>
-    <div class="chipit" style="margin-bottom:10px">${testit.map((t) => `<button class="chip" data-k="${t}" aria-pressed="${t === valittu}">${esc(tila.testi[t].nimi)}</button>`).join("")}</div>
+    <div class="chipit" style="margin-bottom:10px">${testit.map((t) => `<button class="chip" data-k="${t}" aria-pressed="${t === valittu}">${esc(tila.testi[t].nimi)}${t === "nok_30m" ? " (ka)" : ""}</button>`).join("")}</div>
     <div class="paneeli"><div class="kaavio"><canvas id="kehitys"></canvas></div></div>
     <p class="vihje">Katkoviiva on saman ikäluokan mediaani kullakin testikerralla.</p>
 
@@ -72,7 +74,7 @@ export async function nayta(main, id) {
 
     <details style="margin-top:36px"><summary><h2 style="display:inline;margin:0">Kaikki tulokset (${omat.length})</h2></summary>
     <div class="taulu-wrap" style="margin-top:12px"><table><thead><tr><th>Päivä</th><th>Testi</th><th class="n">Paras</th><th class="n">Yrityksiä</th><th class="n">Ka</th></tr></thead>
-      <tbody>${[...omat].reverse().map((x) => `<tr><td><a href="#/kerta/${x.kerta}">${pvm(x.pvm)}</a></td><td>${esc(tila.testi[x.testi].nimi)}</td><td class="n">${muotoile(x.arvo, x.testi)}</td><td class="n">${x.n}</td><td class="n">${x.n > 1 ? muotoile(x.ka, x.testi) : ""}</td></tr>`).join("")}</tbody></table></div></details>`;
+      <tbody>${[...omat].reverse().map((x) => `<tr><td><a href="#/kerta/${x.kerta}">${pvm(x.pvm)}</a></td><td>${esc(tila.testi[x.testi].nimi)}</td><td class="n">${muotoile(x.parasJuoksu ?? x.arvo, x.testi)}</td><td class="n">${x.n}</td><td class="n">${x.n > 1 ? muotoile(x.ka, x.testi) : ""}</td></tr>`).join("")}</tbody></table></div></details>`;
 
   const valitse = (t) => { valittu = t; $$("[data-k]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === t)); $$(".lukema[data-t]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.t === t)); kaavio(); };
   $$("[data-k]").forEach((b) => (b.onclick = () => valitse(b.dataset.k)));

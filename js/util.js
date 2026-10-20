@@ -42,7 +42,8 @@ export function juoksutYhteen(rivit) {
   for (const r of rivit) {
     if (r.testi === "10m" || r.testi === "30m") out.push(r.tarkenne ? { ...r, tarkenne: "", kengat: r.tarkenne } : r);
     else {
-      out.push(r);
+      // NOK on aina samoilla kengillä per kerta; tarkenne pois, jotta se näkyy pelaajakortilla (20.10.2026)
+      out.push(r.testi === "nok_30m" && r.tarkenne ? { ...r, tarkenne: "", kengat: r.tarkenne } : r);
       if (r.testi === "nok_30m") out.push({ ...r, testi: "30m", yritys: 100 + r.yritys, tarkenne: "", kengat: r.tarkenne, nok: true });
     }
   }

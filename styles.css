@@ -1682,3 +1682,4 @@ a.jtt-yla:hover { text-decoration: underline; }
   .pv-r .tr { margin: 0 16px 0 14px; }
   .pv-r .v small { display: none; }
 }
+.pv-puuttuu { margin: 4px 0 0; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,.18); color: var(--ink-3); }

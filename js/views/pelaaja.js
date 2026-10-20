@@ -200,8 +200,9 @@ function piirraVertailu(p, kaikki) {
       <span class="v num">${fmt(r.t, r.oma)}<small> ${esc(tila.testi[r.t].yksikko)}</small></span>
       <span class="e num ${r.parempi > 0 ? "plus" : r.parempi < 0 ? "miinus" : ""}">${eroTxt(r)}</span></div>`;
   };
-  const ryhmat = LUOKAT.map(([k, n]) => [n, R.filter((r) => r.luokka === k).sort((a, b) => a.jarj - b.jarj)]).filter(([, a]) => a.length);
-  const muut = R.filter((r) => !LUOKAT.some(([k]) => k === r.luokka));
+  const puuttuvat = R.filter((r) => r.puuttuu); // kootaan yhdeksi riviksi, ettei näkymä täyty tyhjistä riveistä
+  const ryhmat = LUOKAT.map(([k, n]) => [n, ok.filter((r) => r.luokka === k).sort((a, b) => a.jarj - b.jarj)]).filter(([, a]) => a.length);
+  const muut = ok.filter((r) => !LUOKAT.some(([k]) => k === r.luokka));
   if (muut.length) ryhmat.push(["Muut", muut]);
   el.innerHTML = `
     <div class="pv-paa"><div><h2>Vertailu</h2><p class="pieni">${esc(nimi(p))} vs. ${esc(nimiV)} · kauden paras tulos verrattuna ryhmän pelaajien kauden parhaisiin</p></div>
@@ -213,6 +214,7 @@ function piirraVertailu(p, kaikki) {
     </div>` : ""}
     <div class="pv-ots"><span></span><span class="pieni">heikompi ← sija → parempi</span><span class="pieni n">Tulos</span><span class="pieni n">vs. md</span></div>
     ${ryhmat.map(([n, a]) => `<div class="pv-ryhma"><h3>${esc(n)}</h3>${a.map(rivi).join("")}</div>`).join("")}
+    ${puuttuvat.length ? `<p class="pieni pv-puuttuu">Ei vertailutuloksia ryhmältä ${esc(nimiV)}${vertailuValinta === "miehet" ? " (miehet eivät ole tehneet näitä testejä)" : ""}: ${puuttuvat.map((r) => esc(testinNimi(r.t))).join(", ")}.</p>` : ""}
     <p class="vihje">Pallo = sija vertailuryhmässä (pelaaja mukaan lukien), vihreä kärjessä, punainen hännillä. Pystyviiva = ryhmän puoliväli. "vs. md" = ero ryhmän mediaaniin: + = parempi kuin ryhmän mediaani (juoksuissa nopeampi). Kausi on pelaajan viimeisin kausi, jolla testi on tehty; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen.</p>`;
   $$("[data-pv]", el).forEach((b) => (b.onclick = () => { vertailuValinta = b.dataset.pv; piirraVertailu(p, kaikki); }));
 }

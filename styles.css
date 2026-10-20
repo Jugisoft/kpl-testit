@@ -1769,3 +1769,13 @@ a.jtt-yla:hover { text-decoration: underline; }
 .vt-jako-pk i.a { background: #F5A800; } .vt-jako-pk i.b { background: #7DD3FC; }
 .vt-jako small { grid-column: 1 / -1; text-align: center; font: 600 11px var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-top: -4px; }
 .vt-hero-jako { width: min(320px, 70vw); margin-top: 8px; display: grid; gap: 2px; }
+/* pelaajakohtainen sarjavalinta */
+.vt-sarjavalinnat { display: grid; gap: 6px; margin-bottom: 10px; }
+.vt-sv { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 6px 8px; border-radius: 8px; background: rgba(0,0,0,.18); }
+.vt-sv.a { border-left: 3px solid #F5A800; } .vt-sv.b { border-left: 3px solid #7DD3FC; }
+.vt-sv-nimi { font: 700 13px var(--num); text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+.vt-sv.a .vt-sv-nimi { color: #F5A800; } .vt-sv.b .vt-sv-nimi { color: #7DD3FC; }
+.vt-sv .chip { padding: 3px 9px; font-size: 12.5px; }
+.vt-sv .chip small { color: var(--ink-3); margin-left: 2px; }
+.vt-sv.a .chip.on { background: rgba(245,168,0,.18); color: #F5A800; border-color: #F5A800; }
+.vt-sv.b .chip.on { background: rgba(125,211,252,.16); color: #7DD3FC; border-color: #7DD3FC; }

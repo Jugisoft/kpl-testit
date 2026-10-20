@@ -5,6 +5,7 @@ import { PAKETIT, voiPoistaa, poistaKerta } from "./kerrat.js";
 
 const NOPEUS = new Set(["10m", "30m", "nok_30m", "30m_takaperin", "ketteryysrata"]);
 const JONO_AVAIN = "kpl-testit-jono";
+const COOPER_KIERROS = 261;
 let k = null;          // testikerta
 let osallistujat = []; // [{pelaaja, jarjestys}]
 let rivit = new Map(); // avain -> tulosrivi
@@ -49,7 +50,7 @@ export async function nayta(main, id) {
     <div class="testivalitsin" role="tablist">${valilehdet.map((v, i) => `<button class="chip" role="tab" data-i="${i}" aria-pressed="${i === aktiivinen}">${esc(v.nimi)}</button>`).join("")}</div>
     <div class="taulu-wrap"><table class="syotto" id="ruudukko"></table></div>
     <div class="rivi" style="margin-top:10px"><button class="btn" id="lisaa-yritys">+ yritys</button></div>
-    <p class="vihje">Kirjoita tulos ja paina <kbd>Enter</kbd>. Desimaalin voi jättää pois: <b>412</b> tallentuu 4,12 sekunniksi. Lisää perään <b>h</b> (esim. <b>148h</b>), jos tulos on hylätty, esimerkiksi haamu tai lyönti alle. Tyhjennä solu poistaaksesi tuloksen. Tulokset tallentuvat heti; ilman verkkoa ne odottavat laitteella ja lähtevät, kun yhteys palaa.</p>
+    <p class="vihje">Kirjoita tulos ja paina <kbd>Enter</kbd>. Desimaalin voi jättää pois: <b>412</b> tallentuu 4,12 sekunniksi. Cooperin voi syöttää kierroksina: <b>11+110</b> = 11 kierrosta (261 m) + 110 m = 2981 m. Lisää perään <b>h</b> (esim. <b>148h</b>), jos tulos on hylätty, esimerkiksi haamu tai lyönti alle. Tyhjennä solu poistaaksesi tuloksen. Tulokset tallentuvat heti; ilman verkkoa ne odottavat laitteella ja lähtevät, kun yhteys palaa.</p>
     <details class="paneeli" style="margin-top:20px"><summary><strong>Osallistujat ja järjestys</strong></summary><div id="osallistujat" style="margin-top:12px"></div></details>`;
 
   $("#poista-kerta")?.addEventListener("click", (e) => poistaKerta(e.currentTarget, k.id, () => (location.hash = "#/kerrat")));
@@ -178,6 +179,9 @@ function tulkitse(teksti, testi) {
   let hyvaksytty = true;
   if (/[h*]$/.test(s)) { hyvaksytty = false; s = s.replace(/[h*]+$/, ""); }
   s = s.replace(",", ".");
+  // Cooper: kierrokset + metrit, esim. "11+110" = 11 × 261 m + 110 m (20.10.2026)
+  const kierr = testi === "cooper" && s.match(/^(\d{1,2})[+/](\d{1,3})$/);
+  if (kierr) s = String(+kierr[1] * COOPER_KIERROS + +kierr[2]);
   if (!/^\d+(\.\d+)?$/.test(s)) return { virhe: "Ei numero" };
   let arvo = parseFloat(s);
   const t = tila.testi[testi];

@@ -6,6 +6,7 @@ export const PAKETIT = [
   { nimi: "Nopeus 10 + 30 m", testit: ["10m", "30m"] },
   { nimi: "Tutkat", testit: ["heitto_paikalta", "heitto_vauhti", "lyonti"] },
   { nimi: "Nopeuskestävyys", testit: ["nok_30m"] },
+  { nimi: "Cooper", testit: ["cooper"] },
   { nimi: "Näpytesti", testit: ["napy_1raja", "napy_keskipieni", "napy_2raja"] },
   { nimi: "Lyöntitesti", testit: ["lyonti_2rajakova", "lyonti_3rajakova", "lyonti_ilma", "lyonti_koppi", "lyonti_sauma", "lyonti_varsi"] },
   { nimi: "Voima", testit: ["rinnalleveto_kg", "tasatassut", "leuat_toistot", "leuat_lisapaino_kg"] },

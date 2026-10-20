@@ -1460,3 +1460,173 @@ a.sp-lc[href]:hover { border-color: var(--kpl); }
   .yk-pelaajat .yk-p { grid-template-columns: 36px minmax(0,1fr) auto auto; } .yk-p .hs { display: none; }
   .yk-rr { grid-template-columns: 92px minmax(0,1fr) 46px; }
 }
+
+/* ===== Juoksutestit (20.10.2026) ===== */
+.jtt-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.jtt-paa .ingressi { margin-bottom: 0; }
+.jtt-yla { display: inline-block; font: 600 12px/1 var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); text-decoration: none; margin-bottom: 8px; }
+a.jtt-yla:hover { text-decoration: underline; }
+.jtt-testit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.jtt-testikortti { display: grid; gap: 3px; align-content: start; text-align: left; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--surface-2), var(--surface)); color: var(--ink); cursor: pointer; font: inherit; position: relative; overflow: hidden; }
+.jtt-testikortti:hover { border-color: rgba(245,168,0,.5); }
+.jtt-testikortti[aria-selected="true"] { border-color: var(--cyan); box-shadow: var(--glow), 0 0 0 1px var(--cyan) inset; }
+.jtt-testikortti[aria-selected="true"]::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--cyan); }
+.jtt-tk-nimi { font: 700 22px/1.05 var(--num); text-transform: uppercase; letter-spacing: .01em; }
+.jtt-tk-ala { font-size: 12.5px; color: var(--ink-3); }
+.jtt-tk-arvo { font: 700 38px/1 var(--num); margin-top: 8px; color: var(--ink); }
+.jtt-tk-arvo small, .jtt-kpi-arvo small, .jtt-iso small { font-size: .45em; font-weight: 600; color: var(--ink-3); margin-left: 4px; }
+.jtt-testikortti[aria-selected="true"] .jtt-tk-arvo { color: var(--cyan); }
+.jtt-tk-tyhja { margin-top: 10px; font-size: 14px; color: var(--ink-3); }
+.jtt-kipina { position: absolute; right: 14px; top: 14px; opacity: .9; }
+.jtt-ohjaimet { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 0 14px; border-top: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); margin-bottom: 18px; }
+.jtt-segmentti { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); }
+.jtt-segmentti button { border: 0; background: none; color: var(--ink-2); font: 600 14px/1 var(--text); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+.jtt-segmentti button[aria-checked="true"] { background: var(--cyan); color: var(--musta); }
+.jtt-valinta { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); }
+.jtt-valinta select { max-width: 340px; }
+.jtt-chipit { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.jtt-chipit .chip { padding: 5px 11px; font-size: 14px; }
+.jtt-kuvaus { color: var(--ink-3); font-size: 13.5px; margin: 0 0 14px; max-width: 90ch; }
+.jtt-kpit { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.jtt-kpi { display: grid; gap: 4px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--surface-2), var(--surface)); box-shadow: var(--glow); min-width: 0; }
+.jtt-kpi-ots { font: 600 11.5px/1.2 var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.jtt-kpi-arvo { font: 700 36px/1 var(--num); color: var(--ink); }
+.jtt-kpi-ala { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jtt-osio { margin-top: 30px; }
+.jtt-osio-paa { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.jtt-osio-paa h2 { margin: 0; font-size: 26px; text-transform: uppercase; letter-spacing: .01em; }
+.jtt-selite { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-3); margin-bottom: 8px; }
+.jtt-selite span { display: inline-flex; align-items: center; gap: 6px; }
+.jtt-selite .jtt-pallo { position: static; transform: none; }
+.jtt-mdviiva { display: inline-block; width: 2px; height: 14px; background: var(--ink-2); }
+.jtt-lampo-selite { display: inline-block; width: 46px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, #2EE59D, #F5A800, #FF3B4E); }
+
+/* tulostaulu */
+.jtt-taulu { border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(180deg, var(--surface-2), var(--surface)); box-shadow: var(--glow); overflow: hidden; }
+.jtt-r { display: grid; align-items: center; gap: 10px; padding: 7px 14px; border-top: 1px solid var(--line-2); min-height: 50px; }
+.jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(160px, 2fr) 64px 78px 54px 70px 76px 84px; }
+.jtt-taulu-nok .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(140px, 1.6fr) 64px 78px 150px 58px 64px 84px; }
+.jtt-taulu-cooper .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(160px, 2fr) 70px 78px 120px 76px 84px; }
+.jtt-r.jtt-ots { min-height: 0; border-top: 0; padding-top: 10px; padding-bottom: 8px; font: 600 11.5px/1.2 var(--text); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); background: rgba(0,0,0,.18); }
+.jtt-r .n { text-align: right; font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 17px; }
+.jtt-r.jtt-ots .n { font: inherit; }
+.jtt-r:not(.jtt-ots):hover { background: rgba(245,168,0,.04); }
+.jtt-r.korostettu { background: rgba(245,168,0,.09); box-shadow: inset 3px 0 0 var(--cyan); }
+.jtt-sija { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 700 16px/1 var(--num); cursor: pointer; }
+.jtt-sija:hover { border-color: var(--cyan); color: var(--ink); }
+.jtt-sija[aria-pressed="true"] { background: var(--cyan); color: var(--musta); border-color: var(--cyan); }
+.jtt-nimi a { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; min-width: 0; }
+.jtt-nimi a > span { display: grid; min-width: 0; }
+.jtt-nimi b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jtt-nimi small { color: var(--ink-3); font-size: 12px; }
+.jtt-nimi a:hover b { color: var(--cyan); }
+.jtt-rata { position: relative; height: 26px; }
+.jtt-rata::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; border-radius: 4px; background: var(--line-2); }
+.jtt-rata i { position: absolute; top: 50%; }
+.jtt-md { width: 2px; height: 22px; margin-top: -11px; background: var(--ink-3); opacity: .8; }
+.jtt-yhd { height: 4px; margin-top: -2px; background: var(--ink-3); border-radius: 2px; }
+.jtt-yhd.plus { background: linear-gradient(90deg, rgba(46,229,157,.15), var(--green)); }
+.jtt-yhd.miinus { background: linear-gradient(90deg, var(--red), rgba(255,59,78,.15)); }
+.jtt-pallo { display: inline-block; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px rgba(245,168,0,.7); border: 2px solid #1a1712; }
+.jtt-pallo.haamu { width: 10px; height: 10px; margin: -5px 0 0 -5px; background: transparent; border: 2px solid var(--ink-3); box-shadow: none; }
+.jtt-pallo.pb { background: var(--green); box-shadow: 0 0 10px rgba(46,229,157,.8); }
+.jtt-tulos { font-weight: 700; font-size: 21px !important; color: var(--ink); white-space: nowrap; }
+.jtt-pb { font: 700 10px/1 var(--text); font-style: normal; color: var(--musta); background: var(--green); border-radius: 3px; padding: 2px 4px; margin-left: 5px; vertical-align: 3px; }
+.jtt-muutos { font-family: var(--num); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-3); }
+.jtt-muutos.plus { color: var(--green); }
+.jtt-muutos.miinus { color: var(--red); }
+.jtt-lisa small { color: var(--ink-3); font-size: 12px; }
+.jtt-ikas { display: inline-block; min-width: 46px; text-align: center; padding: 3px 6px; border-radius: 6px; font: 700 15px/1 var(--num); }
+.jtt-ikas.hyva, .jtt-vpalkki i.hyva { background: rgba(46,229,157,.16); color: var(--green); }
+.jtt-ikas.keski, .jtt-vpalkki i.keski { background: rgba(245,168,0,.16); color: var(--cyan); }
+.jtt-ikas.heikko, .jtt-vpalkki i.heikko { background: rgba(255,59,78,.14); color: #ff7a87; }
+.jtt-lampo { display: inline-flex; gap: 2px; vertical-align: middle; }
+.jtt-lampo i { width: 13px; height: 22px; border-radius: 3px; }
+.jtt-lampo i.vali { margin-left: 5px; }
+.jtt-lampo i.tyhja { background: var(--line-2); }
+/* SVG-kaaviot */
+.jtt-svg { padding: 14px 18px; overflow: hidden; }
+.jtt-svg svg { display: block; font-family: var(--text); }
+.jtt-ax { font-size: 11.5px; fill: var(--ink-3); font-family: var(--num); }
+.jtt-kaista { font: 700 17px var(--num); fill: var(--ink); }
+.jtt-kaista.sp { fill: var(--cyan); }
+.jtt-tunniste { font: 600 12px var(--text); fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.8); stroke-width: 3px; }
+.jtt-pisteteksti { font: 500 11px var(--text); fill: var(--ink-2); paint-order: stroke; stroke: rgba(13,12,11,.85); stroke-width: 3px; }
+.jtt-kulma { font: 700 13px var(--num); letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-3); opacity: .8; }
+.jtt-piste { cursor: pointer; }
+.jtt-tyhja h2 { margin-top: 0; }
+/* pelaajaprofiili */
+.jtt-pkortti { display: grid; grid-template-columns: auto minmax(180px, 1fr) minmax(280px, 1.6fr); gap: 22px; align-items: center; }
+.jtt-pk-kuva .kuva.iso { width: 104px; height: 104px; border: 2px solid rgba(245,168,0,.5); box-shadow: 0 0 24px rgba(245,168,0,.3); }
+.jtt-pk-tiedot { display: grid; gap: 4px; }
+.jtt-pk-tiedot b { font: 700 34px/1 var(--num); }
+.jtt-vahvuudet { display: grid; gap: 7px; }
+.jtt-vahvuus { display: grid; grid-template-columns: minmax(120px, 170px) 1fr 52px; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
+.jtt-vahvuus b { text-align: right; font-size: 17px; color: var(--ink); }
+.jtt-vpalkki { height: 10px; background: var(--line-2); border-radius: 6px; overflow: hidden; }
+.jtt-vpalkki i { display: block; height: 100%; border-radius: 6px; }
+.jtt-vpalkki i.hyva { background: var(--green); } .jtt-vpalkki i.keski { background: var(--cyan); } .jtt-vpalkki i.heikko { background: var(--red); }
+.jtt-posio { margin-top: 22px; }
+.jtt-pgrid { display: grid; grid-template-columns: minmax(220px, .9fr) minmax(260px, 1.1fr) minmax(280px, 1.3fr); gap: 22px; align-items: start; margin-top: 6px; }
+.jtt-isot { display: grid; gap: 6px; }
+.jtt-iso { font: 700 64px/0.95 var(--num); color: var(--cyan); text-shadow: 0 0 24px rgba(245,168,0,.25); }
+.jtt-minit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.jtt-mini { display: grid; gap: 2px; padding: 8px 10px; border-radius: 8px; background: rgba(0,0,0,.2); border: 1px solid var(--line-2); min-width: 0; }
+.jtt-mini span { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jtt-mini b { font-size: 22px; }
+.jtt-mini b small { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.jtt-mini em { font: normal 13px var(--num); color: var(--ink-3); }
+.jtt-mini em.plus { color: var(--green); } .jtt-mini em.miinus { color: var(--red); }
+.jtt-mini-leveä { grid-column: 1 / -1; }
+.jtt-vertailut { display: grid; gap: 14px; }
+.jtt-nauha-ots { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); }
+.jtt-nauha-ots b { font-size: 19px; color: var(--ink); }
+.jtt-nauha-rata { position: relative; height: 22px; margin: 4px 0 2px; }
+.jtt-nauha-rata::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; border-radius: 4px; background: var(--line-2); }
+.jtt-nauha-rata i { position: absolute; top: 50%; width: 2px; height: 10px; margin: -5px 0 0 -1px; background: var(--ink-3); opacity: .55; border-radius: 1px; }
+.jtt-nauha-rata i.md { height: 20px; margin-top: -10px; background: var(--ink); opacity: .9; }
+.jtt-nauha-rata b { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; border: 2px solid #1a1712; }
+.jtt-nauha-rata b.hyva { background: var(--green); box-shadow: 0 0 10px rgba(46,229,157,.7); }
+.jtt-nauha-rata b.keski { background: var(--cyan); box-shadow: 0 0 10px rgba(245,168,0,.7); }
+.jtt-nauha-rata b.heikko { background: var(--red); box-shadow: 0 0 10px rgba(255,59,78,.6); }
+.jtt-nauha-ala { font-size: 12.5px; color: var(--ink-3); }
+.jtt-pkaavio .kaavio.matala { height: 250px; }
+@media (max-width: 1180px) {
+  .jtt-pgrid { grid-template-columns: 1fr 1fr; } .jtt-pkaavio { grid-column: 1 / -1; }
+  .jtt-pkortti { grid-template-columns: auto 1fr; } .jtt-vahvuudet { grid-column: 1 / -1; }
+  .jtt-taulu .jtt-lisa2 { display: none; }
+  .jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(120px, 2fr) 64px 74px 54px 70px 76px; }
+  .jtt-taulu-nok .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(110px, 1.4fr) 64px 74px 150px 58px 64px; }
+  .jtt-taulu-cooper .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(120px, 2fr) 70px 74px 120px 76px; }
+}
+@media (max-width: 900px) {
+  .jtt-kpit { grid-template-columns: 1fr 1fr; }
+  .jtt-taulu .jtt-lisa { display: none; }
+  .jtt-taulu .jtt-r { grid-template-columns: 36px minmax(120px, 1.3fr) minmax(80px, 1fr) 58px 66px !important; gap: 8px; padding: 7px 10px; }
+}
+@media (max-width: 640px) {
+  .jtt-testit { grid-template-columns: 1fr; gap: 8px; }
+  .jtt-testikortti { grid-template-columns: 1fr auto; padding: 10px 14px; }
+  .jtt-testikortti > * { grid-column: 1; }
+  .jtt-tk-arvo { grid-column: 2; grid-row: 1 / span 2; margin: 0; font-size: 30px; text-align: right; }
+  .jtt-testikortti .jtt-tk-ala:nth-of-type(n+3), .jtt-kipina { display: none; }
+  .jtt-segmentti { width: 100%; } .jtt-segmentti button { flex: 1; padding: 8px 6px; font-size: 13px; }
+  .jtt-valinta { width: 100%; } .jtt-valinta select { flex: 1; max-width: none; min-width: 0; }
+  .jtt-kpi-arvo { font-size: 28px; }
+  .jtt-taulu .jtt-r { grid-template-columns: 32px minmax(0, 1fr) 54px 60px !important; }
+  .jtt-taulu .jtt-rata, .jtt-taulu .jtt-rata-ots { display: none; }
+  .jtt-nimi .kuva { display: none; }
+  .jtt-pgrid, .jtt-pkortti { grid-template-columns: 1fr; }
+  .jtt-pk-kuva .kuva.iso { width: 76px; height: 76px; }
+  .jtt-iso { font-size: 54px; }
+  .jtt-vahvuus { grid-template-columns: 110px 1fr 44px; font-size: 12.5px; }
+  .jtt-svg { padding: 10px 8px; }
+}
+.jtt-banneri { display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin: 4px 0 14px; border-radius: 12px; border: 1px solid rgba(245,168,0,.45); background: linear-gradient(90deg, rgba(245,168,0,.14), rgba(245,168,0,.02)); text-decoration: none; color: var(--ink); }
+.jtt-banneri b { font: 700 20px/1 var(--num); text-transform: uppercase; color: var(--cyan); white-space: nowrap; }
+.jtt-banneri span { flex: 1; font-size: 14px; color: var(--ink-2); }
+.jtt-banneri i { font-style: normal; font-size: 22px; color: var(--cyan); }
+.jtt-banneri:hover { border-color: var(--cyan); }
+@media (max-width: 640px) { .jtt-banneri { flex-wrap: wrap; } .jtt-banneri span { flex-basis: 100%; order: 3; } }
+.paneeli.jtt-tyhja { font-style: normal; color: var(--ink); opacity: 1; }
+.paneeli.jtt-tyhja .btn { font-style: normal; }

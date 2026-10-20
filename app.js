@@ -13,6 +13,7 @@ import * as vpelaaja from "./js/views/vpelaaja.js";
 import * as siirtomarkkinat from "./js/views/siirtomarkkinat.js";
 import * as analyysi from "./js/views/analyysi.js";
 import * as testit from "./js/views/testit.js";
+import * as juoksu from "./js/views/juoksu.js";
 import * as kortti from "./js/views/kortti.js";
 import * as juoksuodotus from "./js/views/juoksuodotus.js";
 import * as lyonnit from "./js/views/lyonnit.js";
@@ -25,6 +26,7 @@ const etusivu = keskus;
 const reitit = [
   { polku: /^\/?$/, nakyma: etusivu },
   { polku: /^\/testit(?:\/([a-z]+))?(?:\/([a-z]+))?(?:\/([\w-]+))?$/, nakyma: testit, osio: "testit" },
+  { polku: /^\/juoksu(?:\/([a-z0-9]+))?(?:\/([\w-]+))?$/, nakyma: juoksu, osio: "testit" },
   // vanhat osoitteet
   { polku: /^\/(superpesis|ryhma|tilastot)$/, nakyma: { nayta: (m, x) => location.replace(x === "superpesis" ? "#/testit/superpesis" : "#/testit/juniorit") } },
   { polku: /^\/kirjaudu$/, nakyma: kirjaudu, julkinen: true },
@@ -73,6 +75,7 @@ const RYHMAT = [
     ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p)],
     ["Testit", "#/testit", "testit", (p, r) => r?.osio === "testit", [
       ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
+      ["Juoksutestit", "#/juoksu", (p) => /^\/juoksu/.test(p)],
       ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
       ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)]]],
   ]],

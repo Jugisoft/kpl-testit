@@ -81,6 +81,7 @@ export async function nayta(main, ryhma, luokka, testi) {
     const alat = [...new Set(mukana.map((t) => t.alaluokka || "Muut"))];
     const kuvaus = LUOKAT.find(([k]) => k === S.luokka)[2];
     $("#luokka-sisalto").innerHTML = `<p class="pieni luokka-kuvaus">${esc(kuvaus)}.</p>
+      ${S.luokka === "nopeus" || S.luokka === "fysiikka" ? `<a class="jtt-banneri" href="#/juoksu/${S.luokka === "fysiikka" ? "cooper" : "30m"}/${g}"><b>Juoksutestit</b><span>30 m, nopeuskestävyys 9×30 m ja Cooper: tulostaulu, ikäluokat, vertailu miehiin ja pelaajan juoksuprofiili</span><i aria-hidden="true">→</i></a>` : ""}
       ${alat.map((a) => `<section class="alaluokka"><h3>${esc(a)}</h3><div class="testiruudut">${mukana.filter((t) => (t.alaluokka || "Muut") === a).map((t) => ruutu(g, t)).join("")}</div></section>`).join("")
         || `<div class="paneeli tyhja-paneeli"><b>Ei vielä tuloksia tässä luokassa.</b><p class="pieni">${g === "superpesis" ? "Edustuksen testit näkyvät tässä heti, kun ensimmäinen testikerta on syötetty." : "Juniorien tulokset näkyvät tässä, kun testikerta on syötetty."}</p></div>`}
       ${puuttuu.length ? `<p class="pieni ei-testattu">Ei vielä testattu ${g === "superpesis" ? "edustuksessa" : "junioreilla"}: ${puuttuu.map((t) => esc(t.nimi)).join(", ")}</p>` : ""}`;

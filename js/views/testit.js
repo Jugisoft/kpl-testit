@@ -1,7 +1,7 @@
 // Testit: yksi näkymä edustukselle (Superpesis) ja junioreille. Testit luokiteltu
 // luokka → alaluokka (testit.luokka / testit.alaluokka). Osoite #/testit/<ryhmä>/<luokka>/<testi>.
 import { tila, nimi, lataaTulokset } from "../db.js";
-import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, pelaajaLinkki, mediaani, keskiarvo, piirra, vari, SARJAVARIT, miniPylvaat } from "../util.js";
+import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, pelaajaLinkki, mediaani, keskiarvo, piirra, vari, SARJAVARIT, miniPylvaat } from "../util.js";
 
 export const LUOKAT = [
   ["fysiikka", "Fysiikka", "Räjähtävä voima, maksimivoima, lihaskestävyys ja kestävyys"],
@@ -27,7 +27,7 @@ export async function nayta(main, ryhma, luokka, testi) {
   if (LUOKKANIMI[luokka]) S.luokka = luokka;
   S.testi = testi || null;
 
-  const kaikki = await lataaTulokset();
+  const kaikki = juoksutYhteen(await lataaTulokset());
   const spJ = new Set(tila.joukkueet.filter((j) => /superpesis/i.test(j.nimi)).map((j) => j.id));
   const onSp = (kertaId) => spJ.has(tila.kerta[kertaId]?.joukkue_id);
   const raaka = { superpesis: kaikki.filter((r) => r.hyvaksytty && onSp(r.testikerta_id)), juniorit: kaikki.filter((r) => r.hyvaksytty && tila.kerta[r.testikerta_id] && !onSp(r.testikerta_id)) };

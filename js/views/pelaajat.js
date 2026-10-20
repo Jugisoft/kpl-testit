@@ -1,10 +1,10 @@
 import { tila, nimi, lataaTulokset } from "../db.js";
-import { $, $$, esc, muotoile, paras, parhaatTulokset, pelaajaLinkki, pvm } from "../util.js";
+import { $, $$, esc, muotoile, paras, parhaatTulokset, juoksutYhteen, pelaajaLinkki, pvm } from "../util.js";
 
 let suodatin = { joukkue: "", aktiiviset: true, haku: "" };
 
 export async function nayta(main) {
-  const parhaat = parhaatTulokset(await lataaTulokset());
+  const parhaat = parhaatTulokset(juoksutYhteen(await lataaTulokset()));
   const tieto = (pid, t) => { const a = parhaat.filter((x) => x.pelaaja === pid && x.testi === t); return { pb: paras(t, a.map((x) => x.arvo)), viim: a.at(-1) }; };
   const kerrat = (pid) => new Set(parhaat.filter((x) => x.pelaaja === pid).map((x) => x.kerta)).size;
 

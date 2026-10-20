@@ -1,6 +1,6 @@
 // Pelaajakortti: ennätykset, profiili ikätovereihin verrattuna ja kehitys testeittäin.
 import { tila, nimi, lataaTulokset } from "../db.js";
-import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
+import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
 const PROFIILI = ["30m", "10m", "lentava20", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
 let valittu = "30m";
@@ -8,7 +8,7 @@ let valittu = "30m";
 export async function nayta(main, id) {
   const p = tila.pelaaja[id];
   if (!p) throw new Error("Pelaajaa ei löytynyt.");
-  const kaikki = parhaatTulokset(await lataaTulokset());
+  const kaikki = parhaatTulokset(juoksutYhteen(await lataaTulokset()));
   const omat = kaikki.filter((x) => x.pelaaja === id);
   const testit = [...new Set(omat.map((x) => x.testi))].sort((a, b) => tila.testi[a].jarjestys - tila.testi[b].jarjestys);
   if (!testit.includes(valittu)) valittu = testit[0];

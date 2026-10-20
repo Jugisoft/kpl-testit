@@ -34,6 +34,21 @@ export const mediaani = (a) => { if (!a.length) return null; const s = [...a].so
 export const keskiarvo = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 export const hajonta = (a) => { if (a.length < 2) return null; const k = keskiarvo(a); return Math.sqrt(a.reduce((s, x) => s + (x - k) ** 2, 0) / (a.length - 1)); };
 
+// Juoksut yhteen (20.10.2026, Jugi): 30 m ennätykseen lasketaan kaikki täydet 30 m juoksut –
+// tossut, piikit ja nopeuskestävyyden (9×30 m) yksittäiset juoksut. 10 m ja lentävä 20 m
+// kengistä riippumatta. NOK-juoksut eivät muodosta lentävää 20 m (ei 10 m väliaikaa).
+export function juoksutYhteen(rivit) {
+  const out = [];
+  for (const r of rivit) {
+    if (r.testi === "10m" || r.testi === "30m") out.push(r.tarkenne ? { ...r, tarkenne: "", kengat: r.tarkenne } : r);
+    else {
+      out.push(r);
+      if (r.testi === "nok_30m") out.push({ ...r, testi: "30m", yritys: 100 + r.yritys, tarkenne: "", kengat: r.tarkenne, nok: true });
+    }
+  }
+  return out;
+}
+
 // Parhaat tulokset: avain kerta|pelaaja|testi -> arvo. Vain hyväksytyt ja ilman tarkennetta (piikit erikseen).
 export function parhaatTulokset(rivit, { tarkenne = "" } = {}) {
   const ryhmat = new Map();

@@ -17,7 +17,7 @@ const M = {
 };
 const TESTIT = [
   { k: "30m", nimi: "30 m pikajuoksu", ala: "10 m lähtö · lentävä 20 m · 30 m", paa: "t30", mitat: ["t30", "t10", "l20"], kengat: true,
-    kuvaus: "Kennomittaus paikaltaan. Paras yritys. Lentävä 20 m = 30 m − 10 m samasta juoksusta; huippunopeus = 20 m ÷ lentävä aika." },
+    kuvaus: "Kennomittaus paikaltaan. Paras yritys; myös nopeuskestävyyden 9×30 m juoksut lasketaan 30 m tulokseen (merkintä NOK). Lentävä 20 m = 30 m − 10 m samasta juoksusta; huippunopeus = 20 m ÷ lentävä aika." },
   { k: "nok", nimi: "Nopeuskestävyys", ala: "9 × 30 m · 3 sarjaa", paa: "ka", mitat: ["ka", "paras", "sdec"], kengat: true,
     kuvaus: "3 sarjaa × 3 × 30 m täysillä. Palautus 30 s juoksujen välillä ja 2 min sarjojen välillä. Pudotus % = kuinka paljon keskiarvo on hitaampi kuin paras juoksu." },
   { k: "cooper", nimi: "Cooper", ala: "12 min juoksu", paa: "m", mitat: ["m"], kengat: false,
@@ -71,6 +71,13 @@ function valmistele(rivit) {
     let o = by.get(key);
     if (!o) by.set(key, (o = { fam, kerta: r.testikerta_id, pvm: k.pvm, pelaaja: r.pelaaja_id, tark, a: {}, b: {} }));
     if (r.testi === "10m") o.a[r.yritys] = r.arvo; else o.b[r.yritys] = r.arvo;
+    // NOK-juoksu on täysi 30 m: lasketaan myös saman testikerran 30 m tulokseen (ei lentävään, ei 10 m väliaikaa)
+    if (fam === "nok") {
+      const k30 = `30m|${r.testikerta_id}|${r.pelaaja_id}|${tark}`;
+      let o2 = by.get(k30);
+      if (!o2) by.set(k30, (o2 = { fam: "30m", kerta: r.testikerta_id, pvm: k.pvm, pelaaja: r.pelaaja_id, tark, a: {}, b: {} }));
+      o2.b[100 + r.yritys] = r.arvo;
+    }
   }
   const out = { "30m": [], nok: [], cooper: [] };
   for (const o of by.values()) {
@@ -81,7 +88,8 @@ function valmistele(rivit) {
       s.t10 = v10.length ? Math.min(...v10) : null;
       const l = Object.keys(o.b).filter((y) => o.a[y] != null).map((y) => Math.round((o.b[y] - o.a[y]) * 100) / 100).filter((x) => x > 1.5 && x < 4.5);
       s.l20 = l.length ? Math.min(...l) : null;
-      s.yrit = Math.max(v30.length, v10.length);
+      s.yrit = Math.max(Object.keys(o.b).filter((y) => +y < 100).length, v10.length);
+      s.nok30 = Object.keys(o.b).some((y) => +y >= 100 && o.b[y] === s.t30); // 30 m paras tuli NOK-juoksusta
       if (s.t30 == null && s.t10 == null) continue;
     } else if (o.fam === "nok") {
       const ajat = Array.from({ length: 9 }, (_, i) => o.b[i + 1] ?? null);
@@ -120,8 +128,9 @@ function sijoitus(m, arvo, arvot) {
 }
 // edellinen tulos ja ennätys ennen annettua suoritusta
 function historia(fam, s, m) {
-  const aiemmat = D[fam].filter((x) => x.pelaaja === s.pelaaja && x.tark === s.tark && x.pvm < s.pvm && x[m] != null);
-  return { ed: aiemmat.at(-1) || null, pb: parasArvo(m, aiemmat.map((x) => x[m])) };
+  // edellinen samoilla kengillä (reilu muutos), ennätys kaikista juoksuista kengistä riippumatta
+  const aiemmat = D[fam].filter((x) => x.pelaaja === s.pelaaja && x.pvm < s.pvm && x[m] != null);
+  return { ed: aiemmat.filter((x) => x.tark === s.tark).at(-1) || null, pb: parasArvo(m, aiemmat.map((x) => x[m])) };
 }
 const pctLuokka = (p) => (p == null ? "" : p >= 67 ? "hyva" : p >= 34 ? "keski" : "heikko");
 
@@ -337,7 +346,7 @@ function piirraTaulu(fam, m, rivit, md) {
         <span role="cell" class="jtt-rata" aria-hidden="true"><i class="jtt-md" style="left:${pos(md)}%"></i>
           ${r.ed && r.v != null ? `<i class="jtt-yhd ${plus ? "plus" : miinus ? "miinus" : ""}" style="left:${Math.min(pos(r.ed[m]), pos(r.v))}%;width:${Math.abs(pos(r.v) - pos(r.ed[m]))}%"></i><i class="jtt-pallo haamu" style="left:${pos(r.ed[m])}%" title="Edellinen ${fm(m, r.ed[m])} (${pvmLyhyt(r.ed.pvm)})"></i>` : ""}
           ${r.v != null ? `<i class="jtt-pallo${r.uusiPb ? " pb" : ""}" style="left:${pos(r.v)}%"></i>` : ""}</span>
-        <span role="cell" class="n jtt-tulos">${fm(m, r.v)}${r.uusiPb ? `<em class="jtt-pb" title="Uusi ennätys">PB</em>` : ""}</span>
+        <span role="cell" class="n jtt-tulos">${fam === "30m" && r.s.nok30 ? `<em class="jtt-nokm" title="Paras 30 m tuli nopeuskestävyystestin juoksusta">NOK</em>` : ""}${fm(m, r.v)}${r.uusiPb ? `<em class="jtt-pb" title="Uusi ennätys">PB</em>` : ""}</span>
         <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : (TESTI[fam].kengat ? `Ei aiempaa tulosta ${r.s.tark === "piikit" ? "piikeillä" : "tossuilla"}` : "Ensimmäinen testi")}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : `<span class='pieni'>${TESTI[fam].kengat ? "ei aiempaa" : "1. testi"}</span>`}</span>
         ${lisat.map((x) => `<span role="cell" class="n jtt-lisa">${x}</span>`).join("")}
         <span role="cell" class="n jtt-lisa2">${r.ikaS ? `<span class="jtt-ikas ${pctLuokka(r.ikaS.pct)}" title="Kauden parhaiden perusteella ikäluokassa ${sy}">${r.ikaS.sija}./${r.ikaS.n}</span>` : "<span class='pieni'>–</span>"}</span>
@@ -549,7 +558,7 @@ function pelaajaOsio(T, ss, pid) {
   const samat = ss.filter((s) => s.tark === tark);
   const h = historia(T.k, viim, m);
   const ero = h.ed ? viim[m] - h.ed[m] : null, plus = parannus(m, viim[m], h.ed?.[m]) > 0, miinus = parannus(m, viim[m], h.ed?.[m]) < 0;
-  const pb = parasArvo(m, samat.map((s) => s[m]));
+  const pb = parasArvo(m, ss.map((s) => s[m])); // ennätys kengistä riippumatta
   const omaKp = kausiParhaat(T.k, m, ka, tark, "kaikki").get(pid)?.[m];
   const kpJun = [...kausiParhaat(T.k, m, ka, tark, "juniorit").values()];
   const ryhmaArvot = [...kausiParhaat(T.k, m, ka, tark, ryhmaOf(pid)).values()].map((s) => s[m]);
@@ -571,7 +580,7 @@ function pelaajaOsio(T, ss, pid) {
         <span class="jtt-kpi-ots">${esc(M[m].pitka)}</span>
         <span class="jtt-iso">${fm(m, viim[m])}<small>${M[m].yks}</small></span>
         <span class="jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}">${h.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, ero)} ${M[m].yks} edellisestä (${pvmLyhyt(h.ed.pvm)})` : "ensimmäinen testi"}</span>
-        <span class="pieni">Ennätys <b class="num">${fm(m, pb)} ${M[m].yks}</b>${pb === viim[m] && samat.length > 1 ? ` <em class="jtt-pb">PB</em>` : ""}</span>
+        <span class="pieni">Ennätys <b class="num">${fm(m, pb)} ${M[m].yks}</b>${pb === viim[m] && ss.length > 1 ? ` <em class="jtt-pb">PB</em>` : ""}</span>
         <div class="jtt-minit">${lisa}</div>
       </div>
       <div class="jtt-vertailut"><span class="jtt-kpi-ots">Kausi ${ka} · kauden paras ${fm(m, omaKp)} ${M[m].yks}</span>

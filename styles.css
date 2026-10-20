@@ -1639,3 +1639,4 @@ a.jtt-yla:hover { text-decoration: underline; }
 /* Chart.js-säiliö joustorivissä ei saa kasvaa sisältönsä mukana (tutkakaavio leveni loputtomiin) */
 .rivi > .paneeli, .rivi > .taulu-wrap { min-width: 0; }
 .kaavio { min-width: 0; overflow: hidden; }
+.jtt-nokm { font: 700 9.5px/1 var(--text); font-style: normal; color: var(--ink-2); border: 1px solid var(--line); border-radius: 3px; padding: 2px 3px; margin-right: 5px; vertical-align: 3px; }

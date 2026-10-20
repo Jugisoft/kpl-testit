@@ -135,26 +135,45 @@ function testit(kaikki) {
   }).join("")).join("") || `<p class="tyhja">Ei testituloksia.</p>`;
 }
 
+// Pelitilastot: taulu tilastot, vaihe "kpl_kaikki" = KPL:n pelaajien kaikki viralliset sarjat kausittain
+// (05 Jarvis/Työkalut/vie_omat_tilastot.py); d = kauden yhteissummat, d.sarjat = sarjakohtaiset luvut.
+const PS = { kausi: null, sarja: "" };
 function peli() {
   const A = tila.pelaaja[S.a], B = tila.pelaaja[S.b];
-  const ta = tilastot.get(A.pesistulokset_id) || [], tb = tilastot.get(B.pesistulokset_id) || [];
-  const kaudet = [...new Set([...ta, ...tb].map((r) => r.kausi))].sort();
-  const ka = kaudet.at(-1);
-  const hae = (rr) => rr.filter((r) => r.kausi === ka && r.vaihe === "runko").map((r) => ({ ...r.data, jk: r.joukkue }))[0] || null;
-  const a = hae(ta), b = hae(tb);
-  $("#vt-ptsel").textContent = ka ? `Superpesis ${ka} · runkosarja` : "";
-  if (!a && !b) {
-    $("#vt-peli").innerHTML = `<p class="pieni">Kummallakaan pelaajalla ei ole Keskukseen tuotuja pelitilastoja. Tällä hetkellä mukana on Superpesiksen runkosarja 2026 (pesistulokset.fi). Juniorisarjojen tilastot voidaan tuoda samaan tauluun myöhemmin.</p>`;
+  const omat = (p) => (tilastot.get(p.pesistulokset_id) || []).filter((r) => r.vaihe === "kpl_kaikki");
+  const ra = omat(A), rb = omat(B);
+  const kaudet = [...new Set([...ra, ...rb].map((r) => r.kausi))].sort((x, y) => y - x);
+  if (!kaudet.length) {
+    $("#vt-ptsel").textContent = "";
+    $("#vt-peli").innerHTML = `<p class="pieni">Kummallakaan pelaajalla ei ole pelitilastoja (pesistulokset.fi-tunniste puuttuu tai ei otteluita).</p>`;
     return;
   }
+  const yhteiset = kaudet.filter((k) => ra.some((r) => r.kausi === k) && rb.some((r) => r.kausi === k));
+  if (!kaudet.includes(PS.kausi)) PS.kausi = yhteiset[0] ?? kaudet[0];
+  const da = ra.find((r) => r.kausi === PS.kausi)?.data, db = rb.find((r) => r.kausi === PS.kausi)?.data;
+  const sarjat = [...new Set([...(da?.sarjat || []), ...(db?.sarjat || [])].map((x) => x.nimi))];
+  if (PS.sarja && !sarjat.includes(PS.sarja)) PS.sarja = "";
+  const valitse = (d) => (!d ? null : PS.sarja ? d.sarjat?.find((x) => x.nimi === PS.sarja) || null : d);
+  const a = valitse(da), b = valitse(db);
+  $("#vt-ptsel").innerHTML = `<select id="vt-kausi" aria-label="Kausi">${kaudet.map((k) => `<option${k === PS.kausi ? " selected" : ""}>${k}</option>`).join("")}</select>
+    <select id="vt-sarja" aria-label="Sarja"><option value="">Kaikki sarjat</option>${sarjat.map((n) => `<option${n === PS.sarja ? " selected" : ""}>${esc(n)}</option>`).join("")}</select>`;
+  $("#vt-kausi").onchange = (e) => { PS.kausi = +e.target.value; peli(); };
+  $("#vt-sarja").onchange = (e) => { PS.sarja = e.target.value; peli(); };
+  const sarjaLista = (d) => (d?.sarjat || []).map((x) => `${esc(x.nimi)} ${x.O}`).join(" · ");
   const y = (p) => (p ? (p.K || 0) + (p.L || 0) + (p.T || 0) : null);
   const pct = (p, k, n, min = 10) => (p && p[n] >= min ? (100 * p[k]) / p[n] : null);
   const vert = (va, vb, dir = 1) => (va == null || vb == null ? 0 : dir * (va - vb) > 0 ? 1 : dir * (va - vb) < 0 ? -1 : 0);
   const suhde = (va, vb) => { const m = Math.max(Math.abs(va || 0), Math.abs(vb || 0), 1e-9); return [va == null ? null : (100 * Math.abs(va)) / m, vb == null ? null : (100 * Math.abs(vb)) / m]; };
   const r = (lab, va, vb, fa, opt = {}) => { const [pa, pb] = opt.sata ? [va, vb] : suhde(va, vb); return rivi(lab, va, vb, { fa, pa, pb, voittaja: opt.dir === 0 ? 0 : vert(va, vb, opt.dir ?? 1), sa: opt.sa || "", sb: opt.sb || "" }); };
   const pr = (lab, k, n) => r(lab, pct(a, k, n), pct(b, k, n), (v) => (v == null ? "–" : fi(v) + " %"), { sata: true, sa: a ? `${a[k] ?? 0}/${a[n] ?? 0}` : "", sb: b ? `${b[k] ?? 0}/${b[n] ?? 0}` : "" });
-  const ei = (p) => (p ? "" : "ei Superpesis-otteluita");
-  $("#vt-peli").innerHTML = `${!a || !b ? `<p class="pieni">${!a ? esc(nimi(A)) : esc(nimi(B))}: ${ei(null)} kaudella ${ka}.</p>` : ""}` + [
+  const puuttuu = [[A, a], [B, b]].filter(([, d]) => !d).map(([p]) => esc(nimi(p)));
+  // urataulukko: kaikki kaudet rinnakkain (kaikki sarjat)
+  const ura = kaudet.map((k) => { const x = ra.find((q) => q.kausi === k)?.data, z = rb.find((q) => q.kausi === k)?.data, ya = y(x), yb = y(z), kla = pct(x, "KL", "KLY"), klb = pct(z, "KL", "KLY");
+    return `<tr${k === PS.kausi ? ' class="valittu"' : ""} data-ura="${k}"><td class="l">${k}</td><td>${x ? x.O : "–"}</td><td class="${ya != null && yb != null && ya / Math.max(1, x.O) > yb / Math.max(1, z.O) ? "ca" : ""}">${x ? `${ya} <small>${fi(ya / Math.max(1, x.O), 2)}</small>` : "–"}</td><td class="${kla != null && klb != null && kla > klb ? "ca" : ""}">${kla != null ? fi(kla) : "–"}</td>
+      <td>${z ? z.O : "–"}</td><td class="${ya != null && yb != null && yb / Math.max(1, z.O) > ya / Math.max(1, x.O) ? "cb" : ""}">${z ? `${yb} <small>${fi(yb / Math.max(1, z.O), 2)}</small>` : "–"}</td><td class="${kla != null && klb != null && klb > kla ? "cb" : ""}">${klb != null ? fi(klb) : "–"}</td></tr>`; }).join("");
+  $("#vt-peli").innerHTML = (puuttuu.length ? `<p class="pieni">${puuttuu.join(" ja ")}: ei otteluita ${PS.sarja ? `sarjassa ${esc(PS.sarja)} ` : ""}kaudella ${PS.kausi}.</p>` : "")
+    + (!PS.sarja && (da || db) ? `<p class="pieni vt-sarjat"><span class="a">${sarjaLista(da) || "–"}</span><span class="b">${sarjaLista(db) || "–"}</span></p>` : "")
+    + [
     r("Ottelut", a?.O, b?.O, (v) => v ?? "–", { dir: 0 }),
     r("YHT", y(a), y(b), (v) => v ?? "–"),
     r("YHT / ottelu", a?.O ? y(a) / a.O : null, b?.O ? y(b) / b.O : null, (v) => fi(v, 2)),
@@ -166,7 +185,10 @@ function peli() {
     pr("KL% 1-tilanne", "KL1", "KLY1"),
     pr("KL% 2-tilanne", "KL2", "KLY2"),
     pr("KL% takatilanne (3)", "KL3", "KLY3"),
-  ].join("") + rooliOsio(A, a, B, b) + `<p class="vihje">Lähde pesistulokset.fi (YDIN 2027). KL% = kärkilyöntien onnistumis-%, tilanne = kärkietenijän pesä (0 = lyöjä itse kotipesältä kentälle). Prosentit vähintään 10 yrityksestä.</p>`;
+  ].join("") + rooliOsio(A, a, B, b)
+    + `<h3 class="vt-luokka">Ura kausittain</h3><div class="taulu-wrap vt-ura"><table><thead><tr><th class="l">Kausi</th><th>O</th><th><span class="vt-piste a"></span>YHT <small>/ott.</small></th><th>KL%</th><th>O</th><th><span class="vt-piste b"></span>YHT <small>/ott.</small></th><th>KL%</th></tr></thead><tbody>${ura}</tbody></table></div>`
+    + `<p class="vihje">Lähde pesistulokset.fi, kaikki viralliset sarjat (junioreilla useita sarjoja samalla kaudella; valitse sarja ylhäältä). KL% = kärkilyöntien onnistumis-%, tilanne = kärkietenijän lähtöpesä (0 = lyöjä itse kentälle). Prosentit vähintään 10 yrityksestä. Urataulukon riviä klikkaamalla vaihtuu tarkasteltava kausi.</p>`;
+  $$("[data-ura]").forEach((tr) => (tr.onclick = () => { PS.kausi = +tr.dataset.ura; peli(); }));
 }
 
 function kehitys(kaikki) {

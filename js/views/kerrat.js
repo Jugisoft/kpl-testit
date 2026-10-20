@@ -28,7 +28,7 @@ export async function nayta(main) {
         <thead><tr><th>Päivä</th><th>Nimi</th><th>Testit</th><th class="n">Pelaajia</th><th></th></tr></thead>
         <tbody>${tila.kerrat.filter((k) => kausi(k.pvm) === ka).map((k) => `<tr>
           <td>${pvm(k.pvm)}${k.pvm_tarkka ? "" : ' <span class="merkki harmaa" title="Päivä ei tiedossa tarkasti">noin</span>'}</td>
-          <td>${esc(k.nimi || "")}${k.piikit ? ' <span class="merkki harmaa">piikit</span>' : ""}</td>
+          <td>${esc(k.nimi || "")}${k.piikit ? ' <span class="merkki harmaa">piikkiajat</span>' : ""}</td>
           <td class="pieni" style="white-space:normal;max-width:340px">${k.testit.filter((t) => tila.testi[t]).map((t) => esc(tila.testi[t].nimi)).join(", ")}</td>
           <td class="n">${lkm[k.id] || 0}</td>
           <td class="n"><a class="btn" href="#/syota/${k.id}">Syötä</a> <a class="btn" href="#/kerta/${k.id}">Tulokset</a>${voiPoistaa(k) ? ` <button class="btn vaara" data-poista="${k.id}">Poista</button>` : ""}</td></tr>`).join("")}</tbody>
@@ -75,7 +75,7 @@ function uusiLomake(el) {
         <h3 style="margin-top:0">Testit</h3>
         <div class="chipit" style="margin-bottom:10px">${PAKETIT.map((p, i) => `<button type="button" class="chip" data-paketti="${i}">+ ${esc(p.nimi)}</button>`).join("")}</div>
         ${ryhmat.map(([r, rn]) => `<div class="testiryhma"><span class="osa-nimi">${esc(rn)}</span><div class="chipit" style="margin-bottom:6px">${tila.testit.filter((t) => (r ? t.luokka === r : !LUOKKANIMI[t.luokka]) && !t.johdettu && t.aktiivinen).map((t) => `<label class="chip"><input type="checkbox" name="testi" value="${t.koodi}">${esc(t.nimi)}</label>`).join("")}</div></div>`).join("")}
-        <label class="chip" style="margin-top:8px"><input type="checkbox" name="piikit">Juostaan piikkareilla</label>
+        <label class="chip" style="margin-top:8px"><input type="checkbox" name="piikit">Piikkiajat (yksittäiset kärkiajat)</label>
       </div>
       <div>
         <div class="rivi vali"><h3 style="margin:0">Osallistujat</h3><span class="pieni" id="valittuja"></span></div>

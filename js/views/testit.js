@@ -32,7 +32,7 @@ export async function nayta(main, ryhma, luokka, testi) {
   const onSp = (kertaId) => spJ.has(tila.kerta[kertaId]?.joukkue_id);
   const raaka = { superpesis: kaikki.filter((r) => r.hyvaksytty && onSp(r.testikerta_id)), juniorit: kaikki.filter((r) => r.hyvaksytty && tila.kerta[r.testikerta_id] && !onSp(r.testikerta_id)) };
 
-  // Parhaat tulokset kerralla. Testille valitaan tarkenne: tyhjä, tai jos sitä ei ole, yleisin (esim. NOK = piikit).
+  // Parhaat tulokset kerralla. Juoksujen piikkiajat on yhdistetty muihin (juoksutYhteen); muille testeille tarkenne: tyhjä, tai jos sitä ei ole, yleisin.
   const data = {};
   for (const [g, rr] of Object.entries(raaka)) {
     const tark = new Map();

@@ -1,7 +1,8 @@
 // Juoksutestit (20.10.2026): 30 m (10 m lähtö, lentävä 20 m), nopeuskestävyys 9×30 m ja Cooper.
 // Ryhmänäkymä #/juoksu/<testi>/<ryhmä> ja pelaajan juoksuprofiili #/juoksu/pelaaja/<id>.
 // Vertailut: oma kehitys, oma ryhmä (juniorit / Superpesis), ikäluokka (juniorit) ja kaikki testatut.
-// Vertailuvaraston pohja: pelaajan kauden paras tulos (kausi heinäkuu–kesäkuu) samoilla kengillä.
+// Vertailuvaraston pohja: pelaajan kauden paras tulos (kausi heinäkuu–kesäkuu).
+// Tarkenne "piikit" = piikkiaika (yksittäinen kärkiaika), ei kengät: kaikki juoksut vertaillaan yhdessä.
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, pvm, pvmLyhyt, kausi, mediaani, keskiarvo, piirra, vari, kuva } from "../util.js";
 
@@ -16,19 +17,18 @@ const M = {
   m: { nimi: "Matka", pitka: "Cooper, matka", yks: "m", pp: false, d: 0 },
 };
 const TESTIT = [
-  { k: "30m", nimi: "30 m pikajuoksu", ala: "10 m lähtö · lentävä 20 m · 30 m", paa: "t30", mitat: ["t30", "t10", "l20"], kengat: true,
+  { k: "30m", nimi: "30 m pikajuoksu", ala: "10 m lähtö · lentävä 20 m · 30 m", paa: "t30", mitat: ["t30", "t10", "l20"],
     kuvaus: "Kennomittaus paikaltaan. Paras yritys; myös nopeuskestävyyden 9×30 m juoksut lasketaan 30 m tulokseen (merkintä NOK). Lentävä 20 m = 30 m − 10 m samasta juoksusta; huippunopeus = 20 m ÷ lentävä aika." },
-  { k: "nok", nimi: "Nopeuskestävyys", ala: "9 × 30 m · 3 sarjaa", paa: "ka", mitat: ["ka", "paras", "sdec"], kengat: true,
+  { k: "nok", nimi: "Nopeuskestävyys", ala: "9 × 30 m · 3 sarjaa", paa: "ka", mitat: ["ka", "paras", "sdec"],
     kuvaus: "3 sarjaa × 3 × 30 m täysillä. Palautus 30 s juoksujen välillä ja 2 min sarjojen välillä. Pudotus % = kuinka paljon keskiarvo on hitaampi kuin paras juoksu." },
-  { k: "cooper", nimi: "Cooper", ala: "12 min juoksu", paa: "m", mitat: ["m"], kengat: false,
+  { k: "cooper", nimi: "Cooper", ala: "12 min juoksu", paa: "m", mitat: ["m"],
     kuvaus: `12 minuutin juoksu. Kierros ${KIERROS} m. Hapenottokyvyn arvio = (matka − 504,9) ÷ 44,73 ml/kg/min.` },
 ];
 const TESTI = Object.fromEntries(TESTIT.map((t) => [t.k, t]));
 const RYHMAT = [["juniorit", "Juniorit"], ["superpesis", "Superpesis"], ["kaikki", "Kaikki testatut"]];
-const KENKA = { "": "Tossut", piikit: "Piikit" };
 const LAJIVARIT = ["#7DD3FC", "#2EE59D", "#A78BFA", "#F472B6", "#FFC93C", "#94A3B8", "#FB923C", "#5EEAD4"];
 
-let S = { testi: "30m", ryhma: "juniorit", kengat: {}, valinta: {}, ikaluokka: "", korostus: new Set() };
+let S = { testi: "30m", ryhma: "juniorit", valinta: {}, ikaluokka: "", korostus: new Set() };
 let D = null;
 let piirtajat = []; // uudelleenpiirto ikkunan koon muuttuessa
 let kokoAjastin = null;
@@ -56,7 +56,7 @@ const kaistaNimi = (v) => (v && v >= 2007 ? String(v) : "Muut");
 function ryhmaOf(pid) { return D.sp.has(tila.pelaaja[pid]?.joukkue_id) ? "superpesis" : "juniorit"; }
 const kuuluu = (pid, ryhma) => ryhma === "kaikki" || ryhmaOf(pid) === ryhma;
 
-// ---------- data: suoritukset (testikerta × pelaaja × kengät)
+// ---------- data: suoritukset (testikerta × pelaaja)
 function valmistele(rivit) {
   const sp = new Set(tila.joukkueet.filter((j) => /superpesis/i.test(j.nimi)).map((j) => j.id));
   const by = new Map();
@@ -66,7 +66,7 @@ function valmistele(rivit) {
     if (!fam) continue;
     const k = tila.kerta[r.testikerta_id];
     if (!k || !tila.pelaaja[r.pelaaja_id]) continue;
-    const tark = fam === "cooper" ? "" : r.tarkenne || "";
+    const tark = ""; // piikkiaika ei ole oma luokkansa
     const key = `${fam}|${r.testikerta_id}|${r.pelaaja_id}|${tark}`;
     let o = by.get(key);
     if (!o) by.set(key, (o = { fam, kerta: r.testikerta_id, pvm: k.pvm, pelaaja: r.pelaaja_id, tark, a: {}, b: {} }));
@@ -128,7 +128,6 @@ function sijoitus(m, arvo, arvot) {
 }
 // edellinen tulos ja ennätys ennen annettua suoritusta
 function historia(fam, s, m) {
-  // edellinen samoilla kengillä (reilu muutos), ennätys kaikista juoksuista kengistä riippumatta
   const aiemmat = D[fam].filter((x) => x.pelaaja === s.pelaaja && x.pvm < s.pvm && x[m] != null);
   return { ed: aiemmat.filter((x) => x.tark === s.tark).at(-1) || null, pb: parasArvo(m, aiemmat.map((x) => x[m])) };
 }
@@ -167,7 +166,7 @@ function piirraTestikortit() {
   const ryhma = S.ryhma;
   $("#jtt-testit").innerHTML = TESTIT.map((T) => {
     const rr = D[T.k].filter((s) => kuuluu(s.pelaaja, ryhma) && s[T.paa] != null);
-    const tark = T.kengat ? oletusKenka(T.k) : "";
+    const tark = "";
     const kaudet = [...new Set(rr.filter((s) => s.tark === tark).map((s) => s.kausi))].sort();
     const sarja = kaudet.map((ka) => mediaani([...kausiParhaat(T.k, T.paa, ka, tark, ryhma).values()].map((s) => s[T.paa])));
     const viim = kaudet.at(-1);
@@ -175,7 +174,7 @@ function piirraTestikortit() {
     return `<button class="jtt-testikortti" role="tab" data-testi="${T.k}" aria-selected="${T.k === S.testi}">
       <span class="jtt-tk-nimi">${esc(T.nimi)}</span><span class="jtt-tk-ala">${esc(T.ala)}</span>
       ${viim ? `<span class="jtt-tk-arvo">${fm(T.paa, sarja.at(-1))}<small>${M[T.paa].yks}</small></span>
-        <span class="jtt-tk-ala">mediaani · kausi ${viim} · ${n} pelaajaa${T.kengat && tark ? " · piikit" : ""}</span>${kipina(sarja, M[T.paa].pp)}`
+        <span class="jtt-tk-ala">mediaani · kausi ${viim} · ${n} pelaajaa</span>${kipina(sarja, M[T.paa].pp)}`
         : `<span class="jtt-tk-tyhja">Ei vielä tuloksia${ryhma === "superpesis" ? " Superpesis-ryhmältä" : ""}</span>`}
     </button>`;
   }).join("");
@@ -191,11 +190,6 @@ function kipina(arvot, pp) {
   return `<svg class="jtt-kipina" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts.map((p) => p.join(",")).join(" ")}" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linejoin="round"/>${pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 3.5 : 2}" fill="${i === pts.length - 1 ? "var(--cyan)" : "var(--ink-3)"}"/>`).join("")}</svg>`;
 }
 
-function oletusKenka(fam) {
-  if (S.kengat[fam] != null) return S.kengat[fam];
-  const rr = D[fam].filter((s) => kuuluu(s.pelaaja, S.ryhma));
-  return rr.at(-1)?.tark ?? "";
-}
 
 function vaihtoehdot(fam, tark) {
   const rr = D[fam].filter((s) => kuuluu(s.pelaaja, S.ryhma) && s.tark === tark && s[TESTI[fam].paa] != null);
@@ -207,9 +201,7 @@ function vaihtoehdot(fam, tark) {
 function piirraOhjaimet() {
   osoite();
   const T = TESTI[S.testi], fam = T.k;
-  const kengat = T.kengat ? [...new Set(D[fam].filter((s) => kuuluu(s.pelaaja, S.ryhma)).map((s) => s.tark))].sort() : [];
-  let tark = T.kengat ? oletusKenka(fam) : "";
-  if (T.kengat && kengat.length && !kengat.includes(tark)) tark = kengat.at(-1);
+  const tark = "";
   const { kerrat, kaudet } = vaihtoehdot(fam, tark);
   let val = S.valinta[fam + S.ryhma + tark];
   const ok = (v) => v && ((v.startsWith("k:") && kerrat.some((k) => "k:" + k.id === v)) || (v.startsWith("s:") && kaudet.includes(v.slice(2))));
@@ -224,12 +216,10 @@ function piirraOhjaimet() {
       ${kerrat.length ? `<optgroup label="Testikerta">${kerrat.map((k) => `<option value="k:${k.id}"${"k:" + k.id === val ? " selected" : ""}>${pvm(k.pvm)} · ${esc(k.nimi || "")}</option>`).join("")}</optgroup>` : ""}
       <optgroup label="Kauden paras">${kaudet.map((ka) => `<option value="s:${ka}"${"s:" + ka === val ? " selected" : ""}>Kausi ${ka}, paras tulos</option>`).join("")}</optgroup>
     </select></label>` : ""}
-    ${kengat.length > 1 ? `<div class="jtt-chipit" role="radiogroup" aria-label="Kengät">${kengat.map((k) => `<button class="chip" role="radio" data-kenka="${k}" aria-checked="${k === tark}" aria-pressed="${k === tark}">${KENKA[k] ?? k}</button>`).join("")}</div>` : kengat.length === 1 && T.kengat ? `<span class="merkki harmaa">${KENKA[kengat[0]] ?? kengat[0]}</span>` : ""}
     ${ikaluokat.length > 1 ? `<div class="jtt-chipit" role="radiogroup" aria-label="Ikäluokka"><button class="chip" data-ika="" aria-pressed="${!S.ikaluokka}">Kaikki</button>${ikaluokat.map((v) => `<button class="chip" data-ika="${v}" aria-pressed="${v === S.ikaluokka}">${v === "Muut" ? "Muut" : v}</button>`).join("")}</div>` : ""}`;
 
   $$("[data-ryhma]").forEach((b) => (b.onclick = () => { S.ryhma = b.dataset.ryhma; S.korostus.clear(); piirraTestikortit(); piirraOhjaimet(); }));
   $("#jtt-val") && ($("#jtt-val").onchange = (e) => { S.valinta[fam + S.ryhma + tark] = e.target.value; piirraOhjaimet(); });
-  $$("[data-kenka]").forEach((b) => (b.onclick = () => { S.kengat[fam] = b.dataset.kenka; piirraTestikortit(); piirraOhjaimet(); }));
   $$("[data-ika]").forEach((b) => (b.onclick = () => { S.ikaluokka = b.dataset.ika; piirraOhjaimet(); }));
   piirraRunko(fam, tark, val, nykyKausi);
 }
@@ -280,7 +270,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
   el.innerHTML = `
     <p class="jtt-kuvaus">${esc(T.kuvaus)}</p>
     <div class="jtt-kpit">
-      <div class="jtt-kpi"><span class="jtt-kpi-ots">Mediaani · ${esc(M[m].pitka)}</span><span class="jtt-kpi-arvo">${fm(m, md)}<small>${M[m].yks}</small></span><span class="jtt-kpi-ala">${rivit.length} pelaajaa${tark ? " · piikit" : ""}</span></div>
+      <div class="jtt-kpi"><span class="jtt-kpi-ots">Mediaani · ${esc(M[m].pitka)}</span><span class="jtt-kpi-arvo">${fm(m, md)}<small>${M[m].yks}</small></span><span class="jtt-kpi-ala">${rivit.length} pelaajaa</span></div>
       <div class="jtt-kpi"><span class="jtt-kpi-ots">Paras</span><span class="jtt-kpi-arvo">${fm(m, paras.v)}<small>${M[m].yks}</small></span><span class="jtt-kpi-ala">${esc(nimi(tila.pelaaja[paras.s.pelaaja]))}</span></div>
       ${fam === "30m" ? `<div class="jtt-kpi"><span class="jtt-kpi-ots">Kovin huippunopeus</span><span class="jtt-kpi-arvo">${f(Math.max(0, ...rivit.map((r) => huippu(r.s.l20) || 0)), 1)}<small>km/h</small></span><span class="jtt-kpi-ala">lentävästä 20 metristä</span></div>` : ""}
       ${fam === "nok" ? `<div class="jtt-kpi"><span class="jtt-kpi-ots">Pudotuksen mediaani</span><span class="jtt-kpi-arvo">${f(mediaani(rivit.map((r) => r.s.sdec).filter((x) => x != null)), 1)}<small>%</small></span><span class="jtt-kpi-ala">keskiarvo vs. paras juoksu</span></div>` : ""}
@@ -292,7 +282,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
       <div class="jtt-selite"><span><i class="jtt-pallo"></i>tulos</span><span><i class="jtt-pallo haamu"></i>edellinen tulos</span><span><i class="jtt-mdviiva"></i>mediaani</span><span>oikealla = parempi</span>${fam === "nok" ? `<span><i class="jtt-lampo-selite"></i>juoksut 1–9: väri kertoo hidastumisen omasta parhaasta</span>` : ""}</div>
       <div class="jtt-taulu jtt-taulu-${fam}" id="jtt-taulu" role="table" aria-label="Tulostaulu"></div></section>
 
-    <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kaikki samalla janalla</h2><span class="pieni">Kausi ${nykyKausi} · jokaisen pelaajan kauden paras${tark ? " (piikit)" : ""}</span></div>
+    <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kaikki samalla janalla</h2><span class="pieni">Kausi ${nykyKausi} · jokaisen pelaajan kauden paras</span></div>
       <p class="pieni">Ikäluokat ja Superpesis-pelaajat rinnakkain. Pystyviiva on kaistan mediaani, katkoviiva kaikkien mediaani. Korostetut pelaajat näkyvät nimellä.</p>
       <div class="paneeli jtt-svg" id="jtt-jana"></div></section>
 
@@ -303,7 +293,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
       <p class="pieni">Mediaani ja keskimmäinen puolikas juoksuittain. Korosta pelaajia tulostaulusta nähdäksesi heidän käyränsä.</p>
       <div class="paneeli"><div class="kaavio"><canvas id="jtt-profiili"></canvas></div></div></section>` : ""}
 
-    <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kehitys kausittain</h2><span class="pieni">${esc(M[m].pitka)} · mediaani kauden parhaista<span id="jtt-kehitys-kengat"></span></span></div>
+    <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kehitys kausittain</h2><span class="pieni">${esc(M[m].pitka)} · mediaani kauden parhaista</span></div>
       <p class="pieni">Juniorien ikäluokat ja Superpesis-ryhmä. ${M[m].pp ? "Ylempänä on parempi." : ""} Mukana kaudet, joilla ryhmässä vähintään kolme pelaajaa.</p>
       <div class="paneeli"><div class="kaavio"><canvas id="jtt-kehitys"></canvas></div></div></section>`;
 
@@ -347,7 +337,7 @@ function piirraTaulu(fam, m, rivit, md) {
           ${r.ed && r.v != null ? `<i class="jtt-yhd ${plus ? "plus" : miinus ? "miinus" : ""}" style="left:${Math.min(pos(r.ed[m]), pos(r.v))}%;width:${Math.abs(pos(r.v) - pos(r.ed[m]))}%"></i><i class="jtt-pallo haamu" style="left:${pos(r.ed[m])}%" title="Edellinen ${fm(m, r.ed[m])} (${pvmLyhyt(r.ed.pvm)})"></i>` : ""}
           ${r.v != null ? `<i class="jtt-pallo${r.uusiPb ? " pb" : ""}" style="left:${pos(r.v)}%"></i>` : ""}</span>
         <span role="cell" class="n jtt-tulos">${fam === "30m" && r.s.nok30 ? `<em class="jtt-nokm" title="Paras 30 m tuli nopeuskestävyystestin juoksusta">NOK</em>` : ""}${fm(m, r.v)}${r.uusiPb ? `<em class="jtt-pb" title="Uusi ennätys">PB</em>` : ""}</span>
-        <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : (TESTI[fam].kengat ? `Ei aiempaa tulosta ${r.s.tark === "piikit" ? "piikeillä" : "tossuilla"}` : "Ensimmäinen testi")}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : `<span class='pieni'>${TESTI[fam].kengat ? "ei aiempaa" : "1. testi"}</span>`}</span>
+        <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : "Ensimmäinen testi"}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : `<span class='pieni'>1. testi</span>`}</span>
         ${lisat.map((x) => `<span role="cell" class="n jtt-lisa">${x}</span>`).join("")}
         <span role="cell" class="n jtt-lisa2">${r.ikaS ? `<span class="jtt-ikas ${pctLuokka(r.ikaS.pct)}" title="Kauden parhaiden perusteella ikäluokassa ${sy}">${r.ikaS.sija}./${r.ikaS.n}</span>` : "<span class='pieni'>–</span>"}</span>
       </div>`; }).join("")}`;
@@ -470,12 +460,9 @@ function piirraProfiili(rivit) {
 // ---------- kehitys kausittain: ikäluokat + Superpesis
 function piirraKehitys(fam, m, tark) {
   const c = $("#jtt-kehitys"); if (!c) return;
-  if (TESTI[fam].kengat) { const kk = (t) => new Set(D[fam].filter((s) => s.tark === t && s[m] != null).map((s) => s.kausi)).size;
-    const paras = [...new Set(D[fam].map((s) => s.tark))].sort((a, b) => kk(b) - kk(a))[0];
-    if (paras != null && kk(paras) > kk(tark)) tark = paras;
-    const el = $("#jtt-kehitys-kengat"); if (el) el.textContent = TESTI[fam].kengat ? ` · ${KENKA[tark] ?? tark}` : ""; }
+
   const kaudet = [...new Set(D[fam].filter((s) => s.tark === tark && s[m] != null).map((s) => s.kausi))].sort();
-  if (kaudet.length < 2) { c.closest(".paneeli").innerHTML = `<p class="pieni" style="margin:0">Kehityskäyrä piirtyy, kun tuloksia on vähintään kahdelta kaudelta${TESTI[fam].kengat ? " samoilla kengillä" : ""}. Nyt kausi ${kaudet[0] || "–"}.</p>`; return; }
+  if (kaudet.length < 2) { c.closest(".paneeli").innerHTML = `<p class="pieni" style="margin:0">Kehityskäyrä piirtyy, kun tuloksia on vähintään kahdelta kaudelta. Nyt kausi ${kaudet[0] || "–"}.</p>`; return; }
   const ryhmat = new Map();
   for (const ka of kaudet) for (const s of kausiParhaat(fam, m, ka, tark, "kaikki").values()) {
     const g = ryhmaOf(s.pelaaja) === "superpesis" ? "Superpesis" : synt(s.pelaaja) && synt(s.pelaaja) >= 2007 ? `${synt(s.pelaaja)} syntyneet` : null;
@@ -558,7 +545,7 @@ function pelaajaOsio(T, ss, pid) {
   const samat = ss.filter((s) => s.tark === tark);
   const h = historia(T.k, viim, m);
   const ero = h.ed ? viim[m] - h.ed[m] : null, plus = parannus(m, viim[m], h.ed?.[m]) > 0, miinus = parannus(m, viim[m], h.ed?.[m]) < 0;
-  const pb = parasArvo(m, ss.map((s) => s[m])); // ennätys kengistä riippumatta
+  const pb = parasArvo(m, ss.map((s) => s[m]));
   const omaKp = kausiParhaat(T.k, m, ka, tark, "kaikki").get(pid)?.[m];
   const kpJun = [...kausiParhaat(T.k, m, ka, tark, "juniorit").values()];
   const ryhmaArvot = [...kausiParhaat(T.k, m, ka, tark, ryhmaOf(pid)).values()].map((s) => s[m]);
@@ -574,7 +561,7 @@ function pelaajaOsio(T, ss, pid) {
     : `<div class="jtt-mini"><span>Kierrokset</span><b class="num">${Math.floor(viim.m / KIERROS)}<small> + ${Math.round(viim.m % KIERROS)} m</small></b><em></em></div>
       <div class="jtt-mini"><span>Hapenotto, arvio</span><b class="num">${f(vo2(viim.m), 1)}<small> ml/kg/min</small></b><em></em></div>`;
   return `<section class="jtt-osio paneeli jtt-posio">
-    <div class="jtt-osio-paa"><h2>${esc(T.nimi)}</h2><span class="pieni">viimeisin ${pvm(viim.pvm)}${T.kengat ? ` · ${KENKA[tark] ?? tark}` : ""} · ${ss.length} ${ss.length === 1 ? "testi" : "testiä"}</span></div>
+    <div class="jtt-osio-paa"><h2>${esc(T.nimi)}</h2><span class="pieni">viimeisin ${pvm(viim.pvm)} · ${ss.length} ${ss.length === 1 ? "testi" : "testiä"}</span></div>
     <div class="jtt-pgrid">
       <div class="jtt-isot">
         <span class="jtt-kpi-ots">${esc(M[m].pitka)}</span>
@@ -601,13 +588,13 @@ function piirraPelaajaKaavio(T, ss, pid) {
   const pvmt = [...new Set(kerrat.map((s) => s.pvm))];
   const ikaMd = (ka) => { const a = [...kausiParhaat(T.k, m, ka, tark, "juniorit").values()].filter((s) => synt(s.pelaaja) === sy).map((s) => s[m]); return a.length >= 3 ? mediaani(a) : null; };
   const ryhmaMd = (ka) => { const a = [...kausiParhaat(T.k, m, ka, tark, ryhmaOf(pid)).values()].map((s) => s[m]); return a.length >= 3 ? mediaani(a) : null; };
-  const kengat = [...new Set(ss.map((s) => s.tark))];
-  const ds = kengat.map((k) => { const oma = k === tark, col = oma ? "#F5A800" : "#C98A00";
-    return { label: T.kengat && kengat.length > 1 ? `${nimi(tila.pelaaja[pid])} · ${KENKA[k] ?? k}` : nimi(tila.pelaaja[pid]), data: pvmt.map((d) => parasArvo(m, ss.filter((s) => s.pvm === d && s.tark === k).map((s) => s[m]))),
+  const sarjat = [...new Set(ss.map((s) => s.tark))];
+  const ds = sarjat.map((k) => { const oma = k === tark, col = oma ? "#F5A800" : "#C98A00";
+    return { label: nimi(tila.pelaaja[pid]), data: pvmt.map((d) => parasArvo(m, ss.filter((s) => s.pvm === d && s.tark === k).map((s) => s[m]))),
       borderColor: col, backgroundColor: col, borderWidth: oma ? 3 : 2, borderDash: oma ? undefined : [4, 3], pointRadius: oma ? 5 : 3, spanGaps: true, tension: 0.2 }; });
   const kaudet = pvmt.map((d) => kausi(d));
   const vl = (d, i) => (ss.some((s) => s.pvm === d && s.tark === tark) ? i : null);
-  if (jun && sy) ds.push({ label: `Ikäluokan ${sy} mediaani${kengat.length > 1 ? ` (${(KENKA[tark] ?? tark).toLowerCase()})` : ""}`, data: pvmt.map((d, i) => (vl(d, i) != null ? ikaMd(kaudet[i]) : null)), borderColor: "#7DD3FC", borderDash: [6, 4], borderWidth: 2, pointRadius: 0, spanGaps: true });
+  if (jun && sy) ds.push({ label: `Ikäluokan ${sy} mediaani`, data: pvmt.map((d, i) => (vl(d, i) != null ? ikaMd(kaudet[i]) : null)), borderColor: "#7DD3FC", borderDash: [6, 4], borderWidth: 2, pointRadius: 0, spanGaps: true });
   ds.push({ label: jun ? "Juniorien mediaani" : "Ryhmän mediaani", data: pvmt.map((d, i) => (vl(d, i) != null ? ryhmaMd(kaudet[i]) : null)), borderColor: vari("--ink-3"), borderDash: [2, 3], borderWidth: 2, pointRadius: 0, spanGaps: true });
   piirra(c, { type: "line", data: { labels: pvmt.map(pvmLyhyt), datasets: ds },
     options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },

@@ -145,8 +145,8 @@ function paivitaRivi(pid) {
   if (v.paras) {
     const t = v.paras;
     const tanaan = paras(t, omat.filter((r) => r.testi === t).map((r) => r.arvo));
-    // 30 m ennätys kaikista täysistä 30 m juoksuista (tossut, piikit, NOK-juoksut), 10 m kengistä riippumatta (20.10.2026)
-    const sama = (r) => (t === "30m" ? r.testi === "30m" || r.testi === "nok_30m" : t === "10m" ? r.testi === "10m" : r.testi === t && r.tarkenne === tarkenne(t));
+    // Ennätys: piikkiajat (kärkiajat) ovat samoja tuloksia kuin muutkin; 30 m:ssä mukana myös NOK-juoksut (20.10.2026)
+    const sama = (r) => (t === "30m" ? r.testi === "30m" || r.testi === "nok_30m" : NOPEUS.has(t) ? r.testi === t : r.testi === t && r.tarkenne === tarkenne(t));
     const pb = paras(t, historia.filter((r) => r.pelaaja_id === pid && sama(r)).map((r) => r.arvo));
     const uusiPb = tanaan != null && (pb == null || parannus(t, tanaan, pb) > 0);
     tr.querySelector("[data-paras]").innerHTML = tanaan == null ? "" : `<span class="${uusiPb && pb != null ? "pb" : ""}">${muotoile(tanaan, t)}</span>`;

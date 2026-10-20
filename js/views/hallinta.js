@@ -38,7 +38,7 @@ export async function nayta(main) {
       <button class="btn ensisij">Lisää pelaaja</button></form>
 
     <h2>Testikerrat</h2>
-    <div class="taulu-wrap"><table><thead><tr><th>Päivä</th><th>Nimi</th><th>Piikit</th></tr></thead>
+    <div class="taulu-wrap"><table><thead><tr><th>Päivä</th><th>Nimi</th><th>Piikkiajat</th></tr></thead>
       <tbody>${tila.kerrat.map((k) => `<tr data-kerta="${k.id}"><td><input type="date" data-k="pvm" value="${k.pvm}"></td><td><input type="text" data-k="nimi" value="${esc(k.nimi || "")}" style="width:320px"></td><td><input type="checkbox" data-k="piikit" ${k.piikit ? "checked" : ""}></td></tr>`).join("")}</tbody></table></div>
 
     <h2>Testit</h2>

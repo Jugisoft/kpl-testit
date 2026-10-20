@@ -34,23 +34,23 @@ export const mediaani = (a) => { if (!a.length) return null; const s = [...a].so
 export const keskiarvo = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
 export const hajonta = (a) => { if (a.length < 2) return null; const k = keskiarvo(a); return Math.sqrt(a.reduce((s, x) => s + (x - k) ** 2, 0) / (a.length - 1)); };
 
-// Juoksut yhteen (20.10.2026, Jugi): 30 m ennätykseen lasketaan kaikki täydet 30 m juoksut –
-// tossut, piikit ja nopeuskestävyyden (9×30 m) yksittäiset juoksut. 10 m ja lentävä 20 m
-// kengistä riippumatta. NOK-juoksut eivät muodosta lentävää 20 m (ei 10 m väliaikaa).
+// Juoksut yhteen (20.10.2026, Jugi): tarkenne "piikit" = piikkiaika eli yksittäinen kärkiaika
+// (EI kengät – kaikki testit juostaan piikkareilla). Piikkiajat ovat tavallisia 30 m / 10 m tuloksia.
+// 30 m ennätykseen lasketaan lisäksi nopeuskestävyyden (9×30 m) yksittäiset juoksut.
+// NOK-juoksut eivät muodosta lentävää 20 m (ei 10 m väliaikaa).
 export function juoksutYhteen(rivit) {
   const out = [];
   for (const r of rivit) {
-    if (r.testi === "10m" || r.testi === "30m") out.push(r.tarkenne ? { ...r, tarkenne: "", kengat: r.tarkenne } : r);
+    if (r.testi === "10m" || r.testi === "30m") out.push(r.tarkenne ? { ...r, tarkenne: "", piikkiaika: true } : r);
     else {
-      // NOK on aina samoilla kengillä per kerta; tarkenne pois, jotta se näkyy pelaajakortilla (20.10.2026)
-      out.push(r.testi === "nok_30m" && r.tarkenne ? { ...r, tarkenne: "", kengat: r.tarkenne } : r);
-      if (r.testi === "nok_30m") out.push({ ...r, testi: "30m", yritys: 100 + r.yritys, tarkenne: "", kengat: r.tarkenne, nok: true });
+      out.push(r.testi === "nok_30m" && r.tarkenne ? { ...r, tarkenne: "" } : r);
+      if (r.testi === "nok_30m") out.push({ ...r, testi: "30m", yritys: 100 + r.yritys, tarkenne: "", nok: true });
     }
   }
   return out;
 }
 
-// Parhaat tulokset: avain kerta|pelaaja|testi -> arvo. Vain hyväksytyt ja ilman tarkennetta (piikit erikseen).
+// Parhaat tulokset: avain kerta|pelaaja|testi -> arvo. Vain hyväksytyt, annetulla tarkenteella (oletus tyhjä; juoksuille käytä juoksutYhteen).
 export function parhaatTulokset(rivit, { tarkenne = "" } = {}) {
   const ryhmat = new Map();
   const lent = new Map();

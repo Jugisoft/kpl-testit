@@ -7,8 +7,9 @@ let valittu = null;
 export async function nayta(main, id) {
   const k = tila.kerta[id];
   if (!k) throw new Error("Testikertaa ei löytynyt.");
-  const kaikki = await lataaTulokset(true);
-  const tark = k.piikit ? "piikit" : "";
+  // "piikit" = piikkiaika (kärkiaika), vertaillaan samoina tuloksina kuin muut juoksut (20.10.2026)
+  const kaikki = (await lataaTulokset(true)).map((r) => (r.tarkenne === "piikit" ? { ...r, tarkenne: "" } : r));
+  const tark = "";
   const p1 = parhaatTulokset(kaikki), p2 = tark ? parhaatTulokset(kaikki, { tarkenne: tark }) : [];
   const parhaat = [...p1, ...p2.map((x) => ({ ...x, piikit: true }))];
   const tama = parhaat.filter((x) => x.kerta === id);

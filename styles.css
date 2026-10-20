@@ -1632,6 +1632,10 @@ a.jtt-yla:hover { text-decoration: underline; }
 .paneeli.jtt-tyhja .btn { font-style: normal; }
 /* html { zoom: 1.12 } isoilla näytöillä saa Chart.js:n mittaamaan kankaan 12 % liian leveäksi → kumotaan zoom kaavioiden ympäriltä */
 @media (min-width: 1500px) {
-  .jtt-osio .kaavio, .jtt-pkaavio .kaavio { zoom: calc(1 / 1.12); height: 336px; }
+  .kaavio { zoom: calc(1 / 1.12); height: 336px; }
+  .kaavio.matala { height: 246px; }
   .jtt-pkaavio .kaavio.matala { height: 280px; }
 }
+/* Chart.js-säiliö joustorivissä ei saa kasvaa sisältönsä mukana (tutkakaavio leveni loputtomiin) */
+.rivi > .paneeli, .rivi > .taulu-wrap { min-width: 0; }
+.kaavio { min-width: 0; overflow: hidden; }

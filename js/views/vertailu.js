@@ -106,11 +106,26 @@ function hero(kaikki) {
   const ala = (p) => `${esc(ryhmaNimi(p))}${p.syntymavuosi ? ` · s. ${p.syntymavuosi}` : ""}`;
   $("#vt-hero").innerHTML = `
     <div class="vt-p a">${kuva(A, true)}<b>${esc(nimi(A))}</b><small>${ala(A)}</small><a class="pieni" href="#/pelaaja/${A.id}">pelaajakortti</a></div>
-    <div class="vt-keski"><small>Testit, parempi tulos</small><span class="vt-iso"><i class="a">${va}</i>–<i class="b">${vb}</i></span><small>${mol.length} yhteistä testiä${mol.length - va - vb ? ` · ${mol.length - va - vb} tasan` : ""}</small></div>
+    <div class="vt-keski"><small>Testit, parempi tulos</small><span class="vt-iso"><i class="a">${va}</i>–<i class="b">${vb}</i></span><small>${mol.length} yhteistä testiä${mol.length - va - vb ? ` · ${mol.length - va - vb} tasan` : ""}</small><div class="vt-hero-jako" id="vt-hero-jako"></div></div>
     <div class="vt-p b">${kuva(B, true)}<b>${esc(nimi(B))}</b><small>${ala(B)}</small><a class="pieni" href="#/pelaaja/${B.id}">pelaajakortti</a></div>`;
+  JAKO.testit = { va, vb, n: mol.length };
+  paivitaHeroJako();
 }
 
 // kaksipuolinen vertailurivi YDINin tapaan: palkit = prosenttipiste kaikista testatuista (testit) tai suhde (tilastot)
+// prosenttijakauma: osuus vertailuista (tasapeli puoliksi kummallekin)
+function jakauma(va, vb, n, otsikko) {
+  if (!n) return "";
+  const pa = Math.round((100 * (va + (n - va - vb) / 2)) / n), pb = 100 - pa;
+  return `<div class="vt-jako" title="${esc(otsikko)}: ${va} – ${vb}${n - va - vb ? `, ${n - va - vb} tasan` : ""} (${n} vertailua)">
+    <span class="a num">${pa} %</span><span class="vt-jako-pk"><i class="a" style="width:${pa}%"></i><i class="b" style="width:${pb}%"></i></span><span class="b num">${pb} %</span>
+    <small>${esc(otsikko)} · ${va}–${vb}${n - va - vb ? ` · ${n - va - vb} tasan` : ""}</small></div>`;
+}
+const JAKO = { testit: null, peli: null };
+function paivitaHeroJako() {
+  const el = $("#vt-hero-jako"); if (!el) return;
+  el.innerHTML = [["Testit", JAKO.testit], ["Kenttä", JAKO.peli]].filter(([, j]) => j && j.n).map(([n, j]) => jakauma(j.va, j.vb, j.n, n)).join("");
+}
 function rivi(lab, a, b, { fa = String, sa = "", sb = "", pa = null, pb = null, voittaja = 0 } = {}) {
   const wa = voittaja > 0, wb = voittaja < 0;
   return `<div class="vt-r"><span class="v a${wa ? " voitto" : ""}">${fa(a)}${sa ? `<small>${sa}</small>` : ""}</span>
@@ -127,7 +142,7 @@ function testit(kaikki) {
   $("#vt-tselite").textContent = S.tapa === "kausi"
     ? "Pelaajan paras tulos uusimmalta kaudelta, jolla testi on tehty (kausi pienellä). Palkki = monenko prosentin testatuista pelaaja ohittaa."
     : "Pelaajan kaikkien aikojen paras tulos (kausi pienellä). Palkki = monenko prosentin testatuista pelaaja ohittaa.";
-  $("#vt-testit").innerHTML = ryhmat.map(([n, ts]) => `<h3 class="vt-luokka">${esc(n)}</h3>` + ts.map((t) => {
+  $("#vt-testit").innerHTML = (JAKO.testit?.n ? jakauma(JAKO.testit.va, JAKO.testit.vb, JAKO.testit.n, "Testit, parempi tulos") : "") + ryhmat.map(([n, ts]) => `<h3 class="vt-luokka">${esc(n)}</h3>` + ts.map((t) => {
     const a = arvoTesti(kaikki, S.a, t), b = arvoTesti(kaikki, S.b, t);
     const d = a && b ? parannus(t, a.v, b.v) : 0;
     return rivi(`${tNimi(t)} · ${tila.testi[t].yksikko}`, a?.v, b?.v, { fa: (v) => fmt(t, v), sa: a?.k || "", sb: b?.k || "",
@@ -144,6 +159,7 @@ function peli() {
   const ra = omat(A), rb = omat(B);
   const kaudet = [...new Set([...ra, ...rb].map((r) => r.kausi))].sort((x, y) => y - x);
   if (!kaudet.length) {
+    JAKO.peli = null; paivitaHeroJako();
     $("#vt-ptsel").textContent = "";
     $("#vt-peli").innerHTML = `<p class="pieni">Kummallakaan pelaajalla ei ole pelitilastoja (pesistulokset.fi-tunniste puuttuu tai ei otteluita).</p>`;
     return;
@@ -164,7 +180,10 @@ function peli() {
   const pct = (p, k, n, min = 10) => (p && p[n] >= min ? (100 * p[k]) / p[n] : null);
   const vert = (va, vb, dir = 1) => (va == null || vb == null ? 0 : dir * (va - vb) > 0 ? 1 : dir * (va - vb) < 0 ? -1 : 0);
   const suhde = (va, vb) => { const m = Math.max(Math.abs(va || 0), Math.abs(vb || 0), 1e-9); return [va == null ? null : (100 * Math.abs(va)) / m, vb == null ? null : (100 * Math.abs(vb)) / m]; };
-  const r = (lab, va, vb, fa, opt = {}) => { const [pa, pb] = opt.sata ? [va, vb] : suhde(va, vb); return rivi(lab, va, vb, { fa, pa, pb, voittaja: opt.dir === 0 ? 0 : vert(va, vb, opt.dir ?? 1), sa: opt.sa || "", sb: opt.sb || "" }); };
+  const voitot = { va: 0, vb: 0, n: 0 };
+  const r = (lab, va, vb, fa, opt = {}) => { const [pa, pb] = opt.sata ? [va, vb] : suhde(va, vb), w = opt.dir === 0 ? 0 : vert(va, vb, opt.dir ?? 1);
+    if (opt.dir !== 0 && va != null && vb != null) { voitot.n++; if (w > 0) voitot.va++; else if (w < 0) voitot.vb++; }
+    return rivi(lab, va, vb, { fa, pa, pb, voittaja: w, sa: opt.sa || "", sb: opt.sb || "" }); };
   const pr = (lab, k, n) => r(lab, pct(a, k, n), pct(b, k, n), (v) => (v == null ? "–" : fi(v) + " %"), { sata: true, sa: a ? `${a[k] ?? 0}/${a[n] ?? 0}` : "", sb: b ? `${b[k] ?? 0}/${b[n] ?? 0}` : "" });
   const puuttuu = [[A, a], [B, b]].filter(([, d]) => !d).map(([p]) => esc(nimi(p)));
   // urataulukko: kaikki kaudet rinnakkain (kaikki sarjat)
@@ -173,7 +192,7 @@ function peli() {
       <td>${z ? z.O : "–"}</td><td class="${ya != null && yb != null && yb / Math.max(1, z.O) > ya / Math.max(1, x.O) ? "cb" : ""}">${z ? `${yb} <small>${fi(yb / Math.max(1, z.O), 2)}</small>` : "–"}</td><td class="${kla != null && klb != null && klb > kla ? "cb" : ""}">${klb != null ? fi(klb) : "–"}</td></tr>`; }).join("");
   $("#vt-peli").innerHTML = (puuttuu.length ? `<p class="pieni">${puuttuu.join(" ja ")}: ei otteluita ${PS.sarja ? `sarjassa ${esc(PS.sarja)} ` : ""}kaudella ${PS.kausi}.</p>` : "")
     + (!PS.sarja && (da || db) ? `<p class="pieni vt-sarjat"><span class="a">${sarjaLista(da) || "–"}</span><span class="b">${sarjaLista(db) || "–"}</span></p>` : "")
-    + [
+    + "%%JAKO%%" + [
     r("Ottelut", a?.O, b?.O, (v) => v ?? "–", { dir: 0 }),
     r("YHT", y(a), y(b), (v) => v ?? "–"),
     r("YHT / ottelu", a?.O ? y(a) / a.O : null, b?.O ? y(b) / b.O : null, (v) => fi(v, 2)),
@@ -188,6 +207,8 @@ function peli() {
   ].join("") + rooliOsio(A, a, B, b)
     + `<h3 class="vt-luokka">Ura kausittain</h3><div class="taulu-wrap vt-ura"><table><thead><tr><th class="l">Kausi</th><th>O</th><th><span class="vt-piste a"></span>YHT <small>/ott.</small></th><th>KL%</th><th>O</th><th><span class="vt-piste b"></span>YHT <small>/ott.</small></th><th>KL%</th></tr></thead><tbody>${ura}</tbody></table></div>`
     + `<p class="vihje">Lähde pesistulokset.fi, kaikki viralliset sarjat (junioreilla useita sarjoja samalla kaudella; valitse sarja ylhäältä). KL% = kärkilyöntien onnistumis-%, tilanne = kärkietenijän lähtöpesä (0 = lyöjä itse kentälle). Prosentit vähintään 10 yrityksestä. Urataulukon riviä klikkaamalla vaihtuu tarkasteltava kausi.</p>`;
+  $("#vt-peli").innerHTML = $("#vt-peli").innerHTML.replace("%%JAKO%%", jakauma(voitot.va, voitot.vb, voitot.n, `Pelitilastot, vahvempi ${PS.kausi}${PS.sarja ? " · " + PS.sarja : ""}`));
+  JAKO.peli = voitot; paivitaHeroJako();
   $$("[data-ura]").forEach((tr) => (tr.onclick = () => { PS.kausi = +tr.dataset.ura; peli(); }));
 }
 
@@ -214,13 +235,22 @@ function kehitys(kaikki) {
 // ---------- Rooli kentällä: missä tilanteissa pelaaja lyö kärkilyönnit ja tuoko vai lyökö juoksut
 const TILANTEET = [["KLY0", "0", "kentälle pääsy"], ["KLY1", "1", "1-tilanne"], ["KLY2", "2", "2-tilanne"], ["KLY3", "3", "takatilanne"]];
 const TVARIT = ["#94A3B8", "#7DD3FC", "#F5A800", "#2EE59D"];
+// Roolit kärkilyöntien tilannejakauman mukaan (Jugi 20.10.2026): pääosin 0-tilanne = kärkietenijä,
+// 1-tilanne = 1-tilanteen vaihtaja, 2-tilanne = 2-tilanteen vaihtaja, takatilanne = kotiuttaja
+// (jos muita tilanteita on paljon, vaihtaja / kotiuttaja). Mikään ei erotu = monipuolinen.
 function rooli(d) {
   if (!d || !d.KLY || d.KLY < 20) return { nimi: "Liian vähän yrityksiä", syy: "alle 20 kärkilyöntiyritystä" };
-  const o0 = d.KLY0 / d.KLY, o23 = ((d.KLY2 || 0) + (d.KLY3 || 0)) / d.KLY, L = d.L || 0, T = d.T || 0;
-  if (o0 >= 0.45 && T >= L) return { nimi: "Etenijä", syy: `${Math.round(o0 * 100)} % kärkilyönneistä kotipesältä, tuodut ${T} ≥ lyödyt ${L}` };
-  if (o23 >= 0.5 && L > T) return { nimi: "Kotiuttaja", syy: `${Math.round(o23 * 100)} % kärkilyönneistä 2- ja takatilanteissa, lyödyt ${L} > tuodut ${T}` };
-  if ((d.KLY1 || 0) / d.KLY >= 0.4) return { nimi: "Vaihtaja (1-tilanne)", syy: `${Math.round(((d.KLY1 || 0) / d.KLY) * 100)} % kärkilyönneistä 1-tilanteessa` };
-  return { nimi: "Monipuolinen", syy: `kärkilyönnit jakautuvat tilanteisiin, lyödyt ${L} · tuodut ${T}` };
+  const o = [0, 1, 2, 3].map((n) => (d[`KLY${n}`] || 0) / d.KLY), pc = (x) => `${Math.round(x * 100)} %`;
+  const max = Math.max(...o), n = o.indexOf(max);
+  const toinen = [0, 1, 2, 3].filter((k) => k !== n).sort((a, b) => o[b] - o[a])[0];
+  const lisa = o[toinen] >= 0.2 ? `, toiseksi eniten ${["0-tilanne", "1-tilanne", "2-tilanne", "takatilanne"][toinen]} ${pc(o[toinen])}` : "";
+  if (max < 0.35) return { nimi: "Monipuolinen", syy: `mikään tilanne ei erotu (suurin ${["0-tilanne", "1-tilanne", "2-tilanne", "takatilanne"][n]} ${pc(max)})` };
+  if (n === 0) return { nimi: "Kärkietenijä", syy: `${pc(o[0])} kärkilyönneistä 0-tilanteessa (kotipesältä kentälle)${lisa}` };
+  if (n === 1) return { nimi: "1-tilanteen vaihtaja", syy: `${pc(o[1])} kärkilyönneistä 1-tilanteessa${lisa}` };
+  if (n === 2) return { nimi: "2-tilanteen vaihtaja", syy: `${pc(o[2])} kärkilyönneistä 2-tilanteessa${lisa}` };
+  const muut12 = o[1] + o[2];
+  if (o[3] >= 0.5 && muut12 < 0.35) return { nimi: "Kotiuttaja", syy: `${pc(o[3])} kärkilyönneistä takatilanteessa${lisa}` };
+  return { nimi: "Vaihtaja / kotiuttaja", syy: `takatilanne ${pc(o[3])}, 1- ja 2-tilanne yhteensä ${pc(muut12)}` };
 }
 function rooliOsio(A, a, B, b) {
   const puoli = (p, d, cls) => {

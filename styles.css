@@ -1762,3 +1762,10 @@ a.jtt-yla:hover { text-decoration: underline; }
 .vt-ura td.ca { color: #F5A800; font-weight: 700; } .vt-ura td.cb { color: #7DD3FC; font-weight: 700; }
 .vt-ura tr[data-ura] { cursor: pointer; } .vt-ura tr.valittu td { background: rgba(245,168,0,.08); }
 .vt-piste { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; } .vt-piste.a { background: #F5A800; } .vt-piste.b { background: #7DD3FC; }
+/* Vertailun prosenttijakauma */
+.vt-jako { display: grid; grid-template-columns: 48px minmax(0,1fr) 48px; align-items: center; gap: 8px; margin: 4px 0 10px; }
+.vt-jako .a { color: #F5A800; font: 700 17px var(--num); } .vt-jako .b { color: #7DD3FC; font: 700 17px var(--num); text-align: right; }
+.vt-jako-pk { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-2); }
+.vt-jako-pk i.a { background: #F5A800; } .vt-jako-pk i.b { background: #7DD3FC; }
+.vt-jako small { grid-column: 1 / -1; text-align: center; font: 600 11px var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin-top: -4px; }
+.vt-hero-jako { width: min(320px, 70vw); margin-top: 8px; display: grid; gap: 2px; }

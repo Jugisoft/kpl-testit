@@ -50,6 +50,13 @@ export function juoksutYhteen(rivit) {
   return out;
 }
 
+// Pelaajakortin ja vertailun tulosdata: parhaat tulokset kerroittain, juoksut yhdistettynä;
+// nopeuskestävyyden (nok_30m) arvo = 9 juoksun keskiarvo (vain täydet sarjat), paras juoksu talteen.
+export function testiParhaat(rivit) {
+  return parhaatTulokset(juoksutYhteen(rivit))
+    .flatMap((x) => (x.testi !== "nok_30m" ? [x] : x.n >= 9 ? [{ ...x, arvo: Math.round(x.ka * 1000) / 1000, parasJuoksu: x.arvo }] : []));
+}
+
 // Parhaat tulokset: avain kerta|pelaaja|testi -> arvo. Vain hyväksytyt, annetulla tarkenteella (oletus tyhjä; juoksuille käytä juoksutYhteen).
 export function parhaatTulokset(rivit, { tarkenne = "" } = {}) {
   const ryhmat = new Map();

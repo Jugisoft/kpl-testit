@@ -1,7 +1,7 @@
 // Pelaajakortti: ennätykset, profiili ikätovereihin verrattuna ja kehitys testeittäin.
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { LUOKAT } from "./testit.js";
-import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
+import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, testiParhaat, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
 const PROFIILI = ["30m", "10m", "lentava20", "nok_30m", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
 let valittu = "30m";
@@ -10,8 +10,7 @@ export async function nayta(main, id) {
   const p = tila.pelaaja[id];
   if (!p) throw new Error("Pelaajaa ei löytynyt.");
   // Nopeuskestävyys: pääluku on 9 juoksun keskiarvo (vain täydet sarjat), paras juoksu talteen
-  const kaikki = parhaatTulokset(juoksutYhteen(await lataaTulokset()))
-    .flatMap((x) => (x.testi !== "nok_30m" ? [x] : x.n >= 9 ? [{ ...x, arvo: Math.round(x.ka * 1000) / 1000, parasJuoksu: x.arvo }] : []));
+  const kaikki = testiParhaat(await lataaTulokset());
   const omat = kaikki.filter((x) => x.pelaaja === id);
   const testit = [...new Set(omat.map((x) => x.testi))].sort((a, b) => tila.testi[a].jarjestys - tila.testi[b].jarjestys);
   if (!testit.includes(valittu)) valittu = testit[0];
@@ -247,6 +246,7 @@ function pelaajaValitsin(p, kaikki) {
     <label class="pk-valinta"><span class="pieni">Pelaaja</span><select id="pk-pelaaja" aria-label="Vaihda pelaajaa">${jarj.map((r) => `<optgroup label="${esc(r)}">${ryhmat.get(r).map((q) => `<option value="${q.id}"${q.id === p.id ? " selected" : ""}>${esc(nimi(q))}</option>`).join("")}</optgroup>`).join("")}</select></label>
     <a class="btn pk-nuoli" href="#/pelaaja/${seur.id}" title="Seuraava: ${esc(nimi(seur))}" aria-label="Seuraava pelaaja">›</a>
     <span class="pieni pk-sijainti">${esc(ryhmaNimi(p))} · ${i + 1} / ${oma.length}</span>
+    <a class="btn pk-vertaa" href="#/vertailu/${p.id}">Vertaa toiseen pelaajaan</a>
   </div>`;
 }
 function kytkeValitsin() {

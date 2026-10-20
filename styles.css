@@ -1694,3 +1694,59 @@ a.jtt-yla:hover { text-decoration: underline; }
 .pk-valinta select { min-width: 240px; }
 .pk-sijainti { color: var(--ink-3); margin-left: 6px; }
 @media (max-width: 640px) { .pk-valinta { flex: 1; } .pk-valinta select { min-width: 0; width: 100%; } .pk-valinta .pieni { display: none; } .pk-sijainti { flex-basis: 100%; margin: 0; } }
+/* Pelaajavertailu (20.10.2026) – YDIN 2027 vertailu.html:n mallin mukaan. A = kulta, B = sininen */
+.pk-vertaa { margin-left: auto; padding: 6px 14px; font-size: 14px; }
+.vt-paa .ingressi { margin-bottom: 14px; }
+.vt-pick { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 12px; align-items: end; margin-bottom: 14px; }
+.vt-pick label { display: flex; flex-direction: column; gap: 4px; font: 600 11px var(--text); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); min-width: 0; }
+.vt-pick select { width: 100%; font-size: 16px; font-weight: 600; padding: 9px 12px; border-width: 2px; border-radius: 10px; }
+.vt-pick .a select { border-color: #F5A800; } .vt-pick .b select { border-color: #7DD3FC; }
+.vt-vaihda { font-size: 20px; padding: 8px 14px; }
+.vt-hero { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 14px; align-items: center; text-align: center; }
+.vt-p { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.vt-p .kuva.iso { width: 84px; height: 84px; }
+.vt-p.a .kuva.iso { border: 2px solid #F5A800; box-shadow: 0 0 20px rgba(245,168,0,.35); }
+.vt-p.b .kuva.iso { border: 2px solid #7DD3FC; box-shadow: 0 0 20px rgba(125,211,252,.3); }
+.vt-p b { font: 700 28px/1 var(--num); } .vt-p.a b { color: #F5A800; } .vt-p.b b { color: #7DD3FC; }
+.vt-p small { color: var(--ink-3); }
+.vt-keski { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.vt-keski small { font: 600 11px var(--text); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.vt-iso { font: 700 52px/1 var(--num); font-variant-numeric: tabular-nums; }
+.vt-iso i { font-style: normal; } .vt-iso i.a { color: #F5A800; } .vt-iso i.b { color: #7DD3FC; }
+.vt-cols { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 16px; align-items: start; margin-top: 16px; }
+.vt-oikea { display: grid; gap: 16px; min-width: 0; }
+.vt-otsa { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.vt-otsa h2 { margin: 0; font: 700 22px var(--num); letter-spacing: .04em; text-transform: uppercase; }
+.vt-otsa .jtt-segmentti button { padding: 6px 11px; font-size: 13px; }
+.vt-luokka { margin: 14px 0 4px; font: 700 13px var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); text-align: center; }
+.vt-r { display: grid; grid-template-columns: 78px minmax(0,1fr) 78px; gap: 10px; align-items: center; padding: 4px 0; font-variant-numeric: tabular-nums; }
+.vt-r .v { font: 700 18px/1.1 var(--num); color: var(--ink-2); }
+.vt-r .v small { display: block; font: 500 11px var(--text); color: var(--ink-3); }
+.vt-r .v.b { text-align: right; }
+.vt-r .v.a.voitto { color: #F5A800; } .vt-r .v.b.voitto { color: #7DD3FC; }
+.vt-r .mid { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.vt-r .lab { font: 600 12px var(--text); letter-spacing: .04em; color: var(--ink-3); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-r .bars { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; height: 10px; }
+.vt-r .bars i { display: block; background: var(--surface-2); border-radius: 4px; position: relative; overflow: hidden; }
+.vt-r .bars i b { position: absolute; top: 0; bottom: 0; border-radius: 4px; opacity: .35; }
+.vt-r .bars i:first-child b { right: 0; background: #F5A800; }
+.vt-r .bars i:last-child b { left: 0; background: #7DD3FC; }
+.vt-r .bars i b.lead { opacity: 1; }
+@media (max-width: 1100px) { .vt-cols { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 600px) {
+  .vt-pick { grid-template-columns: minmax(0,1fr) auto; } .vt-pick .b { grid-column: 1; } .vt-vaihda { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .vt-p .kuva.iso { width: 54px; height: 54px; } .vt-p b { font-size: 19px; } .vt-iso { font-size: 36px; }
+  .vt-r { grid-template-columns: 60px minmax(0,1fr) 60px; } .vt-r .v { font-size: 16px; }
+  .pk-vertaa { margin-left: 0; }
+}
+.vt-roolit { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vt-rooli { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.2); border: 1px solid var(--line-2); min-width: 0; }
+.vt-rooli.a { border-top: 3px solid #F5A800; } .vt-rooli.b { border-top: 3px solid #7DD3FC; }
+.vt-rooli-nimi { font: 700 20px/1 var(--num); text-transform: uppercase; letter-spacing: .03em; }
+.vt-rooli.a .vt-rooli-nimi { color: #F5A800; } .vt-rooli.b .vt-rooli-nimi { color: #7DD3FC; }
+.vt-jakauma { display: flex; height: 20px; border-radius: 5px; overflow: hidden; background: var(--surface-2); }
+.vt-jakauma i { display: grid; place-items: center; font: 700 11px var(--num); font-style: normal; color: #111; }
+.vt-lt { font-size: 13px; color: var(--ink-2); } .vt-lt b { font-family: var(--num); font-size: 15px; color: var(--ink); }
+.vt-tselite { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+.vt-tselite i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+@media (max-width: 600px) { .vt-roolit { grid-template-columns: 1fr; } }

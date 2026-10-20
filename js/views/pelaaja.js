@@ -36,6 +36,7 @@ export async function nayta(main, id) {
   const pct = (x) => (x.ikatov >= 2 ? Math.round((100 * x.ohi) / x.ikatov) : null);
 
   main.innerHTML = `
+    ${pelaajaValitsin(p, kaikki)}
     <div class="kortti-paa">${kuva(p, true)}<div style="flex:1">
       <h1>${esc(nimi(p))}</h1>
       <div class="tagit">
@@ -102,6 +103,7 @@ export async function nayta(main, id) {
   if (valittu) kaavio();
 
   piirraVertailu(p, kaikki);
+  kytkeValitsin();
 
   if (profiili) piirra($("#profiili"), {
     type: "radar",
@@ -227,4 +229,27 @@ function piirraVertailu(p, kaikki) {
     ${puuttuvat.length ? `<p class="pieni pv-puuttuu">Ei vertailutuloksia ryhmältä ${esc(nimiV)}${vertailuValinta === "miehet" ? " (miehet eivät ole tehneet näitä testejä)" : ""}: ${puuttuvat.map((r) => esc(testinNimi(r.t))).join(", ")}.</p>` : ""}
     <p class="vihje">Pallo = sija vertailuryhmässä (pelaaja mukaan lukien), vihreä kärjessä, punainen hännillä. Pystyviiva = ryhmän puoliväli. "vs. md" = ero ryhmän mediaaniin: + = parempi kuin ryhmän mediaani (juoksuissa nopeampi). Luokan prosentti = luokan testien keskimääräinen "parempi kuin %". "Edellisestä" = viimeisin tulos verrattuna edelliseen testikertaan (▲ vihreä = parani). Kausi on pelaajan viimeisin kausi, jolla testi on tehty; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen.</p>`;
   $$("[data-pv]", el).forEach((b) => (b.onclick = () => { vertailuValinta = b.dataset.pv; piirraVertailu(p, kaikki); }));
+}
+
+// ---------- Pelaajan vaihto (20.10.2026): valikko ryhmittäin + ‹ › selaa saman ryhmän pelaajia
+const ryhmaNimi = (q) => (onSp(q.id) ? "Superpesis" : q.syntymavuosi && q.syntymavuosi >= 2007 ? `Juniorit ${q.syntymavuosi}` : "Muut");
+function pelaajaValitsin(p, kaikki) {
+  const testatut = new Set(kaikki.map((x) => x.pelaaja));
+  const lista = tila.pelaajat.filter((q) => testatut.has(q.id) && (q.aktiivinen || q.id === p.id));
+  const ryhmat = new Map();
+  lista.forEach((q) => { const r = ryhmaNimi(q); (ryhmat.get(r) || ryhmat.set(r, []).get(r)).push(q); });
+  const jarj = [...ryhmat.keys()].sort((a, b) => (a === "Superpesis" ? -1 : b === "Superpesis" ? 1 : a === "Muut" ? 1 : b === "Muut" ? -1 : a.localeCompare(b)));
+  jarj.forEach((r) => ryhmat.get(r).sort((a, b) => nimi(a).localeCompare(nimi(b), "fi")));
+  const oma = ryhmat.get(ryhmaNimi(p)) || [p], i = oma.findIndex((q) => q.id === p.id);
+  const ed = oma[(i - 1 + oma.length) % oma.length], seur = oma[(i + 1) % oma.length];
+  return `<div class="pk-valitsin">
+    <a class="btn pk-nuoli" href="#/pelaaja/${ed.id}" title="Edellinen: ${esc(nimi(ed))}" aria-label="Edellinen pelaaja">‹</a>
+    <label class="pk-valinta"><span class="pieni">Pelaaja</span><select id="pk-pelaaja" aria-label="Vaihda pelaajaa">${jarj.map((r) => `<optgroup label="${esc(r)}">${ryhmat.get(r).map((q) => `<option value="${q.id}"${q.id === p.id ? " selected" : ""}>${esc(nimi(q))}</option>`).join("")}</optgroup>`).join("")}</select></label>
+    <a class="btn pk-nuoli" href="#/pelaaja/${seur.id}" title="Seuraava: ${esc(nimi(seur))}" aria-label="Seuraava pelaaja">›</a>
+    <span class="pieni pk-sijainti">${esc(ryhmaNimi(p))} · ${i + 1} / ${oma.length}</span>
+  </div>`;
+}
+function kytkeValitsin() {
+  const s = $("#pk-pelaaja"); if (!s) return;
+  s.onchange = () => (location.hash = `#/pelaaja/${s.value}`);
 }

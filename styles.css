@@ -1687,3 +1687,10 @@ a.jtt-yla:hover { text-decoration: underline; }
   .pv-r .v small { display: none; }
 }
 .pv-puuttuu { margin: 4px 0 0; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,.18); color: var(--ink-3); }
+/* Pelaajakortin pelaajavalitsin (20.10.2026) */
+.pk-valitsin { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.pk-nuoli { padding: 6px 14px; font: 700 20px/1 var(--num); text-decoration: none; }
+.pk-valinta { display: inline-flex; align-items: center; gap: 8px; }
+.pk-valinta select { min-width: 240px; }
+.pk-sijainti { color: var(--ink-3); margin-left: 6px; }
+@media (max-width: 640px) { .pk-valinta { flex: 1; } .pk-valinta select { min-width: 0; width: 100%; } .pk-valinta .pieni { display: none; } .pk-sijainti { flex-basis: 100%; margin: 0; } }

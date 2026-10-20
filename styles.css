@@ -1640,3 +1640,45 @@ a.jtt-yla:hover { text-decoration: underline; }
 .rivi > .paneeli, .rivi > .taulu-wrap { min-width: 0; }
 .kaavio { min-width: 0; overflow: hidden; }
 .jtt-nokm { font: 700 9.5px/1 var(--text); font-style: normal; color: var(--ink-2); border: 1px solid var(--line); border-radius: 3px; padding: 2px 3px; margin-right: 5px; vertical-align: 3px; }
+/* Pelaajakortin Vertailu (20.10.2026) – Oma pelin "Joukkue vs. sarja" -tyyli */
+.pv { margin-top: 16px; display: grid; gap: 12px; }
+.pv-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.pv-paa h2 { margin: 0; font: 700 22px var(--num); letter-spacing: .04em; text-transform: uppercase; }
+.pv-paa .pieni { margin: 2px 0 0; }
+.pv-paa .chipit { gap: 6px; }
+.pv-paa .chip { padding: 5px 12px; font-size: 14px; }
+.pv-yht { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px; align-items: stretch; }
+.pv-iso, .pv-lista { background: rgba(0,0,0,.2); border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pv-iso b { font: 700 40px/1 var(--num); }
+.pv-lista { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pv-lista > .pieni:first-child { flex-basis: 100%; font: 600 11.5px var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.pv-merkki { font-size: 13.5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+.pv-merkki b { font-family: var(--num); margin-left: 3px; }
+.pv-merkki.plus { border-color: rgba(46,229,157,.45); background: rgba(46,229,157,.08); }
+.pv-merkki.miinus { border-color: rgba(255,59,78,.45); background: rgba(255,59,78,.08); }
+.pv-ots, .pv-r { display: grid; grid-template-columns: 150px minmax(0,1fr) 92px 84px; align-items: center; gap: 12px; }
+.pv-ots .n { text-align: right; white-space: nowrap; }
+.pv-ots > span:nth-child(2) { text-align: center; }
+.pv-ryhma { display: grid; gap: 8px; }
+.pv-ryhma h3 { margin: 6px 0 0; font: 700 13px var(--text); letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+.pv-r .k { font: 600 14px var(--num); color: var(--ink-2); text-align: right; line-height: 1.1; }
+.pv-r .k small { display: block; font: 500 11px var(--text); color: var(--ink-3); }
+.pv-r .tr { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); margin: 0 16px; }
+.pv-r .tr i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; opacity: .35; }
+.pv-r .tr em { position: absolute; top: -5px; bottom: -5px; width: 1px; background: var(--ink-3); opacity: .6; }
+.pv-r .tr b { position: absolute; top: 50%; min-width: 30px; height: 24px; margin: -12px 0 0 -15px; border-radius: 12px; display: grid; place-items: center; font: 700 13px var(--num); color: #111; border: 2px solid var(--surface); padding: 0 5px; }
+.pv-r .v { text-align: right; font-weight: 600; font-size: 17px; }
+.pv-r .v small { font-size: 11px; color: var(--ink-3); font-weight: 500; }
+.pv-r .e { text-align: right; font-size: 15px; color: var(--ink-3); }
+.pv-r .e.plus { color: var(--green); } .pv-r .e.miinus { color: var(--red); }
+.pv-r.tyhja-r .k, .pv-r.tyhja-r .v { opacity: .55; }
+.pv-ei { font-size: 12.5px; color: var(--ink-3); font-style: italic; }
+@media (max-width: 760px) {
+  .pv-yht { grid-template-columns: 1fr; }
+  .pv-ots, .pv-r { grid-template-columns: minmax(0,1fr) 62px 54px; gap: 4px 8px; }
+  .pv-ots > span:first-child { display: none; }
+  .pv-r .k { grid-column: 1 / -1; text-align: left; font-size: 13.5px; display: flex; gap: 8px; align-items: baseline; }
+  .pv-r .k small { display: inline; }
+  .pv-r .tr { margin: 0 16px 0 14px; }
+  .pv-r .v small { display: none; }
+}

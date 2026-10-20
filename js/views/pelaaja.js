@@ -1,5 +1,6 @@
 // Pelaajakortti: ennätykset, profiili ikätovereihin verrattuna ja kehitys testeittäin.
 import { tila, nimi, lataaTulokset } from "../db.js";
+import { LUOKAT } from "./testit.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
 const PROFIILI = ["30m", "10m", "lentava20", "nok_30m", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
@@ -47,6 +48,8 @@ export async function nayta(main, id) {
       </div></div>
       ${indeksi != null ? `<div style="text-align:center">${mittari(Math.max(0, Math.min(100, (indeksi - 20) * 100 / 60)), indeksi, "indeksi", 104)}<div class="pieni">Talvi ${profiili.kausi}</div></div>` : ""}
     </div>
+
+    <section class="paneeli pv" id="pv"></section>
 
     <div class="kpi-rivi" style="margin-top:16px">${kortit.filter((x) => (tila.testi[x.t].ryhma !== "taito" || x.t === "napy_1raja") && tuore(x.viim.pvm)).slice(0, 12).map((x) => {
       const T = tila.testi[x.t], muutos = x.edel ? parannus(x.t, x.viim.arvo, x.edel.arvo) : null;
@@ -98,6 +101,8 @@ export async function nayta(main, id) {
   }
   if (valittu) kaavio();
 
+  piirraVertailu(p, kaikki);
+
   if (profiili) piirra($("#profiili"), {
     type: "radar",
     data: { labels: profiili.rivit.map((r) => (r.t === "nok_30m" ? "9×30 m (ka)" : tila.testi[r.t].nimi) + (r.kausi ? ` (${r.kausi})` : "")), datasets: [
@@ -138,4 +143,76 @@ function laskeProfiili(p, kaikki) {
     }
   }
   return rivit.length >= 3 ? { kausi: ka, rivit, vertailu } : null;
+}
+
+// ---------- Vertailu (20.10.2026): pelaaja vs. valittu ryhmä, Oma pelin "Joukkue vs. sarja" -mallin mukaan.
+// Kunkin testin pelaajan kauden paras (viimeisin kausi, jolla testi on tehty) vs. ryhmän pelaajien kauden parhaat samalta kaudelta.
+const VERTAILUT = [["ika", "Oma ikäluokka"], ["juniorit", "Juniorit"], ["miehet", "Miehet"], ["kaikki", "Kaikki testatut"]];
+let vertailuValinta = null;
+const onSp = (pid) => /superpesis/i.test(tila.joukkueet.find((j) => j.id === tila.pelaaja[pid]?.joukkue_id)?.nimi || "");
+const testinNimi = (t) => (t === "nok_30m" ? "9×30 m (ka)" : t === "lentava20" ? "Lentävä 20 m" : tila.testi[t].nimi.replace(/^Edustuksen lyöntitesti: |^Lyöntitesti: /, "LT: ").replace(" juoksu", "").replace(" väliaika", ""));
+
+function vertailuRivit(p, kaikki, ryhma) {
+  const kuuluu = (pid) => ryhma === "kaikki" || (ryhma === "miehet" ? onSp(pid) : ryhma === "juniorit" ? !onSp(pid) : !onSp(pid) && tila.pelaaja[pid]?.syntymavuosi === p.syntymavuosi);
+  const kausiParhaat = (t, k) => { const m = new Map();
+    for (const x of kaikki) { if (x.testi !== t || x.pelaaja === p.id || kausi(x.pvm) !== k || !kuuluu(x.pelaaja)) continue; const o = m.get(x.pelaaja); if (o == null || parannus(t, x.arvo, o) > 0) m.set(x.pelaaja, x.arvo); }
+    return [...m.values()]; };
+  const testit = [...new Set(kaikki.filter((x) => x.pelaaja === p.id).map((x) => x.testi))];
+  return testit.map((t) => {
+    const omat = kaikki.filter((x) => x.pelaaja === p.id && x.testi === t);
+    const ka = kausi(omat.at(-1).pvm);
+    const oma = paras(t, omat.filter((x) => kausi(x.pvm) === ka).map((x) => x.arvo));
+    let k = ka, arvot = kausiParhaat(t, ka);
+    if (arvot.length < 3 && ryhma === "miehet") { // miehet ovat voineet testata eri kaudella: viimeisin kausi, jolla dataa
+      const kk = [...new Set(kaikki.filter((x) => x.testi === t && kuuluu(x.pelaaja)).map((x) => kausi(x.pvm)))].sort().at(-1);
+      if (kk && kk !== ka) { k = kk; arvot = kausiParhaat(t, kk); }
+    }
+    const T = tila.testi[t];
+    const rivi = { t, oma, ka, k, luokka: T.luokka, jarj: T.jarjestys ?? 99 };
+    if (arvot.length < 3) return { ...rivi, puuttuu: true };
+    const parempia = arvot.filter((v) => parannus(t, v, oma) > 0).length;
+    const md = mediaani(arvot);
+    return { ...rivi, sij: parempia + 1, n: arvot.length + 1, pct: Math.round((100 * (arvot.length - parempia)) / arvot.length), md, ero: oma - md, parempi: parannus(t, oma, md) };
+  });
+}
+
+function piirraVertailu(p, kaikki) {
+  const el = $("#pv"); if (!el) return;
+  const sp = onSp(p.id);
+  const valinnat = VERTAILUT.filter(([k]) => !(k === "ika" && (sp || !p.syntymavuosi)));
+  if (!vertailuValinta || !valinnat.some(([k]) => k === vertailuValinta)) vertailuValinta = sp ? "miehet" : "ika";
+  const R = vertailuRivit(p, kaikki, vertailuValinta);
+  const ok = R.filter((r) => !r.puuttuu);
+  const nimiV = { ika: `ikäluokka ${p.syntymavuosi}`, juniorit: "juniorit", miehet: "Superpesis-miehet", kaikki: "kaikki testatut" }[vertailuValinta];
+  const jarj = [...ok].sort((a, b) => b.pct - a.pct);
+  // Vahvimmat: pelaajan parhaat sijoitukset (aina näkyvissä); kehitettävät: heikoimmat alle puolivälin, ei samoja
+  const vahv = jarj.slice(0, Math.min(3, Math.ceil(jarj.length / 2)));
+  const kehit = jarj.filter((r) => r.pct < 50 && !vahv.includes(r)).slice(-3).reverse();
+  const uusinKausi = R.map((r) => r.ka).sort().at(-1); // kausi näytetään vain, jos rivi poikkeaa uusimmasta
+  const fmt = (t, v) => muotoile(v, t === "lentava20" ? "30m" : t);
+  const eroTxt = (r) => { const d = tila.testi[r.t]?.desimaalit ?? 2; const a = Math.abs(r.ero); return a < 10 ** -d / 2 ? "±0" : (r.parempi > 0 ? "+" : "−") + a.toFixed(d).replace(".", ","); };
+  const rivi = (r) => {
+    if (r.puuttuu) return `<div class="pv-r tyhja-r"><span class="k">${esc(testinNimi(r.t))}</span><span class="pv-ei">ei vertailuryhmän tuloksia${vertailuValinta === "miehet" ? " – miehet eivät ole tehneet testiä" : ""}</span><span class="v num">${fmt(r.t, r.oma)}</span><span></span></div>`;
+    const pos = r.n > 1 ? ((r.n - r.sij) / (r.n - 1)) * 100 : 50, vari = `color-mix(in srgb, #2EE59D ${pos}%, #FF3B4E)`;
+    return `<div class="pv-r" title="${esc(testinNimi(r.t))}: sija ${r.sij}./${r.n}, parempi kuin ${r.pct} % · ryhmän mediaani ${fmt(r.t, r.md)} ${esc(tila.testi[r.t].yksikko)} · kausi ${r.k}">
+      <span class="k">${esc(testinNimi(r.t))}${r.k !== r.ka ? `<small>miehet ${r.k}</small>` : r.ka !== uusinKausi ? `<small>${r.ka}</small>` : ""}</span>
+      <span class="tr"><i style="width:${pos}%;background:${vari}"></i><em style="left:50%"></em><b style="left:${pos}%;background:${vari}">${r.sij}.</b></span>
+      <span class="v num">${fmt(r.t, r.oma)}<small> ${esc(tila.testi[r.t].yksikko)}</small></span>
+      <span class="e num ${r.parempi > 0 ? "plus" : r.parempi < 0 ? "miinus" : ""}">${eroTxt(r)}</span></div>`;
+  };
+  const ryhmat = LUOKAT.map(([k, n]) => [n, R.filter((r) => r.luokka === k).sort((a, b) => a.jarj - b.jarj)]).filter(([, a]) => a.length);
+  const muut = R.filter((r) => !LUOKAT.some(([k]) => k === r.luokka));
+  if (muut.length) ryhmat.push(["Muut", muut]);
+  el.innerHTML = `
+    <div class="pv-paa"><div><h2>Vertailu</h2><p class="pieni">${esc(nimi(p))} vs. ${esc(nimiV)} · kauden paras tulos verrattuna ryhmän pelaajien kauden parhaisiin</p></div>
+      <div class="chipit" role="radiogroup" aria-label="Vertailuryhmä">${valinnat.map(([k, n]) => `<button class="chip" role="radio" data-pv="${k}" aria-pressed="${k === vertailuValinta}" aria-checked="${k === vertailuValinta}">${k === "ika" ? `${n} ${p.syntymavuosi}` : n}</button>`).join("")}</div></div>
+    ${ok.length ? `<div class="pv-yht">
+      <div class="pv-iso"><span class="pieni">Keskimäärin parempi kuin</span><b class="num" style="color:color-mix(in srgb, #2EE59D ${Math.round(keskiarvo(ok.map((r) => r.pct)))}%, #FF3B4E)">${Math.round(keskiarvo(ok.map((r) => r.pct)))} %</b><span class="pieni">${ok.length} testissä</span></div>
+      <div class="pv-lista"><span class="pieni">Vahvimmat</span>${vahv.map((r) => `<span class="pv-merkki ${r.pct >= 50 ? "plus" : ""}">${esc(testinNimi(r.t))} <b>${r.sij}./${r.n}</b></span>`).join("") || `<span class="pieni">–</span>`}</div>
+      <div class="pv-lista"><span class="pieni">Kehitettävät</span>${kehit.map((r) => `<span class="pv-merkki miinus">${esc(testinNimi(r.t))} <b>${r.sij}./${r.n}</b></span>`).join("") || `<span class="pieni">–</span>`}</div>
+    </div>` : ""}
+    <div class="pv-ots"><span></span><span class="pieni">heikompi ← sija → parempi</span><span class="pieni n">Tulos</span><span class="pieni n">vs. md</span></div>
+    ${ryhmat.map(([n, a]) => `<div class="pv-ryhma"><h3>${esc(n)}</h3>${a.map(rivi).join("")}</div>`).join("")}
+    <p class="vihje">Pallo = sija vertailuryhmässä (pelaaja mukaan lukien), vihreä kärjessä, punainen hännillä. Pystyviiva = ryhmän puoliväli. "vs. md" = ero ryhmän mediaaniin: + = parempi kuin ryhmän mediaani (juoksuissa nopeampi). Kausi on pelaajan viimeisin kausi, jolla testi on tehty; jos miehillä ei ole tulosta samalta kaudelta, verrataan miesten viimeisimpään kauteen.</p>`;
+  $$("[data-pv]", el).forEach((b) => (b.onclick = () => { vertailuValinta = b.dataset.pv; piirraVertailu(p, kaikki); }));
 }

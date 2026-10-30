@@ -83,6 +83,10 @@ button.warn{color:#ff7a59}
 .libtools{display:flex;gap:6px;flex-wrap:wrap}
 .main{display:flex;flex-direction:column;gap:12px;min-width:0}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px}
+/* Pikavalinta 30.10.2026: kirjaston kuviot pomppuvalikkona heti ylhäällä – vain puhelimella (≤860 px), jossa kirjasto on sivun alalaidassa */
+.pika{display:none}
+@media (max-width:860px){.pika{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) auto;gap:8px;align-items:end;padding:10px 12px;margin-bottom:10px}.pika label{display:flex;flex-direction:column;gap:3px;font:600 12px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:0}.pika select{padding:9px 8px;text-overflow:ellipsis}.pika .selaa{display:flex;gap:4px}.pika .selaa button{padding:9px 12px;font-size:16px;line-height:1}.pika .selaa button:disabled{opacity:.35;cursor:default}}
+@media (max-width:420px){.pika{grid-template-columns:minmax(0,1fr) auto}.pika .pika-t{grid-column:1/-1}}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .seg button{border:0;border-radius:0;padding:8px 12px}
 .seg button.on{background:var(--accent);color:var(--accent-ink)}
@@ -207,6 +211,11 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
   </aside>
 
   <section class="main">
+    <div class="panel pika" id="pika" aria-label="Valitse kuvio kirjastosta">
+      <label class="pika-t">Tilanne<select id="pikaT"></select></label>
+      <label>Variaatio<select id="pikaV"></select></label>
+      <div class="selaa"><button id="pikaEd" aria-label="Edellinen variaatio">‹</button><button id="pikaSe" aria-label="Seuraava variaatio">›</button></div>
+    </div>
     <div class="panel bar">
       <div class="seg" role="tablist" aria-label="Vaihe">
         <button id="phA" class="on">1 · Asetelma</button>
@@ -760,7 +769,23 @@ function renderList(){
     });
   }
   $("list").innerHTML=h||'<p class="note">Ei hakutuloksia.</p>';
+  renderPika();
 }
+/* Pikavalinta (puhelin): tilanne + variaatio pomppuvalikoista, ‹ › selaa saman tilanteen variaatioita */
+function pikaLista(k){ return plays.filter(p=>kansioOf(p.tilanne)===k).sort(lajittele); }
+function renderPika(){
+  const c=cur(); const k=c?kansioOf(c.tilanne):TILANTEET[0];
+  $("pikaT").innerHTML=TILANTEET.map(t=>`<option value="${t}" ${t===k?"selected":""}>${esc(t)} (${pikaLista(t).length})</option>`).join("");
+  const arr=pikaLista(k);
+  $("pikaV").innerHTML=arr.length?arr.map(p=>`<option value="${p.id}" ${p.id===sel?"selected":""}>${esc(p.variaatio||"Nimetön variaatio")}${p.lyoja&&p.lyoja!=="Uusi lyöjä"?" · "+esc(p.lyoja):""}</option>`).join(""):'<option value="">Ei vielä variaatioita</option>';
+  $("pikaV").disabled=!arr.length;
+  const i=arr.findIndex(p=>p.id===sel); $("pikaEd").disabled=i<=0; $("pikaSe").disabled=i<0||i>=arr.length-1;
+}
+function pikaValitse(id){ if(!id||id===sel) return; sel=id; $("delconfirm").hidden=true; const c=cur(); if(c){ kAuki.add(kansioOf(c.tilanne)); saveK(); } loadForm(); renderList(); drawDyn(); save(); paivitaLuonnos(); }
+$("pikaT").addEventListener("change",e=>{ const arr=pikaLista(e.target.value); if(arr.length) pikaValitse(arr[0].id); else { $("pikaV").innerHTML='<option value="">Ei vielä variaatioita</option>'; $("pikaV").disabled=true; $("pikaEd").disabled=$("pikaSe").disabled=true; toast(`${e.target.value}: ei vielä variaatioita`); } });
+$("pikaV").addEventListener("change",e=>pikaValitse(e.target.value));
+$("pikaEd").onclick=()=>{ const arr=pikaLista(kansioOf(cur().tilanne)); const i=arr.findIndex(p=>p.id===sel); if(i>0) pikaValitse(arr[i-1].id); };
+$("pikaSe").onclick=()=>{ const arr=pikaLista(kansioOf(cur().tilanne)); const i=arr.findIndex(p=>p.id===sel); if(i>=0&&i<arr.length-1) pikaValitse(arr[i+1].id); };
 $("kmT").onclick=()=>{kmode="tilanne";saveK();renderList();};
 $("kmL").onclick=()=>{kmode="lyoja";saveK();renderList();};
 $("list").addEventListener("click",e=>{

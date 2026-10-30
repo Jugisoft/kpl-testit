@@ -80,12 +80,13 @@ const RYHMAT = [
       ["Juoksutestit", "#/juoksu", (p) => /^\/juoksu/.test(p)],
       ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
       ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
-      ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)]]],
+      ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)],
+      ["Reaktioaika ↗", "https://jugisoft.github.io/reaktioaikalaskuri/", () => false]]],
   ]],
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261030-4", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261030-5", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],

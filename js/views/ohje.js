@@ -76,6 +76,18 @@ const SIVUT = [
       ["Ikä", "Ikä, jonka pelaaja täyttää talven aikana (talvella 2025–26 vuonna 2009 syntynyt on 17)."],
       ["Ontto piste", "Alle viisi pelaajaa, suuntaa-antava."],
     ] },
+  { id: "reaktioaika", nimi: "Reaktio ja lähtö", linkki: "https://jugisoft.github.io/reaktioaikalaskuri/",
+    mita: "Etenijän reaktio- ja lähtöajat mitataan videolta erillisellä Reaktioaika-sovelluksella (puhelin kotinäytölle, läppärillä reaktioaika.html). Kun sovellukseen on kirjauduttu Keskuksen tunnuksella, pelaajat tulevat Keskuksesta ja toistot siirtyvät Keskukseen. Tulokset: Testit → Nopeus → Reaktio ja lähtö, pelaajakortti ja pelaajavertailu.",
+    kohdat: [
+      ["T0, T1, T2", "T0 = ärsyke (syöttö irtoaa, lyönnin osuma tai mailamiehen signaali), T1 = ensimmäinen liike (valinnainen), T2 = jalka irtoaa pesältä."],
+      ["Lähtöaika", "T2 − T0 millisekunteina. Pienempi on parempi. Pääluku."],
+      ["Reaktioaika", "T1 − T0 millisekunteina. Vain toistoista, joihin T1 on merkitty."],
+      ["Testi per tilanne", "Jokainen ärsyke ja pesä on oma testinsä (esim. Lähtöaika: syöttö, 1-pesä), joten vertailu tehdään aina samassa tilanteessa."],
+      ["Päivän tulos", "Saman päivän hyväksyttyjen toistojen mediaani. Vertailuihin ja ennätyksiin vasta, kun toistoja on vähintään 3. Hylätyt toistot eivät ole mukana."],
+      ["Testikerta", "Keskus luo jokaisesta mittauspäivästä testikerran Reaktioajat (laskuri) pelaajan joukkueelle automaattisesti."],
+      ["Tarkkuus", "Riippuu kuvaustaajuudesta: 240 fps ±8 ms, 120 fps ±17 ms aikavälissä. 30 fps ei riitä vertailuun."],
+      ["Videot", "Videot eivät koskaan lähde puhelimelta. Keskukseen siirtyvät vain merkinnät ja ajat."],
+    ] },
   { id: "juoksutestit", nimi: "Juoksutestit", linkki: "#/juoksu",
     mita: "30 m (10 m lähtö, lentävä 20 m), nopeuskestävyys 9×30 m ja Cooper yhdessä näkymässä. Ryhmät: Juniorit, Superpesis ja Kaikki testatut. Tulostaulu, kaikki samalla janalla, testikohtainen analyysi, kehitys kausittain ja pelaajan juoksuprofiili.",
     kohdat: [
@@ -92,7 +104,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261030-4",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261030-5",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],

@@ -54,7 +54,7 @@ export async function nayta(main) {
 
     <nav class="pikalinkit" aria-label="Pääosiot">
       <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
-      <a href="pelikirja.html?v=20261030-4"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="pelikirja.html?v=20261030-5"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
       <a href="#/muistio/vastustajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
       <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
       <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spKerrat.length}</span><span class="pl-ala">${spKerrat.length ? `edustuksen testikertaa, viimeisin ${pvm(spKerrat[0].pvm)}` : "edustuksen testikertaa"}</span></a>

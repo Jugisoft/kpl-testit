@@ -6,11 +6,11 @@ import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, para
 export const LUOKAT = [
   ["fysiikka", "Fysiikka", "Räjähtävä voima, maksimivoima, lihaskestävyys ja kestävyys"],
   ["voima", "Lyönti- ja heittovoima", "Tutkamittaukset: heitot ja lyönnit"],
-  ["nopeus", "Nopeus", "Pikanopeus, ketteryys ja nopeuskestävyys"],
+  ["nopeus", "Nopeus", "Pikanopeus, ketteryys, nopeuskestävyys sekä reaktio ja lähtö"],
   ["lajitaito", "Lajitaito", "Lyöntitaito: näpyt, lyöntitestit ja kovat lyönnit"],
 ];
 export const LUOKKANIMI = Object.fromEntries(LUOKAT.map(([k, n]) => [k, n]));
-const ALAJARJ = ["Räjähtävä voima", "Maksimivoima", "Lihaskestävyys", "Kestävyys", "Lyöntivoima", "Heittovoima", "Pikanopeus", "Ketteryys", "Nopeuskestävyys", "Lyöntitaito", "Kiinniotto"];
+const ALAJARJ = ["Räjähtävä voima", "Maksimivoima", "Lihaskestävyys", "Kestävyys", "Lyöntivoima", "Heittovoima", "Pikanopeus", "Ketteryys", "Nopeuskestävyys", "Reaktio ja lähtö", "Lyöntitaito", "Kiinniotto"];
 const RYHMAT = [["superpesis", "Superpesis", "Edustus"], ["juniorit", "Juniorit", "Ikäluokittain"]];
 const LT = ["lt_napyt", "lt_1raja_pomppu", "lt_2raja_pomppu", "lt_keskipomppu", "lt_kumura", "lt_viistari", "lt_koppi"];
 const MAILAT = ["oma", "Optima", "Ultima"];

@@ -95,6 +95,7 @@ const SIVUT = [
   { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
+      ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
       ["Asetelma / Syötöstä", "Vaihe 1 = pelaajien paikat ennen syöttöä, vaihe 2 = liike syötöstä (nuolet). Toista-nappi animoi."],
       ["Saumat", "Avoin leveys lyöjän silmin mitattuna syvemmän pelaajan linjalla, metreinä."],
       ["Mitat", "Etäisyys kotipesästä (S ja 1V), lähimmästä sivurajasta ja polttolinjasta (2- ja 3-pesän välinen linja: + takana, − edessä)."],

@@ -146,6 +146,8 @@ svg#field{display:block;width:100%;height:auto;max-height:86vh;touch-action:none
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:7px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
+/* Puhelinkorjaus 30.10.2026 (vain ≤900 px): ei tekstin suurennusta vaakatilassa, kentät 16 px ettei iPhone zoomaa sisään */
+@media (max-width:900px){html{-webkit-text-size-adjust:100%;text-size-adjust:100%}input,select,textarea,.io textarea,.pat input{font-size:16px}input[type=checkbox],input[type=radio],input[type=range]{font-size:inherit}}
 </style>
 </head>
 <body>

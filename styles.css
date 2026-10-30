@@ -1781,3 +1781,26 @@ a.jtt-yla:hover { text-decoration: underline; }
 .vt-sv.b .chip.on { background: rgba(125,211,252,.16); color: #7DD3FC; border-color: #7DD3FC; }
 .vt-r .v.pieni-otos { opacity: .55; font-style: italic; }
 .vt-r .bars i b.pieni-otos { opacity: .18 !important; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 3px, transparent 3px 6px); }
+
+/* ===== Puhelinkorjaukset 30.10.2026 – kaikki säännöt vain kapealla näytöllä (≤900 px), selainversio ennallaan ===== */
+@media (max-width: 900px) {
+  /* iOS ei suurenna tekstiä vaakatilassa */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  /* background-attachment: fixed venyttää taustan iOS:ssä koko sivun korkuiseksi ja nykii vierittäessä */
+  body { background-attachment: scroll; }
+  /* alle 16 px kenttä saa iPhonen zoomaamaan sisään napautettaessa, eikä sivu palaa takaisin mittoihinsa */
+  input, select, textarea, .fl-rooli select, #vt-ptsel select { font-size: 16px; }
+  input[type="checkbox"], input[type="radio"], input[type="range"], input[type="color"] { font-size: inherit; }
+}
+@media (max-width: 760px) {
+  /* vastustajakortin paperi reunasta reunaan (mobiilin sivumarginaali on 14 px, ei 20 px) */
+  .kt-paperi { margin-left: -14px; margin-right: -14px; }
+  /* Muistion osio- ja joukkuerivi vierittyy sivusuunnassa (myöhempi .osiot { overflow-x: hidden } esti sen) */
+  .osiot { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 600px) {
+  /* Pelaajavertailun yläosa: pelaajat rinnakkain, tulos ja jakauma koko leveydeltä alle (ennen pelaajasarakkeet puristuivat 3 px:iin) */
+  .vt-hero { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px 10px; }
+  .vt-hero .vt-keski { grid-column: 1 / -1; grid-row: 2; }
+  .vt-hero-jako { width: 100%; margin-inline: auto; }
+}

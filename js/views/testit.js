@@ -1,6 +1,6 @@
 // Testit: yksi näkymä edustukselle (Superpesis) ja junioreille. Testit luokiteltu
 // luokka → alaluokka (testit.luokka / testit.alaluokka). Osoite #/testit/<ryhmä>/<luokka>/<testi>.
-import { tila, nimi, lataaTulokset } from "../db.js";
+import { tila, nimi, lataaTulokset, sallitutRyhmat } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, pelaajaLinkki, mediaani, keskiarvo, piirra, vari, SARJAVARIT, miniPylvaat } from "../util.js";
 
 export const LUOKAT = [
@@ -24,6 +24,8 @@ const muistetut = {}; // ryhmä|luokka -> viimeksi valittu testi
 
 export async function nayta(main, ryhma, luokka, testi) {
   if (RYHMAT.some(([k]) => k === ryhma)) S.ryhma = ryhma;
+  const sallitut = sallitutRyhmat();
+  if (sallitut && !sallitut.includes(S.ryhma)) S.ryhma = sallitut[0];
   if (LUOKKANIMI[luokka]) S.luokka = luokka;
   S.testi = testi || null;
 
@@ -59,7 +61,7 @@ export async function nayta(main, ryhma, luokka, testi) {
       <div><h1>Testit</h1><p class="ingressi">Kaikki testit samassa paikassa: valitse ryhmä, testiluokka ja testi.</p></div>
       <div class="rivi"><a class="btn ensisij" href="#/kerrat">Syötä tuloksia</a><a class="btn" href="#/pelaajat">Pelaajakortit</a></div>
     </div>
-    <div class="ryhmavalinta" role="tablist" aria-label="Ryhmä">${RYHMAT.map(([k, n, ala]) => `<button role="tab" class="ryhmanappi" data-ryhma="${k}" aria-selected="${k === S.ryhma}"><b>${n}</b><span>${ala}</span></button>`).join("")}</div>
+    <div class="ryhmavalinta" role="tablist" aria-label="Ryhmä">${RYHMAT.filter(([k]) => !sallitut || sallitut.includes(k)).map(([k, n, ala]) => `<button role="tab" class="ryhmanappi" data-ryhma="${k}" aria-selected="${k === S.ryhma}"><b>${n}</b><span>${ala}</span></button>`).join("")}</div>
     <div class="valilehdet luokkavalinta" role="tablist" aria-label="Testiluokka" id="luokat"></div>
     <div id="luokka-sisalto"></div>
     <div id="testi-sisalto"></div>`;

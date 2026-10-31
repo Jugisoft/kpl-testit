@@ -86,7 +86,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261030-5", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261031-1", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -96,6 +96,20 @@ const RYHMAT = [
 ];
 // Puhelimen alapalkki: neljä tärkeintä + Valikko
 const ALAPALKKI = [["Keskus", "#/", "koti"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit", "testit"], ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio"]];
+// PSU-valmennus (31.10.2026): vain junioreiden testit ja reaktioajat. Rajaus on tietokannassa; tämä vain näyttää oikeat sivut.
+const RYHMAT_PSU = [
+  ["Juniorit · PSU", [
+    ["Testit", "#/testit/juniorit", "testit", (p, r) => r?.osio === "testit", [
+      ["Tulokset", "#/testit/juniorit", (p) => /^\/testit/.test(p)],
+      ["Juoksutestit", "#/juoksu/30m/juniorit", (p) => /^\/juoksu/.test(p)],
+      ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
+      ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
+      ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)],
+      ["Reaktioaika ↗", "https://jugisoft.github.io/reaktioaikalaskuri/", () => false]]],
+  ]],
+];
+const ALAPALKKI_PSU = [["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"], ["Pelaajat", "#/pelaajat", "muistio"], ["Vertailu", "#/vertailu", "analyysi"]];
+const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(ohje|korjaamo|kirjaudu)/.test(polku);
 
 let nykyinen = null;
 let navId = 0;
@@ -109,11 +123,12 @@ function piirraNav(polku, r) {
   document.body.classList.toggle("kirjautunut", !!tila.jasen);
   let aktiivinenNimi = "";
   if (tila.jasen) {
-    const kaikki = [...RYHMAT.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
+    const ryhmat = tila.psu ? RYHMAT_PSU : RYHMAT, alapalkki = tila.psu ? ALAPALKKI_PSU : ALAPALKKI;
+    const kaikki = [...ryhmat.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
     aktiivinenNimi = kaikki.find((l) => l[3](polku, r))?.[0] || "";
-    $("#nav").innerHTML = RYHMAT.map(([otsikko, linkit]) => `<div class="nav-ryhma">${otsikko ? `<div class="nav-otsikko">${otsikko}</div>` : ""}${linkit.map(linkki).join("")}</div>`).join("")
+    $("#nav").innerHTML = ryhmat.map(([otsikko, linkit]) => `<div class="nav-ryhma">${otsikko ? `<div class="nav-otsikko">${otsikko}</div>` : ""}${linkit.map(linkki).join("")}</div>`).join("")
       + `<div class="nav-ryhma nav-ala">${linkki(["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)])}${linkki(["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"])}${tila.admin ? linkki(["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]) : ""}</div>`;
-    $("#alapalkki").innerHTML = ALAPALKKI.map(([t, h, ik]) => `<a href="${h}"${kaikki.find((l) => l[1] === h)?.[3](polku, r) ? ' aria-current="page"' : ""}>${ikoni(ik)}<span>${t}</span></a>`).join("")
+    $("#alapalkki").innerHTML = alapalkki.map(([t, h, ik]) => `<a href="${h}"${kaikki.find((l) => l[1] === h)?.[3](polku, r) ? ' aria-current="page"' : ""}>${ikoni(ik)}<span>${t}</span></a>`).join("")
       + `<button type="button" id="avaa-valikko" aria-controls="sivupalkki" aria-expanded="false">${ikoni("valikko")}<span>Valikko</span></button>`;
     $("#avaa-valikko").onclick = () => avaaValikko(true);
   } else {
@@ -151,6 +166,7 @@ async function reititä() {
     return;
   }
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
+  if (tila.psu && !PSU_SALLITTU(polku, r)) { location.replace("#/testit/juniorit"); return; }
   nykyinen?.poistu?.();
   tuhoaKaaviot();
   // uusi sivu alkaa ylhäältä (ei saman sivun sisäisissä vaihdoissa, esim. Ohjeen osiot)

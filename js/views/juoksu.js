@@ -3,7 +3,7 @@
 // Vertailut: oma kehitys, oma ryhmä (juniorit / Superpesis), ikäluokka (juniorit) ja kaikki testatut.
 // Vertailuvaraston pohja: pelaajan kauden paras tulos (kausi heinäkuu–kesäkuu).
 // Tarkenne "piikit" = piikkiaika (yksittäinen kärkiaika), ei kengät: kaikki juoksut vertaillaan yhdessä.
-import { tila, nimi, lataaTulokset } from "../db.js";
+import { tila, nimi, lataaTulokset, sallitutRyhmat } from "../db.js";
 import { $, $$, esc, pvm, pvmLyhyt, kausi, mediaani, keskiarvo, piirra, vari, kuva } from "../util.js";
 
 const KIERROS = 261; // Cooperin kierros metreinä
@@ -143,6 +143,7 @@ export async function nayta(main, a, b) {
   if (a === "pelaaja") return naytaPelaaja(main, b);
   if (TESTI[a]) S.testi = a;
   if (RYHMAT.some(([k]) => k === b)) S.ryhma = b;
+  { const sallitut = sallitutRyhmat(); if (sallitut && !sallitut.includes(S.ryhma)) S.ryhma = sallitut[0]; }
   naytaRyhma(main);
 }
 
@@ -211,7 +212,7 @@ function piirraOhjaimet() {
   if (S.ikaluokka && !ikaluokat.includes(S.ikaluokka)) S.ikaluokka = "";
 
   $("#jtt-ohjaimet").innerHTML = `
-    <div class="jtt-segmentti" role="radiogroup" aria-label="Ryhmä">${RYHMAT.map(([k, n]) => `<button role="radio" data-ryhma="${k}" aria-checked="${k === S.ryhma}">${n}</button>`).join("")}</div>
+    <div class="jtt-segmentti" role="radiogroup" aria-label="Ryhmä">${RYHMAT.filter(([k]) => { const s = sallitutRyhmat(); return !s || s.includes(k); }).map(([k, n]) => `<button role="radio" data-ryhma="${k}" aria-checked="${k === S.ryhma}">${n}</button>`).join("")}</div>
     ${val ? `<label class="jtt-valinta"><span>Tarkastelu</span><select id="jtt-val">
       ${kerrat.length ? `<optgroup label="Testikerta">${kerrat.map((k) => `<option value="k:${k.id}"${"k:" + k.id === val ? " selected" : ""}>${pvm(k.pvm)} · ${esc(k.nimi || "")}</option>`).join("")}</optgroup>` : ""}
       <optgroup label="Kauden paras">${kaudet.map((ka) => `<option value="s:${ka}"${"s:" + ka === val ? " selected" : ""}>Kausi ${ka}, paras tulos</option>`).join("")}</optgroup>

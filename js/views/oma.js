@@ -82,12 +82,7 @@ async function piirra(main) {
       <div style="flex:1;min-width:0">
         <p class="oma-yla">${oma ? "Oma Keskus" : "Pelaajan oma Keskus"}</p>
         <h1>${otsikko}</h1>
-        <div class="tagit">
-          ${joukkue ? `<span>Ryhmä<b>${esc(joukkue.nimi)}</b></span>` : ""}
-          <span>Viikko<b>${viikkoNro(viikko)}</b></span>
-          <span>Ohjelma<b>${valmiit}/${ohjelma.length}</b></span>
-          <span>Tavoitteita<b>${(tav.data || []).length}</b></span>
-        </div>
+        <p class="pieni oma-ala">${joukkue ? `${esc(joukkue.nimi)} · ` : ""}viikko ${viikkoNro(viikko)}${viikko === maanantai(tanaan()) ? "" : ` (${pvmLyhyt(viikko)}–${pvmLyhyt(vkLoppu)})`}</p>
       </div>
       <div class="oma-linkit">
         ${!oma && tila.ohjaaja ? `<a class="btn" href="#/oma">Vaihda pelaajaa</a>` : ""}
@@ -95,12 +90,12 @@ async function piirra(main) {
       </div>
     </div>
 
+    ${tilanne({ p, oma, joukkue, valmiit, ohjelma, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
-    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>
-
     <div class="oma-ruudukko">
-      <section class="paneeli oma-ohjelma" aria-labelledby="oh-otsikko">
+      <section class="paneeli oma-ohjelma" id="oma-ohjelma" aria-labelledby="oh-otsikko">
         <div class="oma-osa-paa">
           <div><h2 id="oh-otsikko">Viikon ohjelma</h2><p class="pieni">Viikko ${viikkoNro(viikko)} · ${pvmLyhyt(viikko)}–${pvmLyhyt(vkLoppu)}${viikko === maanantai(tanaan()) ? " · tämä viikko" : ""}</p></div>
           <div class="rivi"><button class="btn oma-nuoli" data-vk="-7" aria-label="Edellinen viikko">‹</button><button class="btn oma-nuoli" data-vk="0" aria-label="Tämä viikko">Nyt</button><button class="btn oma-nuoli" data-vk="7" aria-label="Seuraava viikko">›</button></div>
@@ -133,11 +128,11 @@ async function piirra(main) {
         </form>` : ""}
       </section>
 
-      <section class="paneeli oma-tavoitteet" aria-labelledby="tav-otsikko">
+      <section class="paneeli oma-tavoitteet" id="oma-tavoitteet" aria-labelledby="tav-otsikko">
         <div class="oma-osa-paa"><h2 id="tav-otsikko">Tavoitteet</h2></div>
         <div id="tav-lista">${tavoitteet(tav.data || [], omat)}</div>
+        <details class="oma-tav-uusi"${(tav.data || []).length ? "" : " open"}><summary>+ Uusi tavoite</summary>
         <form id="tav-uusi" class="oma-lomake">
-          <h3>Uusi tavoite</h3>
           <div class="oma-kentat">
             <label class="kentta">Testi<select name="testi" required>${testiValinnat(testit)}</select></label>
             <label class="kentta">Tavoite<input type="text" name="arvo" required inputmode="decimal" placeholder="esim. 4,20"></label>
@@ -145,25 +140,30 @@ async function piirra(main) {
           </div>
           <div class="rivi"><span class="pieni" id="tav-yks"></span><button class="btn ensisij">Lisää tavoite</button></div>
         </form>
+        </details>
       </section>
     </div>
 
-    <section aria-labelledby="testit-otsikko">
+    <section id="oma-testit" aria-labelledby="testit-otsikko">
       <div class="oma-osa-paa"><h2 id="testit-otsikko">${oma ? "Minun testini" : "Testit"}</h2><a class="pieni" href="#/pelaaja/${pid}">Kaikki tulokset pelaajakortilla</a></div>
       ${normaalit.length ? `<div class="kpi-rivi">${normaalit.slice(0, 12).map(testiKortti).join("")}</div>` : `<p class="tyhja">Ei vielä testituloksia.</p>`}
     </section>
 
     ${reaktiot.length ? `<section aria-labelledby="rk-otsikko"><div class="oma-osa-paa"><h2 id="rk-otsikko">Reaktio ja lähtö</h2><span class="pieni">päivän mediaani, ms</span></div><div class="kpi-rivi">${reaktiot.map(testiKortti).join("")}</div></section>` : ""}
 
-    ${oma ? `<section aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
-      ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}`;
+    ${oma ? `<section id="oma-missiot" aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
+      ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
+
+    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>`;
 
   piirraMinunPeli($("#minun-peli", main), p);
-  piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, paivita: () => piirra(main) });
+  piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, paivita: () => piirra(main) })
+    .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));
   kytkePoissaolot(main, p, poissa, () => piirra(main));
 
   // --- tapahtumat ---
+  $(".ti", main).onclick = (e) => { const a = e.target.closest("[data-ti]"); if (!a) return; e.preventDefault(); $("#" + a.dataset.ti, main)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   $$("[data-vk]", main).forEach((b) => (b.onclick = () => { const n = +b.dataset.vk; viikko = n ? lisaaPv(viikko, n) : maanantai(tanaan()); piirra(main); }));
   $$("[data-kuittaa]", main).forEach((b) => (b.onclick = async () => {
     b.disabled = true;
@@ -231,6 +231,66 @@ function nimenhuuto(nh, poissa, voiMerkita) {
   </div>`;
 }
 
+// ---------- Tilannekortit (1.11.2026, korjaamo): kokonaistilanne yhdellä silmäyksellä.
+// Neljä korttia renkailla: viikon treenit (minuutit tyypeittäin), viikon ohjelma, tavoitteet, lyöntimissio
+// (tai testit, jos missioita ei ole / valmentaja katsoo). Kortti vierittää omaan osioonsa.
+function rengas(osat, keski, ala, koko = 96) {
+  const r = 42, c = 2 * Math.PI * r, yht = osat.reduce((x, o) => x + o.v, 0);
+  let kulma = 0;
+  const kaaret = yht > 0 ? osat.filter((o) => o.v > 0).map((o) => { const pit = (o.v / Math.max(yht, o.max || yht)) * c, rako = osat.length > 1 && o.v < yht ? 2 : 0;
+    const k = `<circle cx="50" cy="50" r="${r}" fill="none" stroke="${o.vari}" stroke-width="11" stroke-dasharray="${Math.max(0, pit - rako)} ${c}" stroke-dashoffset="${-kulma}" stroke-linecap="${osat.length > 1 ? "butt" : "round"}"${o.hehku ? ' class="ti-hehku"' : ""}/>`; kulma += pit; return k; }).join("") : "";
+  return `<svg class="ti-rengas" viewBox="0 0 100 100" width="${koko}" height="${koko}" aria-hidden="true"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line-2)" stroke-width="11"/><g transform="rotate(-90 50 50)">${kaaret}</g>
+    <text x="50" y="${ala ? 50 : 56}" text-anchor="middle" class="ti-keski">${keski}</text>${ala ? `<text x="50" y="66" text-anchor="middle" class="ti-keski-ala">${ala}</text>` : ""}</svg>`;
+}
+const pros1 = (pct) => ({ v: Math.max(0, Math.min(100, pct)), max: 100 });
+function kortti_({ id, kohde, otsikko, rengasHtml, iso, ala, tila: tl }) {
+  return `<a class="ti-kortti" href="#${kohde}" data-ti="${kohde}"${id ? ` id="${id}"` : ""}>
+    <span class="ti-ots">${otsikko}</span>
+    <span class="ti-runko">${rengasHtml}<span class="ti-teksti">${iso ? `<b class="num">${iso}</b>` : ""}${ala ? `<span>${ala}</span>` : ""}</span></span>
+    ${tl ? `<span class="ti-tila ${tl[0]}">${tl[1]}</span>` : ""}
+  </a>`;
+}
+function treeniKortti(a, tamaViikko) {
+  const tl = a.acwr == null ? null : a.acwr > 1.5 ? ["varoitus", "▲ Kuorma nousee jyrkästi"] : a.acwr < 0.6 ? ["info", "▽ Kevyempi jakso"] : ["hyva", "● Kuorma tasainen"];
+  const h = Math.floor(a.yht / 60), m = a.yht % 60;
+  const keski = a.yht ? (h ? `${h}<tspan class="ti-yks">h</tspan>${m ? ` ${m}` : ""}` : `${m}<tspan class="ti-yks">min</tspan>`) : "–";
+  const top = [...a.tyypit].sort((x, y) => y.min - x.min).slice(0, 3);
+  return kortti_({ id: "ti-treeni", kohde: "viikkoni", otsikko: tamaViikko ? "Treenit tällä viikolla" : "Treenit valitulla viikolla",
+    rengasHtml: rengas(a.tyypit.map((t) => ({ v: t.min, vari: t.vari })), keski, a.yht ? "yhteensä" : ""),
+    ala: a.yht ? `<span class="ti-selite">${top.map((t) => `<span><i style="background:${t.vari}"></i><span>${esc(t.nimi)}</span><b>${minStrLyh(t.min)}</b></span>`).join("")}</span>` : "Ei vielä merkittyjä treenejä",
+    iso: "", tila: tl });
+}
+const minStrLyh = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}` : `${m} min`);
+function tilanne({ p, oma, valmiit, ohjelma, tavRivit, omat, missiot, kirjaukset, normaalit }) {
+  const kortit = [];
+  kortit.push(`<a class="ti-kortti ti-lataa" id="ti-treeni" href="#viikkoni" data-ti="viikkoni"><span class="ti-ots">Treenit tällä viikolla</span><span class="ti-runko">${rengas([], "…", "")}</span></a>`);
+  const n = ohjelma.length;
+  kortit.push(kortti_({ kohde: "oma-ohjelma", otsikko: "Viikon ohjelma",
+    rengasHtml: rengas(n ? [{ ...pros1((100 * valmiit) / n), vari: valmiit === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${valmiit}/${n}` : "–", n ? "tehty" : ""),
+    ala: n ? (valmiit === n ? "Kaikki tehty 👏" : `${n - valmiit} harjoitetta jäljellä`) : "Ei ohjelmaa tälle viikolle" }));
+  const tt = tavRivit.filter((g) => tila.testi[g.testi]).map((g) => ({ g, ...tavoiteTila(g, omat) }));
+  const saav = tt.filter((x) => x.saavutettu).length, ka = tt.length ? tt.reduce((x, y) => x + y.pct, 0) / tt.length : 0;
+  const lahin = tt.filter((x) => !x.saavutettu).sort((a, b) => b.pct - a.pct)[0];
+  kortit.push(kortti_({ kohde: "oma-tavoitteet", otsikko: "Tavoitteet",
+    rengasHtml: rengas(tt.length ? [{ ...pros1(ka), vari: "var(--cyan)", hehku: true }] : [], tt.length ? `${Math.round(ka)}<tspan class="ti-yks">%</tspan>` : "–", tt.length ? "matkasta" : ""),
+    ala: tt.length ? `${saav}/${tt.length} saavutettu${lahin ? `<br><small>Lähimpänä: ${esc(tila.testi[lahin.g.testi].nimi)} ${Math.round(lahin.pct)} %</small>` : ""}` : "Aseta ensimmäinen tavoite" }));
+  const ms = oma ? missiot.map((m) => ({ m, s: laskeMissio(m, kirjaukset) })).filter((x) => !x.s.valmis).sort((a, b) => a.m.loppu.localeCompare(b.m.loppu)) : [];
+  if (ms.length) {
+    const { m, s } = ms[0];
+    kortit.push(kortti_({ kohde: "oma-missiot", otsikko: "Lyöntimissio",
+      rengasHtml: rengas([{ ...pros1(s.pct), vari: s.ero >= 0 ? "var(--green)" : "var(--red)", hehku: true }], `${Math.round(s.pct)}<tspan class="ti-yks">%</tspan>`, "tehty"),
+      ala: `${esc(m.nimi || m.laji)}<br><small class="${s.ero >= 0 ? "plus" : "miinus"}">${s.ero >= 0 ? "Edellä" : "Jäljessä"} tahdista ${Math.abs(Math.round(s.ero)).toLocaleString("fi-FI")}</small>${ms.length > 1 ? `<br><small>+ ${ms.length - 1} muuta missiota</small>` : ""}` }));
+  } else {
+    const ka2 = kausi(tanaan());
+    const pbt = normaalit.filter((x) => x.kausiParas != null && x.pb === x.kausiParas && x.sarja.some((y) => kausi(y.pvm) !== ka2));
+    const kaudella = normaalit.filter((x) => x.kausiParas != null).length;
+    kortit.push(kortti_({ kohde: "oma-testit", otsikko: "Testit tällä kaudella",
+      rengasHtml: rengas(kaudella ? [{ ...pros1((100 * pbt.length) / kaudella), vari: "var(--green)", hehku: true }] : [], kaudella ? `${pbt.length}/${kaudella}` : "–", kaudella ? "ennätystä" : ""),
+      ala: kaudella ? (pbt.length ? `Uusi ennätys: ${pbt.slice(0, 2).map((x) => esc(tila.testi[x.t].nimi)).join(", ")}` : "Ei vielä uusia ennätyksiä") : "Ei testejä tällä kaudella" }));
+  }
+  return `<section class="ti" aria-label="Kokonaistilanne">${kortit.join("")}</section>`;
+}
+
 function testiValinnat(omatTestit) {
   const kaikki = tila.testit.filter((t) => !t.johdettu && t.aktiivinen !== false);
   const ensin = kaikki.filter((t) => omatTestit.includes(t.koodi)), muut = kaikki.filter((t) => !omatTestit.includes(t.koodi));
@@ -238,18 +298,23 @@ function testiValinnat(omatTestit) {
   return (ensin.length ? `<optgroup label="Testatut">${ensin.map(opt).join("")}</optgroup>` : "") + `<optgroup label="Muut testit">${muut.map(opt).join("")}</optgroup>`;
 }
 
+function tavoiteTila(g, omat) {
+  const a = omat.filter((x) => x.testi === g.testi), raja = g.luotu.slice(0, 10);
+  const ennen = a.filter((x) => x.pvm < raja), jalkeen = a.filter((x) => x.pvm >= raja);
+  const lahto = ennen.length ? paras(g.testi, ennen.map((x) => x.arvo)) : a[0]?.arvo ?? null;
+  const nyt = a.length ? paras(g.testi, (jalkeen.length ? jalkeen : a).map((x) => x.arvo)) : null;
+  const saavutettu = nyt != null && parannus(g.testi, nyt, g.arvo) >= 0;
+  const matka = lahto != null ? parannus(g.testi, g.arvo, lahto) : null;
+  const pct = saavutettu ? 100 : lahto != null && nyt != null && matka > 0 ? Math.max(0, Math.min(100, (100 * parannus(g.testi, nyt, lahto)) / matka)) : 0;
+  return { lahto, nyt, saavutettu, pct };
+}
+
 // Tavoitteen eteneminen: lähtötaso = paras tulos ennen tavoitteen asettamista (tai ensimmäinen tulos), nyt = paras sen jälkeen
 function tavoitteet(rivit, omat) {
   if (!rivit.length) return `<p class="tyhja">Ei vielä tavoitteita. Aseta ensimmäinen alla.</p>`;
   return `<ul class="oma-tav">${rivit.map((g) => {
     const T = tila.testi[g.testi]; if (!T) return "";
-    const a = omat.filter((x) => x.testi === g.testi), raja = g.luotu.slice(0, 10);
-    const ennen = a.filter((x) => x.pvm < raja), jalkeen = a.filter((x) => x.pvm >= raja);
-    const lahto = ennen.length ? paras(g.testi, ennen.map((x) => x.arvo)) : a[0]?.arvo ?? null;
-    const nyt = a.length ? paras(g.testi, (jalkeen.length ? jalkeen : a).map((x) => x.arvo)) : null;
-    const saavutettu = nyt != null && parannus(g.testi, nyt, g.arvo) >= 0;
-    const matka = lahto != null ? parannus(g.testi, g.arvo, lahto) : null;
-    const pct = saavutettu ? 100 : lahto != null && nyt != null && matka > 0 ? Math.max(0, Math.min(100, (100 * parannus(g.testi, nyt, lahto)) / matka)) : 0;
+    const { lahto, nyt, saavutettu, pct } = tavoiteTila(g, omat);
     const puuttuu = nyt != null && !saavutettu ? Math.abs(nyt - g.arvo) : null;
     const voi = g.asettaja === omaEmail() || tila.ohjaaja || g.pelaaja_id === tila.omaPelaaja;
     return `<li class="${saavutettu ? "saavutettu" : ""}">

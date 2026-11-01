@@ -59,51 +59,19 @@ export async function piirraKuorma(el, p, opt) {
   const maxVk = Math.max(1, ...a.trendi.map((w) => w.min));
   const tila_ = a.acwr == null ? null : a.acwr > 1.5 ? ["varoitus", "Kuorma nousee jyrkästi"] : a.acwr < 0.6 ? ["info", "Kevyempi jakso"] : ["hyva", "Kuorma tasainen"];
 
+  // Tiivis Viikkoni (1.11.2026, korjaamo): yhteenvedon luvut ja jakauma ovat oman Keskuksen tilannekorteissa,
+  // täällä tämä viikko päivittäin, huomiot ja pikakirjaus; ensi viikko, kuusi viikkoa ja kuukausi avattavissa.
   el.innerHTML = `
     <div class="oma-osa-paa">
-      <div><h2 id="ku-otsikko">Viikkoni</h2><p class="pieni">Arki ja kuormitus</p></div>
+      <div><h2 id="ku-otsikko">Viikkoni</h2><p class="pieni">Treenit päivittäin</p></div>
       ${tila_ ? `<span class="ku-tila ${tila_[0]}"><span aria-hidden="true">${tila_[0] === "varoitus" ? "▲" : tila_[0] === "hyva" ? "●" : "▽"}</span>${tila_[1]}</span>` : ""}
     </div>
-    <div class="ku-perusta" aria-label="Mihin arvio perustuu">
-      <b>Mihin arvio perustuu</b>
-      <ul>
-        <li><span>1</span><span>Ryhmän treenit Nimenhuudosta – oletus on, että olit mukana. Merkitse poissaolo viikon ohjelmassa.</span></li>
-        <li><span>2</span><span>Omat kirjauksesi (alla) ja lyöntipäiväkirja (100 lyöntiä ≈ 30 min lajia).</span></li>
-        <li><span>3</span><span>Testipäivät testituloksista.</span></li>
-        <li><span>4</span><span>Rasitus on <b>arvio</b>: treenityypin tai ohjelman tyypillinen rasitus × minuutit. Ei sykettä eikä omaa tuntemusta.</span></li>
-      </ul>
-    </div>
-    <div class="ku-luvut">
-      <div><b class="num">${a.yht ? minStr(a.yht) : "–"}</b><span>harjoittelua</span></div>
-      <div><b class="num">${a.omaMin ? minStr(a.omaMin) : "–"}</b><span>siitä omatoimista</span></div>
-      <div><b class="num">${a.lepo}${a.lepoSuunn ? `<small> + ${a.lepoSuunn}</small>` : ""}</b><span>lepopäivää${a.lepoSuunn ? " (+ tulevat vapaat)" : ""}</span></div>
-      <div><b class="num">${a.acwr != null ? a.acwr.toFixed(2).replace(".", ",") : "–"}</b><span>kuorma vs. oma taso</span></div>
-    </div>
-
-    ${a.yht ? `<div class="ku-jakauma" role="img" aria-label="Viikon minuutit tyypeittäin: ${a.tyypit.map((t) => `${t.nimi} ${t.min} min`).join(", ")}">
-      ${a.tyypit.map((t) => `<i style="flex:${t.min};background:${t.vari}" data-tip="${t.nimi}: ${minStr(t.min)} (${Math.round((100 * t.min) / a.yht)} %)"></i>`).join("")}
-    </div>
-    <ul class="ku-selite">${a.tyypit.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}<b class="num">${minStr(t.min)}</b><span>${Math.round((100 * t.min) / a.yht)} %</span></li>`).join("")}</ul>` : `<p class="tyhja">Tälle viikolle ei ole merkitty harjoituksia.</p>`}
-
-    ${[[a, opt.viikko === maanantai(tanaan()) ? "Tämä viikko" : "Valittu viikko"], [a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko], i) => `
+    ${[[a, opt.viikko === maanantai(tanaan()) ? "Tämä viikko" : "Valittu viikko"]].map(([w, otsikko], i) => `
     <div class="ku-vko-paa"><h3>${otsikko}</h3><span class="pieni">${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}</span>
       <span class="ku-vko-sum num">${w.yht ? `${i && !w.paivat.some((d) => !d.tuleva) ? "suunniteltu " : ""}${minStr(w.yht)}` : "ei merkittyjä harjoituksia"}</span>
       ${w.yht ? `<span class="ku-jakauma ku-mini" aria-hidden="true">${w.tyypit.map((t) => `<i style="flex:${t.min};background:${t.vari}" data-tip="${t.nimi}: ${minStr(t.min)}"></i>`).join("")}</span><span class="pieni">${w.tyypit.map((t) => `${t.nimi.toLowerCase()} ${minStr(t.min)}`).join(" · ")}</span>` : ""}</div>
     ${paivaKaista(w, maxPv)}`).join("")}
-    <p class="pieni ku-pieni">Tulevat päivät ovat suunniteltuja (katkoviiva). Lepo = päivä ilman merkittyä harjoitusta. Omatoimiset kursiivilla.</p>
-    <details class="ku-kk" id="ku-kk"><summary>Kuukausikalenteri</summary><div class="ku-kk-sisalto"></div></details>
-
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${h.teksti}</span></li>`).join("")}</ul>` : ""}
-
-    <h3>Kuusi viikkoa</h3>
-    <div class="ku-trendi" role="img" aria-label="Harjoitusminuutit viikoittain: ${a.trendi.map((w) => `${pvLyh(w.alku)} ${w.min} min`).join(", ")}">
-      ${a.trendi.map((w, i) => `<div class="ku-vk${i === 5 ? " valittu" : ""}" data-tip="Viikko ${pvLyh(w.alku)}: ${minStr(w.min)} · kuorma-arvio ${w.au} AU">
-        <span class="ku-vk-arvo num">${w.min ? minStr(w.min).replace(" min", "") : ""}</span>
-        <div class="ku-vk-pylvas">${w.min ? `<div class="ku-pino" style="height:${Math.max(4, (100 * w.min) / maxVk)}%">${w.tyypit.filter((t) => t.min).map((t) => `<i style="flex:${t.min};background:${T[t.k].vari}"></i>`).join("")}</div>` : ""}</div>
-        <span class="ku-vk-nimi">${pvLyh(w.alku)}</span>
-      </div>`).join("")}
-    </div>
-    <ul class="ku-selite pieni-selite">${TYYPIT.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}</li>`).join("")}</ul>
 
     ${opt.oma ? `<form id="ku-uusi" class="paneeli ly-kirjaus ku-pika">
       <h2>Kirjaa omatoiminen treeni</h2>
@@ -125,7 +93,32 @@ export async function piirraKuorma(el, p, opt) {
       <p class="pieni">Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a>, ne lasketaan mukaan automaattisesti.</p>
     </form>` : ""}
     ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}</li>`; }).join("")}</ul>` : ""}
-    <details class="ku-miten"><summary>Tarkemmin laskennasta</summary>
+    <details class="ku-lisaa"><summary>Ensi viikko, kuusi viikkoa ja kuukausi</summary>
+    ${[[a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko]) => `
+    <div class="ku-vko-paa"><h3>${otsikko}</h3><span class="pieni">${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}</span>
+      <span class="ku-vko-sum num">${w.yht ? `${!w.paivat.some((d) => !d.tuleva) ? "suunniteltu " : ""}${minStr(w.yht)}` : "ei merkittyjä harjoituksia"}</span>
+      ${w.yht ? `<span class="ku-jakauma ku-mini" aria-hidden="true">${w.tyypit.map((t) => `<i style="flex:${t.min};background:${t.vari}" data-tip="${t.nimi}: ${minStr(t.min)}"></i>`).join("")}</span><span class="pieni">${w.tyypit.map((t) => `${t.nimi.toLowerCase()} ${minStr(t.min)}`).join(" · ")}</span>` : ""}</div>
+    ${paivaKaista(w, maxPv)}`).join("")}
+    <p class="pieni ku-pieni">Tulevat päivät ovat suunniteltuja (katkoviiva). Lepo = päivä ilman merkittyä harjoitusta. Omatoimiset kursiivilla.</p>
+    <h3>Kuusi viikkoa</h3>
+    <div class="ku-trendi" role="img" aria-label="Harjoitusminuutit viikoittain: ${a.trendi.map((w) => `${pvLyh(w.alku)} ${w.min} min`).join(", ")}">
+      ${a.trendi.map((w, i) => `<div class="ku-vk${i === 5 ? " valittu" : ""}" data-tip="Viikko ${pvLyh(w.alku)}: ${minStr(w.min)} · kuorma-arvio ${w.au} AU">
+        <span class="ku-vk-arvo num">${w.min ? minStr(w.min).replace(" min", "") : ""}</span>
+        <div class="ku-vk-pylvas">${w.min ? `<div class="ku-pino" style="height:${Math.max(4, (100 * w.min) / maxVk)}%">${w.tyypit.filter((t) => t.min).map((t) => `<i style="flex:${t.min};background:${T[t.k].vari}"></i>`).join("")}</div>` : ""}</div>
+        <span class="ku-vk-nimi">${pvLyh(w.alku)}</span>
+      </div>`).join("")}
+    </div>
+    <ul class="ku-selite pieni-selite">${TYYPIT.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}</li>`).join("")}</ul>
+    <details class="ku-kk" id="ku-kk"><summary>Kuukausikalenteri</summary><div class="ku-kk-sisalto"></div></details>
+
+    </details>
+    <details class="ku-miten"><summary>Mihin arvio perustuu</summary>
+      <ul class="ku-perusta-lista pieni">
+        <li>Ryhmän treenit Nimenhuudosta: oletus on, että olit mukana. Merkitse poissaolo viikon ohjelmassa.</li>
+        <li>Omat kirjaukset ja lyöntipäiväkirja (100 lyöntiä ≈ 30 min lajia).</li>
+        <li>Testipäivät testituloksista.</li>
+        <li>Rasitus on <b>arvio</b>: treenityypin tai ohjelman tyypillinen rasitus × minuutit. Ei sykettä eikä omaa tuntemusta.</li>
+      </ul>
       <p class="pieni">Jokaiselle harjoitukselle käytetään tyypillistä rasitusta asteikolla 0–10 (laji 5, fysiikka 6, peli 7, aerobinen 4, testi 6, palauttava 2; valmentajan ohjelmilla oma arvio, esim. Voima 1–3 = 7, Liikkuvuus = 2) ja se kerrotaan minuuteilla. Tulos on kuorma-arvio (AU). <b>Kuorma vs. oma taso</b> = viimeisen 7 päivän kuorma jaettuna edellisten neljän viikon viikkokeskiarvolla: noin 0,8–1,3 on tasaista, yli 1,5 äkillinen nousu, joka on tutkimuksissa liitetty kohonneeseen vammariskiin (Hulin ym. 2016). Raskas päivä = vähintään 450 AU (esim. 90 min lajia). Nimenhuudon tapahtumat luokitellaan otsikosta; valmentaja voi korjata. Arvio ei tiedä, miltä treeni tuntui – jos olo on väsynyt, kerro valmentajalle.</p>
     </details>`;
 
@@ -172,7 +165,7 @@ export async function piirraKuorma(el, p, opt) {
     const { error } = await sb.from("omat_treenit").delete().eq("id", b.dataset.poistaOma);
     if (error) ilmoita("Poisto ei onnistunut: " + error.message, true); else opt.paivita();
   }));
-  return { poissa: poissaVk };
+  return { poissa: poissaVk, a, a2 };
 }
 // Kuukausikalenteri: ma–su-ruudukko, päivän minuutit pinottuna palkkina tyypeittäin
 const KK = ["tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu", "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu", "marraskuu", "joulukuu"];

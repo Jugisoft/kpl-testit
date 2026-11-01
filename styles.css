@@ -2211,3 +2211,53 @@ body:not(.kirjautunut) main { padding-top: max(28px, env(safe-area-inset-top, 0p
 .yk-lt-p .tr i { background: var(--red); opacity: .75; }
 .yk-lt-p.pieni-otos { opacity: .5; }
 @media (max-width: 600px) { .yk-lt-kpit b { font-size: 22px; } .yk-lt-p { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 28px 52px; gap: 8px; } }
+
+/* Oma Keskus: tilannekortit (1.11.2026, korjaamo) */
+.oma-ala { margin: 4px 0 0; }
+.ti { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
+.ti-kortti { display: grid; gap: 10px; align-content: start; padding: 14px 16px 16px; border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(180deg, var(--surface-2), var(--surface)); color: var(--ink); text-decoration: none; box-shadow: var(--glow); min-width: 0; transition: border-color .15s, transform .15s; }
+.ti-kortti:hover { border-color: rgba(245,168,0,.55); transform: translateY(-1px); }
+.ti-ots { font: 600 11.5px/1.2 var(--text); letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+.ti-runko { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.ti-rengas { flex: none; overflow: visible; }
+.ti-rengas circle { transition: stroke-dasharray .6s cubic-bezier(.2,.7,.2,1); }
+.ti-hehku { filter: drop-shadow(0 0 4px rgba(245,168,0,.55)); }
+.ti-keski { font: 700 24px/1 var(--num); fill: var(--ink); }
+.ti-yks { font-size: 13px; fill: var(--ink-3); font-weight: 600; }
+.ti-keski-ala { font: 500 10px var(--text); fill: var(--ink-3); letter-spacing: .04em; }
+.ti-teksti { display: grid; gap: 6px; min-width: 0; flex: 1; font-size: 13.5px; line-height: 1.35; color: var(--ink-2); }
+.ti-teksti b { font: 700 26px/1 var(--num); color: var(--ink); }
+.ti-teksti small { font-size: 12.5px; color: var(--ink-3); }
+.ti-teksti small.plus { color: var(--green); } .ti-teksti small.miinus { color: #ff7a87; }
+.ti-selite { display: grid; gap: 3px; font-size: 12.5px; color: var(--ink-2); min-width: 0; }
+.ti-selite > span { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 6px; white-space: nowrap; }
+.ti-selite > span > :nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+.ti-selite i { width: 8px; height: 8px; border-radius: 2px; }
+.ti-selite b { font: 600 13px var(--num); color: var(--ink); }
+.ti-tila { justify-self: start; font: 600 11.5px/1 var(--text); padding: 5px 8px; border-radius: 999px; white-space: nowrap; }
+.ti-tila.hyva { background: rgba(46,229,157,.14); color: var(--green); }
+.ti-tila.varoitus { background: rgba(255,59,78,.14); color: #ff7a87; }
+.ti-tila.info { background: rgba(125,211,252,.14); color: #7DD3FC; }
+.ti-lataa .ti-rengas { opacity: .4; }
+.ku-lisaa, .ku-miten { margin-top: 14px; }
+.ku-lisaa > summary, .ku-miten > summary { cursor: pointer; font: 600 14px var(--text); color: var(--ink-2); padding: 10px 0; border-top: 1px solid var(--line-2); }
+.ku-lisaa[open] > summary { color: var(--cyan); }
+.ku-perusta-lista { margin: 4px 0 10px; padding-left: 18px; display: grid; gap: 4px; color: var(--ink-2); }
+@media (max-width: 1180px) { .ti { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .ti { gap: 8px; margin-bottom: 14px; }
+  .ti-kortti { padding: 12px; gap: 8px; }
+  .ti-runko { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .ti-rengas { width: 84px; height: 84px; }
+  .ti-teksti { font-size: 12.5px; }
+  .ti-selite { font-size: 12px; }
+}
+.oma-tav-uusi { margin-top: 12px; }
+.oma-tav-uusi > summary { cursor: pointer; font: 600 14px var(--text); color: var(--cyan); padding: 8px 0; }
+.oma-tav-uusi .oma-lomake { margin-top: 4px; }
+@media (max-width: 600px) {
+  #oma-testit .kpi-rivi { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #oma-testit .oma-testi { padding: 10px 12px; }
+  #oma-testit .oma-testi .arvo { font-size: 26px; }
+  #oma-testit .oma-testi .ala { font-size: 12px; }
+}

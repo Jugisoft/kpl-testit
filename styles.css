@@ -2035,3 +2035,64 @@ a.jtt-yla:hover { text-decoration: underline; }
   .oma-nh-lista li { grid-template-columns: 52px minmax(0, 1fr); }
   .oma-nh-luokka { grid-column: 2; justify-content: flex-start; }
 }
+
+/* Omatoimiset kirjaukset ja perusteet (1.11.2026) */
+.ku-perusta { margin: 12px 0 4px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.02); }
+.ku-perusta > b { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 6px; }
+.ku-perusta ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; font-size: 13.5px; color: var(--ink-2); }
+.ku-perusta li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 6px; align-items: start; }
+.ku-perusta li > span:first-child { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); font: 600 11px/1 var(--num); color: var(--ink); margin-top: 1px; }
+.ku-perusta li b { color: var(--ink); }
+.ku-pv-lista li.oma { font-style: italic; color: var(--ink); }
+.ku-kirjaus { margin-top: 20px; }
+.ku-ryhma { display: grid; gap: 4px; margin-bottom: 10px; }
+.ku-ryhma-nimi { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-right: 4px; }
+.ku-ryhma .ku-chipit { margin-bottom: 0; }
+.ku-chipit .chip { font-size: 14px; padding: 5px 11px; }
+.ku-valinta[hidden] { display: none; }
+.ku-valinta { margin: 6px 0 12px; padding: 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line-2); display: grid; gap: 10px; }
+.ku-valinta-paa { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ku-maarat .kentta input { max-width: 140px; }
+.ku-ohjelma summary { cursor: pointer; color: var(--kpl); font-weight: 600; font-size: 14px; }
+.ku-ohjelma ul { margin: 8px 0 4px; padding-left: 18px; font-size: 14px; color: var(--ink-2); display: grid; gap: 3px; }
+.ku-ohjelma a { color: var(--kpl); white-space: nowrap; }
+.ku-omat small { color: var(--ink-3); }
+.ku-poissa { white-space: nowrap; }
+.ku-poissa.on { color: var(--amber); text-decoration: none; font-weight: 600; }
+.oma-nh-lista li.poissa .oma-nh-teksti b { color: var(--ink-3); }
+.oma-nh-ohje { margin: 0 0 8px; font-size: 13px; }
+@media (max-width: 900px) {
+  .ku-perusta ul { grid-template-columns: 1fr; }
+}
+
+/* Valmentajan viikkokooste (1.11.2026) */
+.ko-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.ko-paa .ingressi { margin-bottom: 8px; }
+.ko-tagit { margin: 8px 0 18px; }
+.ko-h2 { margin: 0 0 10px; }
+.ko-taulu { display: grid; gap: 0; margin-top: 10px; font-size: 14px; }
+.ko-rivi { display: grid; grid-template-columns: minmax(130px, 1.3fr) minmax(120px, 2fr) 76px 76px 92px 64px minmax(160px, 2.2fr); gap: 12px; align-items: center; padding: 8px 4px; border-top: 1px solid var(--line-2); }
+.ko-otsikko { border-top: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.ko-nimi { font-weight: 600; text-decoration: none; color: var(--ink); }
+.ko-nimi:hover { color: var(--kpl); }
+.ko-palkki .ku-jakauma { height: 12px; }
+.ko-rivi .num { font-size: 16px; text-align: right; white-space: nowrap; }
+.ko-acwr.korkea { color: var(--red); font-weight: 700; }
+.ko-acwr.matala { color: var(--amber); }
+.ko-ei { color: var(--red); font-weight: 700; }
+.ko-maarat { color: var(--ink-2); font-size: 13px; }
+.ko-perusta { margin-top: 16px; }
+.ko-arkisto { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ko-arkisto summary { cursor: pointer; }
+.ko-arkisto pre { white-space: pre-wrap; font: 13px/1.5 var(--text); color: var(--ink-2); background: var(--surface-2); padding: 12px; border-radius: var(--radius); }
+@media (max-width: 900px) {
+  .ko-otsikko { display: none; }
+  .ko-rivi { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "n y a" "p p p" "m m m"; gap: 4px 10px; }
+  .ko-rivi > :nth-child(1) { grid-area: n; }
+  .ko-rivi > :nth-child(2) { grid-area: p; }
+  .ko-rivi > :nth-child(3) { grid-area: y; }
+  .ko-rivi > :nth-child(4), .ko-rivi > :nth-child(6) { display: none; }
+  .ko-rivi > :nth-child(5) { grid-area: a; }
+  .ko-rivi > :nth-child(7) { grid-area: m; }
+}
+.ko-tagit ~ .paneeli { margin-top: 16px; }

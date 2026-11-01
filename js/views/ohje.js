@@ -108,7 +108,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261101-14",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261101-15",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -157,6 +157,13 @@ const SIVUT = [
       ["Tila", "Avoin = odottaa käsittelyä, Työn alla, Korjattu, Ei muutosta (vastauksessa perustelu)."],
       ["Vastaus", "Mitä tehtiin. Jarvis käsittelee avoimet ehdotukset pyynnöstä ja kirjaa vastauksen."],
       ["Oma ehdotus", "Avoimen oman ehdotuksen voi poistaa. Ylläpitäjä vaihtaa tilan ja vastaa."],
+    ] },
+  { id: "treenit", nimi: "Treenipäiväkirja", linkki: "#/treenit",
+    mita: "Pelaajan omatoimisten treenien nopea kirjaus omasta valikosta (1.11.2026), lyöntipäiväkirjan tapaan. Puhelimella alapalkissa Treeni.",
+    kohdat: [
+      ["Treenin valinta", "Isot painikkeet ryhmittäin: Voimat, Juoksut ja Lisäosat (valmennuksen ohjelmat) sekä omatoiminen laji ja kunto. Ylimpänä viimeksi tehdyt. Painikkeessa näkyy ohjelman tyypillinen kesto."],
+      ["Kirjaus", "Valinta avaa lomakkeen: kesto (−/+15), lajin määrät (esim. tolppasyötöt, matalat, muut) tai lenkillä ja pyöräilyllä matka km, päivä (tänään, eilen, toissapäivänä tai muu enintään 2 viikkoa taaksepäin). Näytä ohjelma avaa ohjelman sisällön, esimerkiksi punttisalilla."],
+      ["Yhteenveto ja historia", "Yläosassa treenit ja minuutit tällä viikolla sekä treenit 4 viikossa. Alla viimeisimmät kirjaukset; viimeisen 2 viikon kirjauksia voi poistaa. Kirjaukset näkyvät oman Keskuksen Viikkonissa ja kuorma-arviossa sekä valmentajan viikkokoosteessa."],
     ] },
   { id: "lyonnit", nimi: "Lyöntipäiväkirja", linkki: "#/lyonnit",
     mita: "Pelaajan oma lyöntipäiväkirja. Pelaaja asettaa missiot ja kirjaa lyöntiensä määrän lajeittain, löi hän yhteisissä treeneissä tai omalla ajalla. Valmentajat näkevät Seuranta-välilehdellä kaikkien edistymisen, mutta eivät muokkaa.",

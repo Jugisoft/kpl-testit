@@ -18,6 +18,7 @@ import * as vertailu from "./js/views/vertailu.js";
 import * as kortti from "./js/views/kortti.js";
 import * as juoksuodotus from "./js/views/juoksuodotus.js";
 import * as lyonnit from "./js/views/lyonnit.js";
+import * as treenit from "./js/views/treenit.js";
 import * as ohje from "./js/views/ohje.js";
 import * as korjaamo from "./js/views/korjaamo.js";
 import * as oma from "./js/views/oma.js";
@@ -43,6 +44,7 @@ const reitit = [
   { polku: /^\/analyysi$/, nakyma: analyysi },
   { polku: /^\/juoksuodotus$/, nakyma: juoksuodotus },
   { polku: /^\/lyonnit(?:\/(seuranta|p))?(?:\/([^/]+))?$/, nakyma: lyonnit },
+  { polku: /^\/treenit$/, nakyma: treenit },
   { polku: /^\/kerrat$/, nakyma: kerrat, osio: "testit" },
   { polku: /^\/syota\/([\w-]+)$/, nakyma: syotto, osio: "testit" },
   { polku: /^\/kerta\/([\w-]+)$/, nakyma: kerta, osio: "testit" },
@@ -70,6 +72,7 @@ const IK = {
   hallinta: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   valikko: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   kooste: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/>',
+  treeni: '<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
   oma: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
   korjaamo: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5a1.4 1.4 0 0 0 0 2l1 1a1.4 1.4 0 0 0 2 0l5.8-5.8a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.3-.5-.5-2.3z"/>',
   ulos: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
@@ -92,7 +95,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261101-14", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261101-15", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -118,9 +121,11 @@ const ALAPALKKI_PSU = [["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/
 const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|ohje|korjaamo|kirjaudu)/.test(polku);
 // Juniori-pelaaja (1.11.2026): oma Keskus, junioreiden testit (luku), lyöntipäiväkirja
 const OMA = ["Oma Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
+const TREENIT = ["Treenipäiväkirja", "#/treenit", "treeni", (p) => p === "/treenit"];
 const RYHMAT_JUNIORI = [
   [null, [OMA]],
   ["Harjoittelu", [
+    TREENIT,
     ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p)],
     ["Testit", "#/testit/juniorit", "testit", (p, r) => r?.osio === "testit", [
       ["Tulokset", "#/testit/juniorit", (p) => /^\/testit/.test(p)],
@@ -129,8 +134,8 @@ const RYHMAT_JUNIORI = [
       ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)]]],
   ]],
 ];
-const ALAPALKKI_JUNIORI = [["Oma", "#/oma", "oma"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"]];
-const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|lyonnit|ohje|korjaamo|kirjaudu)/.test(polku);
+const ALAPALKKI_JUNIORI = [["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit/juniorit", "testit"]];
+const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|lyonnit|treenit|ohje|korjaamo|kirjaudu)/.test(polku);
 // Valikko roolin mukaan: pelaajalla Oma Keskus ylimpänä, valmentajilla Pelaajien Keskus Valmennus-ryhmässä
 function valikko() {
   if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
@@ -139,9 +144,10 @@ function valikko() {
   if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
-  if (pelaajaRooli) ryhmat[0][1].push(OMA);
+  if (pelaajaRooli) { ryhmat[0][1].push(OMA); ryhmat[1][1].unshift(TREENIT); }
   else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat, koosteL);
-  const ala = pelaajaRooli ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ...ALAPALKKI.slice(2)] : ALAPALKKI;
+  // pelaajalla puhelimen alapalkissa Oma, Treeni ja Lyönnit (1.11.2026); Testit ja Oma peli Valikossa
+  const ala = pelaajaRooli ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ALAPALKKI[1]] : ALAPALKKI;
   return [ryhmat, ala];
 }
 

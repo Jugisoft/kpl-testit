@@ -74,7 +74,7 @@ export async function piirraKuorma(el, p, opt) {
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${h.teksti}</span></li>`).join("")}</ul>` : ""}
 
     ${opt.oma ? `<form id="ku-uusi" class="paneeli ly-kirjaus ku-pika">
-      <h2>Kirjaa omatoiminen treeni</h2>
+      <div class="oma-osa-paa"><h2>Kirjaa omatoiminen treeni</h2><a class="pieni" href="#/treenit">Treenipäiväkirja →</a></div>
       <div class="ku-pika-lajit" role="radiogroup" aria-label="Laji">${Object.values(ohjelmat).map((o) => `<label class="chip"><input type="radio" name="ohjelma" value="${o.koodi}"><i class="ku-pallo" style="background:${T[o.tyyppi].vari}"></i>${esc(o.nimi)}</label>`).join("")}</div>
       <div class="ku-pika-rivi">
         <div class="ku-pika-kentta"><span class="ku-ryhma-nimi">Kesto, min</span>

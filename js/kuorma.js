@@ -58,7 +58,7 @@ function kokoa(nh, omat, testipaivat) {
   const rivit = [];
   for (const e of nh) {
     if (e.peruttu) continue;
-    for (const o of osat(e).osat) rivit.push({ pvm: e.pvm, tyyppi: o.tyyppi, min: o.min, otsikko: e.otsikko, lahde: "nh" });
+    for (const o of osat(e).osat) rivit.push({ pvm: e.pvm, tyyppi: o.tyyppi, min: o.min, otsikko: e.otsikko.replace(/^[^:]{1,12}:\s+/, ""), lahde: "nh" });
   }
   for (const o of omat) rivit.push({ pvm: o.pvm, tyyppi: o.tyyppi, min: o.kesto_min, otsikko: o.huomio || `Oma ${T[o.tyyppi].nimi.toLowerCase()}`, lahde: "oma", id: o.id });
   const testiPv = new Set(rivit.filter((r) => r.tyyppi === "testi").map((r) => r.pvm));
@@ -117,7 +117,7 @@ export function analysoi(rivit, viikko) {
     const ero = Math.round((new Date(r.pvm) - new Date(nyt)) / PAIVA);
     huomiot.push({ taso: "tuleva", teksti: `${r.tyyppi === "peli" ? "Peli" : "Testit"} ${ero === 1 ? "huomenna" : "ylihuomenna"}: ${r.otsikko}. Edeltävä päivä kannattaa pitää kevyempänä, ja nuku hyvin.` });
   }
-  if (!historiaa) huomiot.push({ taso: "info", teksti: "Kuormahistoria kertyy: vertailu omaan tasoon (akuutti vs. pitkän ajan kuorma) näkyy, kun dataa on kertynyt vähintään 3 viikolta." });
+  if (acwr == null) huomiot.push({ taso: "info", teksti: "Kuormahistoria kertyy: vertailu omaan tasoon (akuutti vs. pitkän ajan kuorma) näkyy, kun dataa on kertynyt vähintään 3 viikolta." });
   return { paivat, tyypit, yht, lepo, lepoSuunn, trendi, acwr, akuutti, krooninen, huomiot, harj: paivat.reduce((s, p) => s + p.rivit.length, 0) };
 }
 

@@ -126,7 +126,7 @@ export async function piirraKuorma(el, p, opt) {
 
   tooltip(el);
   const kk = $("#ku-kk", el);
-  let kkAlku = opt.viikko.slice(0, 8) + "01";
+  let kkAlku = (opt.viikko === maanantai(tanaan()) ? tanaan() : opt.viikko).slice(0, 8) + "01";
   const piirraKk = () => { $(".ku-kk-sisalto", kk).innerHTML = kuukausi(rivit, kkAlku, alku, loppu); tooltip(kk);
     kk.querySelectorAll("[data-kk]").forEach((b) => (b.onclick = () => { kkAlku = siirraKk(kkAlku, +b.dataset.kk); piirraKk(); })); };
   try { if (localStorage.getItem("ku-kk") === "1") kk.open = true; } catch (_) {}

@@ -109,8 +109,8 @@ async function piirra(main) {
         <form id="ohj-uusi" class="oma-lomake">
           <h3>Lisää harjoite viikolle ${viikkoNro(viikko)}</h3>
           <div class="oma-kentat">
-            <label class="kentta">Harjoite<input name="otsikko" required maxlength="120" placeholder="esim. Kärkilähdöt 1-pesältä"></label>
-            <label class="kentta">Määrä<input name="maara" maxlength="60" placeholder="esim. 3 × 10"></label>
+            <label class="kentta">Harjoite<input type="text" name="otsikko" required maxlength="120" placeholder="esim. Kärkilähdöt 1-pesältä"></label>
+            <label class="kentta">Määrä<input type="text" name="maara" maxlength="60" placeholder="esim. 3 × 10"></label>
           </div>
           <label class="kentta">Ohje<textarea name="kuvaus" rows="2" maxlength="1000" placeholder="valinnainen"></textarea></label>
           <div class="rivi">
@@ -128,7 +128,7 @@ async function piirra(main) {
           <h3>Uusi tavoite</h3>
           <div class="oma-kentat">
             <label class="kentta">Testi<select name="testi" required>${testiValinnat(testit)}</select></label>
-            <label class="kentta">Tavoite<input name="arvo" required inputmode="decimal" placeholder="esim. 4,20"></label>
+            <label class="kentta">Tavoite<input type="text" name="arvo" required inputmode="decimal" placeholder="esim. 4,20"></label>
             <label class="kentta">Mennessä<input name="takaraja" type="date"></label>
           </div>
           <div class="rivi"><span class="pieni" id="tav-yks"></span><button class="btn ensisij">Lisää tavoite</button></div>

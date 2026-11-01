@@ -1857,3 +1857,82 @@ a.jtt-yla:hover { text-decoration: underline; }
   .oma-harjoite > .linkkinappi { grid-column: 2; justify-self: start; }
   .oma-kuittaus { width: 40px; height: 40px; }
 }
+
+/* ===== Minun pelini (1.11.2026) ===== */
+#minun-peli:empty { display: none; }
+#minun-peli .oma-osa-paa { margin-top: 4px; }
+.mp-tilanteet { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.mp-tilanne { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.mp-tilanne span { font-size: 13px; font-weight: 600; }
+.mp-tilanne b { font: 700 26px/1.1 var(--num); color: var(--ink); }
+.mp-tilanne small { font-size: 12px; color: var(--ink-3); }
+.mp-tilanne[aria-selected="true"] { border-color: var(--kpl); background: rgba(245,168,0,.08); box-shadow: inset 0 -2px 0 var(--kpl); }
+.mp-runko { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+.mp-runko h3 { margin-top: 0; }
+.mp-kysymys { margin: 0 0 8px; font: italic 700 20px/1.2 var(--num); color: var(--kpl); }
+.mp-iso { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.mp-iso .num { font: 700 64px/1 var(--num); color: var(--ink); }
+.mp-iso span:last-child { color: var(--ink-2); font-weight: 600; }
+.mp-iso small { font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.mp-vertailu { display: grid; gap: 8px; }
+.mp-vrivi, .mp-roolit > div { display: grid; grid-template-columns: 120px minmax(0, 1fr) 52px; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-2); }
+.mp-vrivi b, .mp-roolit b { text-align: right; font-size: 18px; color: var(--ink); }
+.mp-palkki { height: 10px; border-radius: 5px; background: var(--line-2); overflow: hidden; }
+.mp-palkki i { display: block; height: 100%; border-radius: 5px; background: var(--ink-3); }
+.mp-vrivi.oma .mp-palkki i { background: var(--kpl); }
+.mp-vrivi.oma span, .mp-vrivi.oma b { color: var(--ink); font-weight: 700; }
+.mp-roolit { display: grid; gap: 8px; }
+.mp-roolit .mp-palkki i { background: var(--kpl); opacity: .75; }
+.mp-sija { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--ink-2); }
+.mp-sija b { font: 700 24px/1 var(--num); color: var(--kpl); }
+.mp-jakauma { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: center; margin-bottom: 6px; font-size: 13px; color: var(--ink-2); }
+.mp-pino { display: flex; height: 22px; border-radius: 5px; overflow: hidden; background: var(--line-2); }
+.mp-pino i { display: grid; place-items: center; font: 700 11px var(--num); font-style: normal; color: #111; min-width: 0; }
+.mp-selite { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 16px; font-size: 12px; color: var(--ink-3); }
+.mp-selite i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.mp-lyonnit { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mp-lyonnit th, .mp-lyonnit td { padding: 6px 8px; border-bottom: 1px solid var(--line-2); text-align: left; }
+.mp-lyonnit td.n, .mp-lyonnit th.n { text-align: right; }
+.mp-lyonnit td b { font: 700 18px var(--num); color: var(--ink); }
+.mp-lyonnit td small { display: block; font-size: 11px; color: var(--ink-3); }
+.mp-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.mp-top li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 52px 36px; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 6px; font-size: 14px; }
+.mp-top li small { color: var(--ink-3); font-size: 12px; }
+.mp-top li b { text-align: right; }
+.mp-top li.oma { background: rgba(245,168,0,.12); box-shadow: inset 3px 0 0 var(--kpl); font-weight: 700; }
+.mp-top li.vali { display: block; text-align: center; color: var(--ink-3); padding: 0; }
+.mp-lause { margin: 10px 0; color: var(--ink-2); font-size: 14px; }
+.mp-lause b { color: var(--ink); }
+.mp-su-suod { margin: 10px 0 4px; }
+.mp-suunta { display: grid; gap: 4px; margin-top: 6px; }
+.mp-su-ots, .mp-su-rivi { display: grid; grid-template-columns: 92px repeat(3, minmax(0, 1fr)); gap: 4px; }
+.mp-su-ots span { font-size: 11.5px; color: var(--ink-3); text-align: center; }
+.mp-su-rivi > span { font-size: 11.5px; color: var(--ink-3); align-self: center; }
+.mp-su-solu { display: grid; place-content: center; text-align: center; min-height: 64px; border-radius: 6px; background: rgba(245,168,0,var(--t)); border: 1px solid var(--line-2); padding: 4px; }
+.mp-su-solu b { font: 700 22px/1 var(--num); color: var(--ink); }
+.mp-su-solu small { font-size: 11px; color: var(--ink-2); }
+.mp-su-solu.karki { border-color: var(--kpl); }
+.mp-su-koti { margin-left: 96px; text-align: center; font-size: 11px; color: var(--ink-3); border-top: 2px solid var(--line); padding-top: 3px; }
+@media (max-width: 1000px) { .mp-runko { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) {
+  .mp-tilanteet { grid-template-columns: repeat(5, minmax(96px, 1fr)); overflow-x: auto; scrollbar-width: none; }
+  .mp-iso .num { font-size: 52px; }
+  .mp-vrivi, .mp-roolit > div { grid-template-columns: 96px minmax(0, 1fr) 48px; }
+  .mp-su-ots, .mp-su-rivi { grid-template-columns: 64px repeat(3, minmax(0, 1fr)); }
+  .mp-su-koti { margin-left: 68px; }
+  .mp-su-solu { min-height: 58px; }
+  .mp-su-solu small { font-size: 10.5px; }
+}
+.mp-iso .num { white-space: nowrap; }
+.mp-taulu { display: grid; font-size: 14px; }
+.mp-t-rivi { display: grid; grid-template-columns: 90px repeat(var(--sar), minmax(0, 1fr)); gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line-2); }
+.mp-t-rivi > span:not(:first-child) { text-align: right; }
+.mp-t-ots span { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+.mp-t-rivi > span[role="rowheader"] { color: var(--ink-2); }
+.mp-t-rivi b { font: 700 17px var(--num); color: var(--ink-2); }
+.mp-t-rivi small { display: block; font-size: 11px; color: var(--ink-3); }
+.mp-t-rivi.oma b, .mp-t-rivi.oma > span[role="rowheader"] { color: var(--ink); font-weight: 700; }
+.mp-t-rivi.oma b { font-size: 20px; color: var(--kpl); }
+.mp-tilanne.pieni-otos b { color: var(--ink-3); }
+.mp-varoitus { margin: 0 0 8px; font-size: 13px; color: var(--amber); }
+.mp-su-solu small { display: block; line-height: 1.25; }

@@ -104,7 +104,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261101-2",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261101-3",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -119,6 +119,7 @@ const SIVUT = [
   { id: "oma", nimi: "Oma Keskus", linkki: "#/oma",
     mita: "Pelaajan oma etusivu (1.11.2026): viikon ohjelma, tavoitteet, omat testit, reaktioajat ja lyöntimissiot. Valmentaja avaa pelaajan sivun Pelaajien Keskus -valikosta tai pelaajakortilta ja voi antaa ohjelmaa ja tavoitteita.",
     kohdat: [
+      ["Minun pelini", "Pelaajan jokainen Superpesis-lyönti (ei vain lyöntivuoro) tilanteittain: onnistuneiden lyöntien osuus verrattuna omaan joukkueeseen ja sarjaan, sijoitus sarjassa samassa tilanteessa (vähintään 30 lyöntiä), mihin lyönnit päättyivät, monesko lyönti, roolijakauma, paineen alla (0, 1, 2 paloa) ja lyöntien suunta 3 × 3 -ruudukossa (3-rajan puoli, keskelle, 2-rajan puoli × lyhyt, keskipitkä, pitkä) valitulla lyönnillä ja paloilla. Onnistui = kärkietenijä eteni, juoksu tai kunnari. Suunnassa laittomat eivät ole mukana. Data: pesistulokset.fi:n ottelutapahtumat YDIN 2027:n kautta, päivittyy iltaisin."],
       ["Viikon ohjelma", "Valmentaja lisää harjoitteen pelaajalle tai koko ryhmälle viikoksi (maanantaista sunnuntaihin). Pelaaja kuittaa sen tehdyksi, ja valmentaja näkee kuittauksen pelaajan sivulla. ‹ › selaa viikkoja."],
       ["Tavoitteet", "Pelaaja tai valmentaja asettaa tavoitteen testiin (esim. 30 m 4,20 s, mennessä-päivä valinnainen). Palkki näyttää edistymisen lähtötasosta (paras tulos ennen tavoitteen asettamista) tavoitteeseen. Vihreä = saavutettu."],
       ["Minun testini", "Ennätys, kauden paras ja viimeisin tulos muutoksineen testeittäin. Kortti avaa pelaajakortin."],

@@ -4,6 +4,7 @@
 import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, testiParhaat, kuva, ilmoita, palkki } from "../util.js";
 import { laske as laskeMissio } from "./lyonnit.js";
+import { piirraMinunPeli } from "../minunpeli.js";
 
 const PAIVA = 864e5;
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
@@ -88,6 +89,8 @@ async function piirra(main) {
       </div>
     </div>
 
+    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>
+
     <div class="oma-ruudukko">
       <section class="paneeli oma-ohjelma" aria-labelledby="oh-otsikko">
         <div class="oma-osa-paa">
@@ -145,6 +148,8 @@ async function piirra(main) {
 
     ${oma ? `<section aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
       ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}`;
+
+  piirraMinunPeli($("#minun-peli", main), p);
 
   // --- tapahtumat ---
   $$("[data-vk]", main).forEach((b) => (b.onclick = () => { const n = +b.dataset.vk; viikko = n ? lisaaPv(viikko, n) : maanantai(tanaan()); piirra(main); }));

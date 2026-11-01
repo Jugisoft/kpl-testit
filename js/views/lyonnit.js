@@ -21,7 +21,7 @@ let valittuLaji = null;
 let maara = 0;
 
 // Mission tila: tehty, odotettu tähän päivään mennessä, tahti
-function laske(m, kirjaukset) {
+export function laske(m, kirjaukset) {
   const t = tanaan();
   const omat = kirjaukset.filter((k) => k.omistaja === m.omistaja && sama(k.laji, m.laji) && k.pvm >= m.alku && k.pvm <= m.loppu);
   const tehty = omat.reduce((s, k) => s + k.maara, 0);

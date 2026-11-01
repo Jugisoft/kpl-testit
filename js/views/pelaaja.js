@@ -45,6 +45,7 @@ export async function nayta(main, id) {
         ${omat.length ? `<span>Ensimmäinen testi<b>${pvm(omat[0].pvm)}</b></span>` : ""}
         ${p.pesistulokset_id ? `<span><a href="https://www.pesistulokset.fi/pelaaja/${p.pesistulokset_id}" target="_blank" rel="noopener">pesistulokset.fi</a></span>` : ""}
         ${p.aktiivinen ? "" : "<span>Ei nykyisessä ryhmässä</span>"}
+        ${tila.ohjaaja || id === tila.omaPelaaja ? `<span><a href="#/oma/${id}">Oma Keskus</a></span>` : ""}
       </div></div>
       ${indeksi != null ? `<div style="text-align:center">${mittari(Math.max(0, Math.min(100, (indeksi - 20) * 100 / 60)), indeksi, "indeksi", 104)}<div class="pieni">Talvi ${profiili.kausi}</div></div>` : ""}
     </div>

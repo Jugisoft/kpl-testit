@@ -30,6 +30,9 @@ export const tila = {
   rooli: null,        // admin = Master, valmentaja = Master-valmennus, pelaaja = Miesten SP -pelaaja, psu = PSU-valmennus (31.10.2026)
   psu: false,         // PSU-valmennus: vain junioreiden testit ja reaktioajat (rajaus tietokannassa, RLS)
   spPelaaja: false,   // Miesten SP -pelaaja: ei junioreiden testituloksia
+  juniori: false,     // Juniori-pelaaja (1.11.2026): junioreiden testit luku, oma Keskus, ei syöttöä
+  ohjaaja: false,     // valmentajan rooli pelaajille (tavoitteet, viikko-ohjelma): admin, valmentaja, psu
+  omaPelaaja: null,   // tunnukseen liitetty pelaaja (valmentajat.pelaaja_id)
   testit: [],          // testimääritelmät
   testi: {},           // koodi -> testi
   joukkueet: [],
@@ -62,14 +65,20 @@ export async function tarkistaRooli() {
   tila.istunto = data.session;
   // Käyttöoikeusluokat (31.10.2026): rajaus on tietokannassa (RLS), tämä vain piilottaa näkymät, joihin ei ole pääsyä.
   // tila.valmentaja = miesten alue (admin, valmentaja, pelaaja); tila.valmennus = Valmennus-osio (admin, valmentaja).
-  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = false; tila.rooli = null;
+  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = tila.juniori = tila.ohjaaja = false; tila.rooli = null; tila.omaPelaaja = null;
   if (tila.istunto) {
     const [v, a, vm, r] = await Promise.all([sb.rpc("on_valmentaja"), sb.rpc("on_admin"), sb.rpc("on_valmennus"), sb.rpc("kayttajan_rooli")]);
     tila.valmentaja = !!v.data;
     tila.admin = !!a.data;
     tila.valmennus = !!vm.data;
     tila.rooli = r.data || null;
+    if (tila.rooli) {
+      const { data: oma } = await sb.from("valmentajat").select("pelaaja_id").eq("email", (tila.istunto.user.email || "").toLowerCase()).maybeSingle();
+      tila.omaPelaaja = oma?.pelaaja_id || null;
+    }
   }
+  tila.juniori = tila.rooli === "juniori";
+  tila.ohjaaja = ["admin", "valmentaja", "psu"].includes(tila.rooli);
   tila.psu = tila.rooli === "psu";
   tila.spPelaaja = tila.rooli === "pelaaja";
   tila.jasen = !!tila.rooli;
@@ -77,7 +86,7 @@ export async function tarkistaRooli() {
 
 // Testiryhmät, jotka roolille näytetään (null = kaikki)
 export function sallitutRyhmat() {
-  return tila.psu ? ["juniorit"] : tila.spPelaaja ? ["superpesis"] : null;
+  return tila.psu || tila.juniori ? ["juniorit"] : tila.spPelaaja ? ["superpesis"] : null;
 }
 
 export async function lataaPelaajat() {

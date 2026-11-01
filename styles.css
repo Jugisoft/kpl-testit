@@ -1804,3 +1804,56 @@ a.jtt-yla:hover { text-decoration: underline; }
   .vt-hero .vt-keski { grid-column: 1 / -1; grid-row: 2; }
   .vt-hero-jako { width: 100%; margin-inline: auto; }
 }
+
+/* ===== Pelaajan oma Keskus (1.11.2026) ===== */
+.oma-paa { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.oma-paa h1 { margin: 0; }
+.oma-yla { margin: 0 0 2px; font: 600 12px/1 var(--text); letter-spacing: .12em; text-transform: uppercase; color: var(--kpl); }
+.oma-linkit { display: flex; gap: 8px; flex-wrap: wrap; }
+.oma-ruudukko { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; margin-bottom: 8px; }
+.oma-osa-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin: 28px 0 10px; }
+.paneeli .oma-osa-paa { margin: 0 0 12px; }
+.oma-osa-paa h2 { margin: 0; }
+.oma-osa-paa .pieni { margin: 2px 0 0; }
+.oma-nuoli { padding: 6px 12px; min-width: 40px; justify-content: center; }
+.oma-edistys { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.oma-edistys .palkki { flex: 1; margin-top: 0; }
+.oma-edistys .num { font-size: 17px; font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+.oma-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.oma-harjoite { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.18); }
+.oma-harjoite.tehty { border-color: rgba(46,229,157,.35); background: rgba(46,229,157,.05); }
+.oma-harjoite.tehty .oma-harjoite-teksti b { color: var(--ink-2); }
+.oma-harjoite-teksti p { margin: 4px 0 0; }
+.oma-kuittaus { width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--line); background: var(--paper); display: grid; place-items: center; cursor: pointer; padding: 0; color: transparent; font: 700 18px/1 var(--text); }
+.oma-kuittaus[aria-pressed="true"], .oma-harjoite.tehty .oma-kuittaus { border-color: var(--green); background: var(--green); color: #0d0c0b; }
+.oma-kuittaus.staattinen { cursor: default; }
+.oma-kuittaus:not(.staattinen):hover { border-color: var(--green); }
+.oma-maara { font: 700 15px/1 var(--num); color: var(--kpl); padding: 3px 8px; border-radius: 6px; background: rgba(245,168,0,.1); }
+.oma-tag { font-size: 12px; color: var(--ink-3); border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px; }
+.oma-lomake { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.oma-lomake h3 { margin: 0; font-size: 17px; }
+.oma-kentat { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.oma-kentat input, .oma-kentat select, .oma-lomake textarea { width: 100%; }
+.oma-tav { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.oma-tav li { display: grid; gap: 6px; }
+.oma-tav-arvo { font: 700 22px/1 var(--num); color: var(--ink); }
+.oma-tav-arvo small { font-size: 13px; color: var(--ink-3); }
+.oma-tav li.saavutettu .oma-tav-arvo { color: var(--green); }
+.oma-tav li.saavutettu .palkki span { background: var(--green); }
+.oma-testi { text-decoration: none; color: inherit; border: 1px solid var(--line); }
+.oma-testi:hover { border-color: var(--kpl); }
+.oma-missiot { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.oma-missio { text-decoration: none; color: inherit; display: grid; gap: 8px; padding: 14px 16px; }
+.oma-missio p { margin: 0; }
+.oma-pelaajat { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.oma-pelaajalinkki { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; text-decoration: none; color: var(--ink); background: var(--surface); }
+.oma-pelaajalinkki:hover { border-color: var(--kpl); }
+@media (max-width: 1000px) { .oma-ruudukko { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .oma-paa { gap: 14px; }
+  .oma-paa .kuva.iso { width: 64px; height: 64px; font-size: 24px; }
+  .oma-linkit { width: 100%; }
+  .oma-harjoite { grid-template-columns: auto minmax(0, 1fr); }
+  .oma-harjoite > .linkkinappi { grid-column: 2; justify-self: start; }
+  .oma-kuittaus { width: 40px; height: 40px; }
+}

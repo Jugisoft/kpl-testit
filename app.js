@@ -20,6 +20,7 @@ import * as juoksuodotus from "./js/views/juoksuodotus.js";
 import * as lyonnit from "./js/views/lyonnit.js";
 import * as ohje from "./js/views/ohje.js";
 import * as korjaamo from "./js/views/korjaamo.js";
+import * as oma from "./js/views/oma.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -49,6 +50,7 @@ const reitit = [
   { polku: /^\/ohje(?:\/([\w-]+))?$/, nakyma: ohje },
   { polku: /^\/korjaamo$/, nakyma: korjaamo },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
+  { polku: /^\/oma(?:\/([\w-]+))?$/, nakyma: oma, osio: "oma" },
 ];
 
 // Sivupalkki (16.10.2026, YDIN 2027:n mallin mukaan): ryhmät, kuvakkeet, Testien alasivut sisennettynä.
@@ -65,6 +67,7 @@ const IK = {
   ohje: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 17h.01"/>',
   hallinta: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   valikko: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  oma: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
   korjaamo: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5a1.4 1.4 0 0 0 0 2l1 1a1.4 1.4 0 0 0 2 0l5.8-5.8a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.3-.5-.5-2.3z"/>',
   ulos: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
 };
@@ -86,7 +89,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261031-1", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261101-1", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -109,7 +112,33 @@ const RYHMAT_PSU = [
   ]],
 ];
 const ALAPALKKI_PSU = [["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"], ["Pelaajat", "#/pelaajat", "muistio"], ["Vertailu", "#/vertailu", "analyysi"]];
-const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(ohje|korjaamo|kirjaudu)/.test(polku);
+const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|ohje|korjaamo|kirjaudu)/.test(polku);
+// Juniori-pelaaja (1.11.2026): oma Keskus, junioreiden testit (luku), lyöntipäiväkirja
+const OMA = ["Oma Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
+const RYHMAT_JUNIORI = [
+  [null, [OMA]],
+  ["Harjoittelu", [
+    ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p)],
+    ["Testit", "#/testit/juniorit", "testit", (p, r) => r?.osio === "testit", [
+      ["Tulokset", "#/testit/juniorit", (p) => /^\/testit/.test(p)],
+      ["Juoksutestit", "#/juoksu/30m/juniorit", (p) => /^\/juoksu/.test(p)],
+      ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
+      ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)]]],
+  ]],
+];
+const ALAPALKKI_JUNIORI = [["Oma", "#/oma", "oma"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"]];
+const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|lyonnit|ohje|korjaamo|kirjaudu)/.test(polku);
+// Valikko roolin mukaan: pelaajalla Oma Keskus ylimpänä, valmentajilla Pelaajien Keskus Valmennus-ryhmässä
+function valikko() {
+  if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
+  const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
+  if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat]]), ALAPALKKI_PSU];
+  const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
+  if (tila.omaPelaaja) ryhmat[0][1].push(OMA);
+  else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat);
+  const ala = tila.omaPelaaja ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ...ALAPALKKI.slice(2)] : ALAPALKKI;
+  return [ryhmat, ala];
+}
 
 let nykyinen = null;
 let navId = 0;
@@ -123,7 +152,7 @@ function piirraNav(polku, r) {
   document.body.classList.toggle("kirjautunut", !!tila.jasen);
   let aktiivinenNimi = "";
   if (tila.jasen) {
-    const ryhmat = tila.psu ? RYHMAT_PSU : RYHMAT, alapalkki = tila.psu ? ALAPALKKI_PSU : ALAPALKKI;
+    const [ryhmat, alapalkki] = valikko();
     const kaikki = [...ryhmat.flatMap(([, l]) => l), ["Ohje", "#/ohje", "ohje", (p) => /^\/ohje/.test(p)], ["Pärnäsen korjaamo", "#/korjaamo", "korjaamo", (p) => p === "/korjaamo"], ["Hallinta", "#/hallinta", "hallinta", (p) => p === "/hallinta"]];
     aktiivinenNimi = kaikki.find((l) => l[3](polku, r))?.[0] || "";
     $("#nav").innerHTML = ryhmat.map(([otsikko, linkit]) => `<div class="nav-ryhma">${otsikko ? `<div class="nav-otsikko">${otsikko}</div>` : ""}${linkit.map(linkki).join("")}</div>`).join("")
@@ -167,6 +196,9 @@ async function reititä() {
   }
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
   if (tila.psu && !PSU_SALLITTU(polku, r)) { location.replace("#/testit/juniorit"); return; }
+  if (tila.juniori && !JUNIORI_SALLITTU(polku, r)) { location.replace("#/oma"); return; }
+  // toisen pelaajan oma Keskus vain valmentajille
+  if (r.osio === "oma" && parametrit[0] && !tila.ohjaaja && parametrit[0] !== tila.omaPelaaja) { location.replace("#/oma"); return; }
   nykyinen?.poistu?.();
   tuhoaKaaviot();
   // uusi sivu alkaa ylhäältä (ei saman sivun sisäisissä vaihdoissa, esim. Ohjeen osiot)

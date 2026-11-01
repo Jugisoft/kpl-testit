@@ -1936,3 +1936,19 @@ a.jtt-yla:hover { text-decoration: underline; }
 .mp-tilanne.pieni-otos b { color: var(--ink-3); }
 .mp-varoitus { margin: 0 0 8px; font-size: 13px; color: var(--amber); }
 .mp-su-solu small { display: block; line-height: 1.25; }
+
+/* Nimenhuudon tapahtumat viikon ohjelmassa (1.11.2026) */
+.oma-nh { margin-bottom: 12px; padding: 10px 12px; border: 1px solid rgba(125,211,252,.25); border-radius: 10px; background: rgba(125,211,252,.05); }
+.oma-nh-paa { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.oma-nh-merkki { font: 700 12px/1 var(--text); letter-spacing: .1em; text-transform: uppercase; color: #7DD3FC; }
+.oma-nh-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.oma-nh-lista li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line-2); }
+.oma-nh-lista li:first-child { border-top: 0; }
+.oma-nh-lista li.peruttu .oma-nh-teksti b { text-decoration: line-through; color: var(--ink-3); }
+.oma-nh-pv { display: grid; text-align: center; font: 600 13px/1.2 var(--num); color: var(--ink-2); }
+.oma-nh-pv b { font-size: 12px; text-transform: uppercase; color: #7DD3FC; letter-spacing: .06em; }
+.oma-nh-teksti { display: grid; gap: 2px; }
+.oma-nh-teksti small { color: var(--ink-3); font-size: 13px; }
+.oma-nh-linkki { padding: 6px 10px; font-size: 13px; }
+.oma-nh-virhe { color: var(--amber); }
+@media (max-width: 600px) { .oma-nh-lista li { grid-template-columns: 44px minmax(0, 1fr); } .oma-nh-linkki { grid-column: 2; justify-self: start; } }

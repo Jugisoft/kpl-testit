@@ -1,5 +1,5 @@
 // Ylläpito: valmentajat, pelaajat, testikerrat ja testit.
-import { sb, tila, nimi, lataaPelaajat, lataaPerus } from "../db.js";
+import { sb, tila, nimi, lataaPelaajat, lataaPerus, SUPABASE_URL } from "../db.js";
 import { LUOKAT } from "./testit.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 
@@ -9,6 +9,8 @@ const pelaajaSel = (v) => `<select data-pelaaja-v="${esc(v.email)}" aria-label="
 
 export async function nayta(main) {
   const { data: valmentajat } = await sb.from("valmentajat").select("*").order("email");
+  const { data: kalenterit } = await sb.from("kalenterit").select("joukkue_id,ics_url,haettu");
+  const kal = Object.fromEntries((kalenterit || []).map((k) => [k.joukkue_id, k]));
   const jSel = (v) => `<select data-k="joukkue_id">${tila.joukkueet.map((j) => `<option value="${j.id}" ${j.id === v ? "selected" : ""}>${esc(j.nimi)}</option>`).join("")}</select>`;
   main.innerHTML = `
     <h1>Hallinta</h1>
@@ -29,6 +31,12 @@ export async function nayta(main) {
       <input type="email" name="email" placeholder="sähköposti" required style="width:240px"><input type="text" name="nimi" placeholder="nimi">
       <select name="rooli">${Object.entries(ROOLIT).map(([k, n]) => `<option value="${k}"${k === "valmentaja" ? " selected" : ""}>${n}</option>`).join("")}</select>
       <button class="btn ensisij">Lisää käyttäjä</button></form>
+
+    <h2>Nimenhuudon kalenterit</h2>
+    <p class="pieni">Ryhmän tapahtumat näkyvät pelaajien omassa Keskuksessa viikon ohjelmassa. Linkki löytyy Nimenhuudosta: <b>Tapahtumat → Tulevat tapahtumat</b>, sivun alalaidan kalenterilinkki (ics-muoto). Linkki näkyy vain valmentajille, pelaajat näkevät pelkät tapahtumat. Päivittyy 15 minuutin välein.</p>
+    <div class="taulu-wrap"><table><thead><tr><th>Ryhmä</th><th>Kalenterilinkki (ics)</th><th></th></tr></thead><tbody>
+      ${tila.joukkueet.map((j) => `<tr><td>${esc(j.nimi)}</td><td><input type="url" data-kal="${j.id}" value="${esc(kal[j.id]?.ics_url || "")}" placeholder="https://….nimenhuuto.com/…ics" style="width:100%;min-width:260px"><div class="pieni" data-kal-tila="${j.id}">${kal[j.id]?.haettu ? `Haettu viimeksi ${new Date(kal[j.id].haettu).toLocaleString("fi-FI")}` : kal[j.id] ? "Ei vielä haettu" : ""}</div></td><td class="n"><button class="btn" data-kal-tallenna="${j.id}">Tallenna</button></td></tr>`).join("")}
+    </tbody></table></div>
 
     <h2>Pelaajat</h2>
     <p class="pieni">Muutokset tallentuvat, kun poistut kentästä. Ei-aktiiviset pelaajat eivät näy osallistujalistoissa, mutta heidän tuloksensa säilyvät.</p>
@@ -94,6 +102,23 @@ export async function nayta(main) {
       ilmoita(`${email}: ${ROOLIT[uusi]}`); nayta(main);
     };
   });
+  $$("[data-kal-tallenna]").forEach((b) => (b.onclick = async () => {
+    const j = +b.dataset.kalTallenna, url = $(`[data-kal="${j}"]`).value.trim().replace(/^webcal:\/\//, "https://");
+    const tilaEl = $(`[data-kal-tila="${j}"]`);
+    if (!url) { const { error } = await sb.from("kalenterit").delete().eq("joukkue_id", j); if (error) return ilmoita(error.message, true); tilaEl.textContent = ""; return ilmoita("Kalenteri poistettu"); }
+    if (!/^https:\/\/[a-z0-9.-]*nimenhuuto\.com\//.test(url)) return ilmoita("Linkin pitää olla Nimenhuudon osoite (https://…nimenhuuto.com/…)", true);
+    const { error } = await sb.from("kalenterit").upsert({ joukkue_id: j, ics_url: url, valimuisti: null, haettu: null, muokattu: new Date().toISOString() });
+    if (error) return ilmoita(error.message, true);
+    // kokeilu: haetaan seuraavat 30 päivää
+    tilaEl.textContent = "Kokeillaan hakua…";
+    const { data: { session } } = await sb.auth.getSession();
+    const alku = new Date().toISOString().slice(0, 10), loppu = new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+    try {
+      const r = await fetch(`${SUPABASE_URL}/functions/v1/kalenteri?joukkue=${j}&alku=${alku}&loppu=${loppu}`, { headers: { Authorization: `Bearer ${session?.access_token}` } });
+      const d = await r.json();
+      tilaEl.textContent = r.ok ? `Toimii: ${d.tapahtumat.length} tapahtumaa seuraavan 30 päivän aikana` : `Haku ei onnistunut: ${d.virhe || r.status}`;
+    } catch (e) { tilaEl.textContent = "Haku ei onnistunut: " + e.message; }
+  }));
   $$("[data-pelaaja-v]").forEach((s) => {
     const alku = s.value;
     s.onchange = async () => {

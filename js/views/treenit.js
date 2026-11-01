@@ -14,16 +14,28 @@ const lyhyt = (n) => n.replace(/\s*\((.*)\)$/, "");
 const tarkenne = (n) => n.match(/\((.*)\)$/)?.[1] || "";
 let valittu = null;
 
-export async function nayta(main) {
-  const pid = tila.omaPelaaja;
-  if (!pid || !tila.pelaaja[pid]) {
-    main.innerHTML = `<h1>Treenipäiväkirja</h1><p class="ingressi">Treenipäiväkirja on pelaajille: tunnukseesi ei ole liitetty pelaajaa.${tila.ohjaaja ? ` Pelaajien kirjaukset näet <a href="#/kooste">viikkokoosteesta</a> ja pelaajien omista Keskuksista.` : " Pyydä ylläpitäjää liittämään tunnuksesi pelaajaan."}</p>`;
+export async function nayta(main, id) {
+  const omaPid = tila.omaPelaaja && tila.pelaaja[tila.omaPelaaja] ? tila.omaPelaaja : null;
+  // Valmentaja (1.11.2026): valitsee pelaajan ja näkee hänen kirjauksensa (vain luku); oman tunnuksen pelaajalle kirjaus
+  if (tila.ohjaaja) {
+    const pid = id && tila.pelaaja[id] ? id : omaPid;
+    const ryhmat = tila.joukkueet.map((j) => [j, tila.pelaajat.filter((p) => p.joukkue_id === j.id && p.aktiivinen)]).filter(([, ps]) => ps.length);
+    main.innerHTML = `<div class="tr-valinta"><label class="jtt-valinta"><span>Pelaaja</span><select id="tr-pelaaja"><option value="">Valitse pelaaja…</option>
+      ${omaPid ? `<option value="${omaPid}"${pid === omaPid ? " selected" : ""}>Omat kirjaukseni</option>` : ""}
+      ${ryhmat.map(([j, ps]) => `<optgroup label="${esc(j.nimi)}">${ps.map((p) => `<option value="${p.id}"${p.id === pid && pid !== omaPid ? " selected" : ""}>${esc(nimi(p))}</option>`).join("")}</optgroup>`).join("")}</select></label></div><div id="tr-sisalto"></div>`;
+    $("#tr-pelaaja").onchange = (e) => { location.hash = e.target.value === omaPid ? "#/treenit" : e.target.value ? `#/treenit/${e.target.value}` : "#/treenit"; };
+    const el = $("#tr-sisalto", main);
+    if (!pid) { el.innerHTML = `<h1>Treenipäiväkirja</h1><p class="ingressi">Valitse pelaaja nähdäksesi hänen omatoimiset treeninsä. Pelaajat kirjaavat treenit tällä sivulla; kaikkien yhteenveto on <a href="#/kooste">viikkokoosteessa</a>.</p>`; return; }
+    return piirra(el, pid, pid !== omaPid);
+  }
+  if (!omaPid) {
+    main.innerHTML = `<h1>Treenipäiväkirja</h1><p class="ingressi">Treenipäiväkirja on pelaajille: tunnukseesi ei ole liitetty pelaajaa. Pyydä ylläpitäjää liittämään tunnuksesi pelaajaan.</p>`;
     return;
   }
-  await piirra(main, pid);
+  await piirra(main, omaPid, false);
 }
 
-async function piirra(main, pid) {
+async function piirra(main, pid, vainLuku) {
   const t = tanaan(), vk = maanantai(t);
   const [ohjelmat, omatRes] = await Promise.all([
     haeOhjelmat(),
@@ -44,24 +56,25 @@ async function piirra(main, pid) {
 
   main.innerHTML = `
     <div class="tr-paa">
-      <div><span class="jtt-yla">Oma harjoittelu</span><h1>Treenipäiväkirja</h1>
-        <p class="ingressi">Valitse treeni, tarkista kesto ja tallenna. Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a>.</p></div>
+      <div><span class="jtt-yla">${vainLuku ? `Treenipäiväkirja · ${esc(nimi(tila.pelaaja[pid]))}` : "Oma harjoittelu"}</span><h1>${vainLuku ? esc(nimi(tila.pelaaja[pid])) : "Treenipäiväkirja"}</h1>
+        <p class="ingressi">${vainLuku ? `Pelaajan omatoimiset treenit. Vain pelaaja kirjaa ja poistaa omiaan. <a href="#/oma/${pid}">Pelaajan oma Keskus →</a>` : `Valitse treeni, tarkista kesto ja tallenna. Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a>.`}</p></div>
       <div class="tr-yht"><div><span class="num">${tamaVk.length}</span><small>treeniä tällä viikolla</small></div><div><span class="num">${vkMin ? minStr(vkMin) : "–"}</span><small>omatoimista</small></div><div><span class="num">${kerrat4}</span><small>treeniä 4 viikossa</small></div></div>
     </div>
 
-    ${viimeksi.length ? `<section class="tr-ryhma"><h2>Viimeksi tehdyt</h2><div class="tr-napit">${viimeksi.map((k) => nappi(ohjelmat[k])).join("")}</div></section>` : ""}
+    ${vainLuku ? "" : `${viimeksi.length ? `<section class="tr-ryhma"><h2>Viimeksi tehdyt</h2><div class="tr-napit">${viimeksi.map((k) => nappi(ohjelmat[k])).join("")}</div></section>` : ""}
     ${ryhmat.map((r) => `<section class="tr-ryhma"><h2>${esc(r)}</h2><div class="tr-napit">${lista.filter((o) => o.ryhma === r).map(nappi).join("")}</div></section>`).join("")}
 
-    <form id="tr-lomake" class="tr-lomake" ${valittu ? "" : "hidden"}></form>
+    <form id="tr-lomake" class="tr-lomake" ${valittu ? "" : "hidden"}></form>`}
 
     <section class="tr-ryhma"><h2>Viimeisimmät kirjaukset</h2>
       ${omat.length ? `<ul class="tr-hist">${omat.slice(0, 20).map((o) => { const oh = ohjelmat[o.ohjelma], ty = T[o.tyyppi] || T.laji, lisa = maaratTeksti(o), d = new Date(o.pvm + "T12:00:00Z");
         return `<li style="--v:${ty.vari}"><span class="tr-h-pvm"><b>${VKP[d.getUTCDay()]}</b>${pvLyh(o.pvm)}</span><span class="tr-h-nimi">${esc(oh?.nimi || ty.nimi)}<small>${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}</small></span>
-          ${o.pvm >= lisaaPv(t, -14) ? `<button class="linkkinappi" data-poista="${o.id}" aria-label="Poista ${esc(oh?.nimi || "")} ${pvLyh(o.pvm)}">Poista</button>` : ""}</li>`; }).join("")}</ul>`
+          ${!vainLuku && o.pvm >= lisaaPv(t, -14) ? `<button class="linkkinappi" data-poista="${o.id}" aria-label="Poista ${esc(oh?.nimi || "")} ${pvLyh(o.pvm)}">Poista</button>` : ""}</li>`; }).join("")}</ul>`
         : `<p class="tyhja">Ei vielä kirjauksia. Valitse yltä tehty treeni.</p>`}
     </section>
     <div class="tr-loppu" aria-hidden="true"></div>`;
 
+  if (vainLuku) return;
   const lomake = $("#tr-lomake", main);
   const avaa = (koodi, vierita) => {
     valittu = koodi;
@@ -107,7 +120,7 @@ async function piirra(main, pid) {
       try { localStorage.setItem("ku-laji", o.koodi); } catch (_) {}
       ilmoita(`Tallennettu: ${lyhyt(o.nimi)} ${kesto} min`);
       valittu = null; window.scrollTo({ top: 0, behavior: "smooth" });
-      piirra(main, pid);
+      piirra(main, pid, false);
     };
     if (vierita) lomake.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
@@ -116,6 +129,6 @@ async function piirra(main, pid) {
   $$("[data-poista]", main).forEach((b) => (b.onclick = async () => {
     if (!confirm("Poistetaanko kirjaus?")) return;
     const { error } = await sb.from("omat_treenit").delete().eq("id", b.dataset.poista);
-    if (error) ilmoita("Poisto ei onnistunut: " + error.message, true); else piirra(main, pid);
+    if (error) ilmoita("Poisto ei onnistunut: " + error.message, true); else piirra(main, pid, false);
   }));
 }

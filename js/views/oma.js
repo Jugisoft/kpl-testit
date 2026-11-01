@@ -113,8 +113,8 @@ async function piirra(main) {
             ${tila.ohjaaja ? `<button class="linkkinappi" data-poista-ohj="${o.id}" aria-label="Poista harjoite ${esc(o.otsikko)}">Poista</button>` : ""}
           </li>`).join("") || `<li class="tyhja">Tälle viikolle ei ole vielä ohjelmaa.</li>`}</ol>
         ${tila.ohjaaja ? `
+        <details class="oma-tav-uusi"><summary>+ Lisää harjoite viikolle ${viikkoNro(viikko)}</summary>
         <form id="ohj-uusi" class="oma-lomake">
-          <h3>Lisää harjoite viikolle ${viikkoNro(viikko)}</h3>
           <div class="oma-kentat">
             <label class="kentta">Harjoite<input type="text" name="otsikko" required maxlength="120" placeholder="esim. Kärkilähdöt 1-pesältä"></label>
             <label class="kentta">Määrä<input type="text" name="maara" maxlength="60" placeholder="esim. 3 × 10"></label>
@@ -125,7 +125,8 @@ async function piirra(main) {
             <label class="chip"><input type="radio" name="kohde" value="ryhma">Koko ryhmä${joukkue ? ` (${esc(joukkue.nimi)})` : ""}</label>
             <button class="btn ensisij">Lisää</button>
           </div>
-        </form>` : ""}
+        </form>
+        </details>` : ""}
       </section>
 
       <section class="paneeli oma-tavoitteet" id="oma-tavoitteet" aria-labelledby="tav-otsikko">

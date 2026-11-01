@@ -3,7 +3,7 @@
 // omatoimiset kirjaukset ohjelmakirjastosta (omat_treenit + treeniohjelmat), lyöntipäiväkirja (rpc kuorma_lyonnit) ja testipäivät.
 import { sb, tila, SUPABASE_URL } from "./db.js";
 import { $, $$, esc, ilmoita } from "./util.js";
-import { TYYPIT, T, lisaaPv, tanaanHki as tanaan, minStr, pvLyh, kokoa, analysoi, osat, kestoMin, maaratTeksti } from "./kuormaydin.js";
+import { TYYPIT, T, lisaaPv, maanantai, tanaanHki as tanaan, minStr, pvLyh, kokoa, analysoi, osat, kestoMin, maaratTeksti } from "./kuormaydin.js";
 export { TYYPIT };
 
 // Nimenhuudon tapahtumat palvelinfunktion kautta (ics-linkki ei tule selaimeen)
@@ -54,7 +54,8 @@ export async function piirraKuorma(el, p, opt) {
   const a = analysoi(rivit, opt.viikko);
   const omatVk = data.omat.filter((o) => o.pvm >= opt.viikko && o.pvm <= lisaaPv(opt.viikko, 6));
   const poissaVk = new Set(data.poissa.map((x) => x.uid));
-  const maxPv = Math.max(120, ...a.paivat.map((d) => d.min));
+  const a2 = analysoi(rivit, lisaaPv(opt.viikko, 7));
+  const maxPv = Math.max(120, ...a.paivat.map((d) => d.min), ...a2.paivat.map((d) => d.min));
   const maxVk = Math.max(1, ...a.trendi.map((w) => w.min));
   const tila_ = a.acwr == null ? null : a.acwr > 1.5 ? ["varoitus", "Kuorma nousee jyrkästi"] : a.acwr < 0.6 ? ["info", "Kevyempi jakso"] : ["hyva", "Kuorma tasainen"];
   const ryhmat = [...new Set(Object.values(ohjelmat).map((o) => o.ryhma))];
@@ -85,14 +86,11 @@ export async function piirraKuorma(el, p, opt) {
     </div>
     <ul class="ku-selite">${a.tyypit.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}<b class="num">${minStr(t.min)}</b><span>${Math.round((100 * t.min) / a.yht)} %</span></li>`).join("")}</ul>` : `<p class="tyhja">Tälle viikolle ei ole merkitty harjoituksia.</p>`}
 
-    <div class="ku-paivat" role="list" aria-label="Viikon päivät">
-      ${a.paivat.map((d) => `<div class="ku-pv${d.tanaan ? " tanaan" : ""}${d.tuleva ? " tuleva" : ""}" role="listitem">
-        <div class="ku-pylvas" aria-hidden="true">${d.min ? `<div class="ku-pino" style="height:${Math.max(8, (100 * d.min) / maxPv)}%">${TYYPIT.map((t) => { const m = d.rivit.filter((r) => r.tyyppi === t.k).reduce((s, r) => s + r.min, 0); return m ? `<i style="flex:${m};background:${t.vari}"></i>` : ""; }).join("")}</div>` : `<span class="ku-lepo">${d.tuleva ? "vapaa" : "lepo"}</span>`}</div>
-        <div class="ku-pv-nimi"><b>${d.vkp}</b> ${pvLyh(d.pvm)}</div>
-        <div class="ku-pv-min num">${d.min ? minStr(d.min) : ""}</div>
-        <ul class="ku-pv-lista">${ryhmita(d.rivit).map((g) => `<li class="${g[0].lahde === "nh" ? "" : "oma"}" data-tip="${esc(g[0].otsikko)} · ${g.map((r) => `${T[r.tyyppi].nimi} ${r.min} min`).join(" + ")}${g[0].lisa ? ` · ${esc(g[0].lisa)}` : ""}${LAHDE[g[0].lahde]}">${g.map((r) => `<i style="background:${T[r.tyyppi].vari}"></i>`).join("")}${esc(g[0].otsikko)}</li>`).join("")}</ul>
-      </div>`).join("")}
-    </div>
+    ${[[a, opt.viikko === maanantai(tanaan()) ? "Tämä viikko" : "Valittu viikko"], [a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko], i) => `
+    <div class="ku-vko-paa"><h3>${otsikko}</h3><span class="pieni">${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}</span>
+      <span class="ku-vko-sum num">${w.yht ? `${i && !w.paivat.some((d) => !d.tuleva) ? "suunniteltu " : ""}${minStr(w.yht)}` : "ei merkittyjä harjoituksia"}</span>
+      ${w.yht ? `<span class="ku-jakauma ku-mini" aria-hidden="true">${w.tyypit.map((t) => `<i style="flex:${t.min};background:${t.vari}" data-tip="${t.nimi}: ${minStr(t.min)}"></i>`).join("")}</span><span class="pieni">${w.tyypit.map((t) => `${t.nimi.toLowerCase()} ${minStr(t.min)}`).join(" · ")}</span>` : ""}</div>
+    ${paivaKaista(w, maxPv)}`).join("")}
     <p class="pieni ku-pieni">Tulevat päivät ovat suunniteltuja (katkoviiva). Lepo = päivä ilman merkittyä harjoitusta. Omatoimiset kursiivilla.</p>
 
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${h.teksti}</span></li>`).join("")}</ul>` : ""}
@@ -157,6 +155,16 @@ export async function piirraKuorma(el, p, opt) {
     if (error) ilmoita("Poisto ei onnistunut: " + error.message, true); else opt.paivita();
   }));
   return { poissa: poissaVk };
+}
+function paivaKaista(w, maxPv) {
+  return `<div class="ku-paivat" role="list" aria-label="Päivät ${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}">
+      ${w.paivat.map((d) => `<div class="ku-pv${d.tanaan ? " tanaan" : ""}${d.tuleva ? " tuleva" : ""}" role="listitem">
+        <div class="ku-pylvas" aria-hidden="true">${d.min ? `<div class="ku-pino" style="height:${Math.max(8, (100 * d.min) / maxPv)}%">${TYYPIT.map((t) => { const m = d.rivit.filter((r) => r.tyyppi === t.k).reduce((s, r) => s + r.min, 0); return m ? `<i style="flex:${m};background:${t.vari}"></i>` : ""; }).join("")}</div>` : `<span class="ku-lepo">${d.tuleva ? "vapaa" : "lepo"}</span>`}</div>
+        <div class="ku-pv-nimi"><b>${d.vkp}</b> ${pvLyh(d.pvm)}</div>
+        <div class="ku-pv-min num">${d.min ? minStr(d.min) : ""}</div>
+        <ul class="ku-pv-lista">${ryhmita(d.rivit).map((g) => `<li class="${g[0].lahde === "nh" ? "" : "oma"}" data-tip="${esc(g[0].otsikko)} · ${g.map((r) => `${T[r.tyyppi].nimi} ${r.min} min`).join(" + ")}${g[0].lisa ? ` · ${esc(g[0].lisa)}` : ""}${LAHDE[g[0].lahde]}">${g.map((r) => `<i style="background:${T[r.tyyppi].vari}"></i>`).join("")}${esc(g[0].otsikko)}</li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>`;
 }
 const LAHDE = { nh: " · ryhmän treeni", oma: " · omatoiminen", lyonti: " · lyöntipäiväkirja", testi: " · testitulokset" };
 const linkit = (l) => esc(l).replace(/(https?:\/\/[^\s]+)/g, (u) => `<a href="${u}" target="_blank" rel="noopener">video ↗</a>`);

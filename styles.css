@@ -2096,3 +2096,8 @@ a.jtt-yla:hover { text-decoration: underline; }
   .ko-rivi > :nth-child(7) { grid-area: m; }
 }
 .ko-tagit ~ .paneeli { margin-top: 16px; }
+/* Viikkoni: tämä ja ensi viikko (1.11.2026) */
+.ku-vko-paa { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 18px 0 8px; }
+.ku-vko-paa h3 { margin: 0; }
+.ku-vko-sum { font-size: 18px; color: var(--ink); }
+.ku-mini { display: inline-flex; width: 140px; height: 8px; align-self: center; }

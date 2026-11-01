@@ -52,6 +52,7 @@ export async function piirraYleiskuva(el, T, pelaajat) {
       </div>
       <div class="yk-sarake">
         <section class="yk-kortti"><div class="yk-otsa"><h3>Pesäväleittäin 2026</h3><span class="chipit pieni-chipit" role="group" aria-label="Sisä- vai ulkopeli"><button type="button" class="chip" data-yk="sisa" aria-pressed="${tila === "sisa"}">Sisäpeli</button><button type="button" class="chip" data-yk="ulko" aria-pressed="${tila === "ulko"}">Ulkopeli</button></span></div><div id="yk-kentta"></div></section>
+        <section class="yk-kortti" id="yk-laittomat"><div class="yk-otsa"><h3>Laittomat lyönnit ${D.kausi}</h3><span class="chipit pieni-chipit" role="group" aria-label="Vaihe"><button type="button" class="chip" data-lv="r" aria-pressed="${laitonVaihe === "r"}">Runkosarja</button><button type="button" class="chip" data-lv="k" aria-pressed="${laitonVaihe === "k"}">Kaikki ottelut</button></span></div><div id="yk-laittomat-sisalto"><p class="pieni">Ladataan…</p></div></section>
         <section class="yk-kortti"><div class="yk-otsa"><h3>Joukkue vs. sarja 2026</h3><span class="pieni">Sijoitus 12 joukkueen joukossa</span></div>${sijoitukset(D.taulukko, t)}</section>
         <section class="yk-kortti"><div class="yk-otsa"><h3>Kokoonpano 2027</h3><span class="pieni">${kok ? `${lista(kok.sopimus).length} sopimuspelaajaa` : ""}</span></div>${kokoonpano(kok)}</section>
         <section class="yk-kortti"><div class="yk-otsa"><h3>Siirrot</h3></div>
@@ -68,6 +69,50 @@ export async function piirraYleiskuva(el, T, pelaajat) {
   };
   el.querySelectorAll("[data-yk]").forEach((b) => (b.onclick = () => { tila = b.dataset.yk; kentta(); }));
   kentta();
+  const laittomat = async () => {
+    el.querySelectorAll("[data-lv]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lv === laitonVaihe));
+    const kohde = el.querySelector("#yk-laittomat-sisalto"); if (!kohde) return;
+    kohde.innerHTML = laitonKortti(await haeYhteenveto(D.kausi), T, D.taulukko);
+  };
+  el.querySelectorAll("[data-lv]").forEach((b) => (b.onclick = () => { laitonVaihe = b.dataset.lv; laittomat(); }));
+  laittomat();
+}
+
+// Laittomat lyönnit joukkueittain ja pelaajittain (1.11.2026, Juuso Ilanderin toive). Data: YDIN 2027:n
+// lyöntiyhteenveto (pesistulokset.fi:n ottelutapahtumat). Pöytäkirjoissa ei ole tietoa, mitkä laittomat
+// olivat merkattuja, joten luvut sisältävät kaikki laittomat.
+const LAITON = 2;   // YDIN TUL-järjestys: kunnari, juoksu, laiton, koppi, palo, haava, eteni, ei_edennyt, muu
+let laitonVaihe = "r";
+const yhteenvedot = new Map();
+function haeYhteenveto(kausi) {
+  if (!yhteenvedot.has(kausi)) yhteenvedot.set(kausi, fetch(LAHDE.replace("joukkueet_keskus.json", `lyonnit_${kausi}/yhteenveto.json`), { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  return yhteenvedot.get(kausi);
+}
+function laitonKortti(Y, T, taulukko) {
+  if (!Y) return `<p class="tyhja">Lyöntidataa ei saatu ladattua.</p>`;
+  const sarja = new Set((taulukko || []).map((x) => x.lyh));
+  const rivi = (p) => p[laitonVaihe]?.kaikki?.[0] || [];
+  const sum = (a) => a.reduce((x, y) => x + (y || 0), 0);
+  const pelaajat = Object.values(Y.pelaajat).map((p) => { const r = rivi(p); return { nimi: p.n, j: p.j, n: sum(r), l: r[LAITON] || 0 }; }).filter((p) => p.n > 0);
+  const joukkueet = [...new Set(pelaajat.map((p) => p.j))].filter((j) => !sarja.size || sarja.has(j)).map((j) => {
+    const a = pelaajat.filter((p) => p.j === j); const n = sum(a.map((p) => p.n)), l = sum(a.map((p) => p.l)); return { j, n, l, pct: n ? (100 * l) / n : 0 }; })
+    .sort((a, b) => a.pct - b.pct);
+  const oma = joukkueet.find((x) => x.j === T);
+  if (!oma) return `<p class="tyhja">Ei Superpesis-lyöntejä kaudelta ${Y.kausi}.</p>`;
+  const sija = joukkueet.indexOf(oma) + 1, ka = sum(joukkueet.map((x) => x.l)) / sum(joukkueet.map((x) => x.n)) * 100;
+  const maxP = Math.max(...joukkueet.map((x) => x.pct));
+  const omat = pelaajat.filter((p) => p.j === T).sort((a, b) => b.l - a.l || b.n - a.n);
+  const maxL = Math.max(1, ...omat.map((p) => p.l));
+  const pc = (v) => `${fi(v.toFixed(1))} %`;
+  return `<div class="yk-lt-kpit">
+      <div><b class="num">${oma.l}</b><span>laitonta</span></div>
+      <div><b class="num">${pc(oma.pct)}</b><span>lyönneistä (${oma.n})</span></div>
+      <div><b class="num">${sija}.</b><span>/ ${joukkueet.length} sarjassa · ka ${pc(ka)}</span></div>
+    </div>
+    <div class="yk-lt-sarja" role="img" aria-label="Laittomien osuus joukkueittain">${joukkueet.map((x, i) => `<div class="yk-lt-j${x.j === T ? " oma" : ""}"><span class="k">${i + 1}. ${esc(x.j)}</span><span class="tr"><i style="width:${(100 * x.pct) / maxP}%"></i></span><span class="v num">${pc(x.pct)}</span></div>`).join("")}</div>
+    <h4 class="yk-lab">Pelaajittain</h4>
+    <div class="yk-lt-pelaajat">${omat.map((p) => `<div class="yk-lt-p${p.n < 20 ? " pieni-otos" : ""}"><span class="n">${esc(p.nimi)}<small>${p.n} lyöntiä</small></span><span class="tr"><i style="width:${(100 * p.l) / maxL}%"></i></span><span class="c num">${p.l}</span><span class="c num pct">${p.n ? pc((100 * p.l) / p.n) : "–"}</span></div>`).join("")}</div>
+    <p class="vihje">${laitonVaihe === "r" ? "Runkosarja" : "Runkosarja ja pudotuspelit"}, kaikki lyönnit pesistulokset.fi:n ottelutapahtumista. Sarjajärjestys: vähiten laittomia ensin. Pöytäkirjoista ei näe, mitkä laittomat olivat merkattuja, joten luvuissa ovat kaikki laittomat. Himmeä = alle 20 lyöntiä.</p>`;
 }
 
 function kehitys(h, kausi) {

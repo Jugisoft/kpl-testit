@@ -92,7 +92,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261101-12", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261101-13", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -174,10 +174,25 @@ function piirraNav(polku, r) {
   if (tila.istunto) {
     const email = tila.istunto.user.email;
     k.innerHTML = `<span class="k-nimi" title="${esc(email)}">${esc(email.split("@")[0])}</span><button id="ulos" title="Kirjaudu ulos">${ikoni("ulos")}<span>Kirjaudu ulos</span></button>`;
-    $("#ulos").onclick = async () => { await sb.auth.signOut(); location.hash = "#/"; location.reload(); };
+    $("#ulos").onclick = ulosKirjaudu;
   } else {
     k.innerHTML = `<a class="btn" style="padding:4px 12px" href="#/kirjaudu">Kirjaudu</a>`;
   }
+}
+// Uloskirjautuminen (1.11.2026, korjaamo): näkyvä palaute heti, istunto poistetaan paikallisesti
+// (ei jää odottamaan verkkoa) ja sivu ladataan kirjautumissivulle ylhäältä alkaen.
+async function ulosKirjaudu() {
+  const nappi = $("#ulos");
+  if (nappi) { nappi.disabled = true; nappi.querySelector("span").textContent = "Kirjaudutaan ulos…"; }
+  document.body.classList.add("uloskirjautuu");
+  $("#sisalto").innerHTML = `<div class="ulos-ilmoitus"><img src="img/kpl-logo-192.png" alt="" width="72" height="72"><h1>Kirjaudutaan ulos…</h1></div>`;
+  window.scrollTo(0, 0);
+  try { await Promise.race([sb.auth.signOut({ scope: "local" }), new Promise((r) => setTimeout(r, 2500))]); } catch (e) { console.error(e); }
+  // varmuuden vuoksi: poista istuntoavaimet, vaikka signOut ei ehtinyt
+  try { Object.keys(localStorage).filter((k) => /^sb-.*-auth-token/.test(k)).forEach((k) => localStorage.removeItem(k)); } catch {}
+  try { sessionStorage.setItem("kpl-ulos", "1"); } catch {}
+  location.replace(location.pathname + "#/kirjaudu");
+  location.reload();
 }
 function avaaValikko(auki) {
   document.body.classList.toggle("valikko-auki", auki);
@@ -227,6 +242,7 @@ async function reititä() {
   if (id === navId) sivu.focus({ preventScroll: true });
 }
 
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 async function kaynnista() {
   // OAuth-paluu (?code=...) käsitellään supabase-js:ssä; siivotaan osoite
   if (location.search.includes("code=")) {
@@ -235,14 +251,17 @@ async function kaynnista() {
   }
   await tarkistaRooli();
   if (tila.jasen) await Promise.all([lataaPerus(), lataaPelaajat()]);
-  sb.auth.onAuthStateChange(async (tapahtuma) => {
+  // Kuuntelijan työ siirretään pois supabase-js:n sisäisestä lukosta (setTimeout): muuten
+  // getSession() kuuntelijan sisällä jumittaa signOut-kutsun (1.11.2026).
+  sb.auth.onAuthStateChange((tapahtuma) => setTimeout(async () => {
+    if (document.body.classList.contains("uloskirjautuu")) return;
     if (tapahtuma === "SIGNED_IN" || tapahtuma === "SIGNED_OUT") {
       const oli = tila.jasen;
       await tarkistaRooli();
       if (tila.jasen && !oli) { await Promise.all([lataaPerus(), lataaPelaajat()]); if (location.hash.startsWith("#/kirjaudu")) location.hash = "#/"; else reititä(); }
       else if (!tila.jasen) reititä();
     }
-  });
+  }, 0));
   window.addEventListener("hashchange", reititä);
   reititä();
 }

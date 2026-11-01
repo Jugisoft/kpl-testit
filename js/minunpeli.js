@@ -14,9 +14,8 @@ const RYHMAT = [
   ["onnistui", "Onnistui", [0, 1, 6], "#2EE59D"],
   ["ei", "Ei etenemistä", [7, 8], "#5E5850"],
   ["laiton", "Laiton", [2], "#8C877D"],
-  ["koppi", "Koppi", [3], "#7DD3FC"],
+  ["koppi", "Koppi", [3, 5], "#7DD3FC"],   // koppi + haava (1.11.2026)
   ["palo", "Palo", [4], "#FF3B4E"],
-  ["haava", "Haava", [5], "#A78BFA"],
 ];
 
 const tiedostot = new Map();

@@ -58,7 +58,6 @@ export async function piirraKuorma(el, p, opt) {
   const maxPv = Math.max(120, ...a.paivat.map((d) => d.min), ...a2.paivat.map((d) => d.min));
   const maxVk = Math.max(1, ...a.trendi.map((w) => w.min));
   const tila_ = a.acwr == null ? null : a.acwr > 1.5 ? ["varoitus", "Kuorma nousee jyrkästi"] : a.acwr < 0.6 ? ["info", "Kevyempi jakso"] : ["hyva", "Kuorma tasainen"];
-  const ryhmat = [...new Set(Object.values(ohjelmat).map((o) => o.ryhma))];
 
   el.innerHTML = `
     <div class="oma-osa-paa">
@@ -106,18 +105,24 @@ export async function piirraKuorma(el, p, opt) {
     </div>
     <ul class="ku-selite pieni-selite">${TYYPIT.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}</li>`).join("")}</ul>
 
-    ${opt.oma ? `<form id="ku-uusi" class="oma-lomake ku-kirjaus">
-      <h3>Kirjaa omatoiminen treeni</h3>
-      <p class="pieni">Valitse ohjelma tai laji, kesto ja päivä. Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a> – ne lasketaan mukaan automaattisesti.</p>
-      ${ryhmat.map((r) => `<div class="ku-ryhma"><span class="ku-ryhma-nimi">${esc(r)}</span><div class="ku-chipit" role="radiogroup" aria-label="${esc(r)}">${Object.values(ohjelmat).filter((o) => o.ryhma === r).map((o) => `<label class="chip"><input type="radio" name="ohjelma" value="${o.koodi}" required><i class="ku-pallo" style="background:${T[o.tyyppi].vari}"></i>${esc(o.nimi)}</label>`).join("")}</div></div>`).join("")}
-      <div id="ku-valinta" class="ku-valinta" hidden></div>
-      <div class="ku-chipit" role="radiogroup" aria-label="Kesto"><span class="ku-ryhma-nimi">Kesto</span>${[20, 30, 45, 60, 75, 90].map((m) => `<label class="chip"><input type="radio" name="pika" value="${m}"${m === 45 ? " checked" : ""}>${m} min</label>`).join("")}
-        <label class="kentta ku-kesto">tai min<input type="number" name="kesto" min="5" max="600" inputmode="numeric" placeholder="–"></label></div>
-      <div class="oma-kentat">
-        <label class="kentta">Päivä<input type="date" name="pvm" value="${tanaan()}" min="${lisaaPv(tanaan(), -14)}" max="${tanaan()}" required></label>
-        <label class="kentta">Huomio<input type="text" name="huomio" maxlength="120" placeholder="valinnainen, esim. tuntui raskaalta"></label>
+    ${opt.oma ? `<form id="ku-uusi" class="paneeli ly-kirjaus ku-pika">
+      <h2>Kirjaa omatoiminen treeni</h2>
+      <div class="ku-pika-lajit" role="radiogroup" aria-label="Laji">${Object.values(ohjelmat).map((o) => `<label class="chip"><input type="radio" name="ohjelma" value="${o.koodi}"><i class="ku-pallo" style="background:${T[o.tyyppi].vari}"></i>${esc(o.nimi)}</label>`).join("")}</div>
+      <div class="ku-pika-rivi">
+        <div class="ku-pika-kentta"><span class="ku-ryhma-nimi">Kesto, min</span>
+          <div class="ly-maara"><button type="button" class="btn ly-pm" data-kesto="-15" aria-label="Vähennä 15 min">−</button>
+            <input name="kesto" type="number" inputmode="numeric" min="5" max="600" value="45" aria-label="Kesto minuutteina" required>
+            <button type="button" class="btn ly-pm" data-kesto="15">+15</button></div></div>
+        <div class="ku-pika-kentta"><span class="ku-ryhma-nimi" id="ku-lkm-nimi">Lukumäärä</span>
+          <div class="ly-maara"><button type="button" class="btn ly-pm" data-lkm="-10" aria-label="Vähennä 10">−</button>
+            <input name="lkm" type="number" inputmode="numeric" min="0" max="5000" placeholder="0" aria-labelledby="ku-lkm-nimi">
+            <button type="button" class="btn ly-pm" data-lkm="10">+10</button></div></div>
       </div>
-      <div class="rivi"><button class="btn ensisij">Kirjaa treeni</button></div>
+      <div class="rivi">
+        <label class="ly-kentta">Päivä <input type="date" name="pvm" value="${tanaan()}" min="${lisaaPv(tanaan(), -14)}" max="${tanaan()}" required></label>
+        <button class="btn ensisij ly-tallenna">Tallenna</button>
+      </div>
+      <p class="pieni">Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a>, ne lasketaan mukaan automaattisesti.</p>
     </form>` : ""}
     ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}</li>`; }).join("")}</ul>` : ""}
     <details class="ku-miten"><summary>Tarkemmin laskennasta</summary>
@@ -132,30 +137,35 @@ export async function piirraKuorma(el, p, opt) {
   try { if (localStorage.getItem("ku-kk") === "1") kk.open = true; } catch (_) {}
   if (kk.open) piirraKk();
   kk.ontoggle = () => { try { localStorage.setItem("ku-kk", kk.open ? "1" : "0"); } catch (_) {} if (kk.open) piirraKk(); };
+  // Pikakirjaus (1.11.2026, korjaamo): laji, kesto, lukumäärä ja päivä – kuten lyöntipäiväkirja
   const f = $("#ku-uusi", el);
   if (f) {
-    const valinta = $("#ku-valinta", f);
-    f.querySelectorAll("[name=ohjelma]").forEach((r) => (r.onchange = () => {
-      const o = ohjelmat[r.value];
-      const pika = [...f.elements.pika].find((x) => +x.value === o.kesto_min);
-      if (pika) { pika.checked = true; f.elements.kesto.value = ""; } else f.elements.kesto.value = o.kesto_min;
-      valinta.hidden = false;
-      valinta.innerHTML = `<div class="ku-valinta-paa"><i class="ku-pallo" style="background:${T[o.tyyppi].vari}"></i><b>${esc(o.nimi)}</b><span class="pieni">${T[o.tyyppi].nimi} · rasitusarvio ${o.rpe}/10</span></div>
-        ${o.maarat.length || o.km ? `<div class="oma-kentat ku-maarat">${o.maarat.map((m, i) => `<label class="kentta">${esc(m)}<input type="number" name="maara${i}" data-maara="${esc(m)}" min="0" max="5000" inputmode="numeric" placeholder="kpl"></label>`).join("")}${o.km ? `<label class="kentta">Matka (km)<input type="number" name="km" min="0" max="300" step="0.1" inputmode="decimal" placeholder="km"></label>` : ""}</div>` : ""}
-        ${o.kuvaus ? `<details class="ku-ohjelma"><summary>Näytä ohjelma</summary><ul>${o.kuvaus.split("\n").map((l) => `<li>${linkit(l)}</li>`).join("")}</ul>${o.lahde ? `<p class="pieni">Lähde: ${esc(o.lahde)}</p>` : ""}</details>` : ""}`;
-    }));
+    const x = f.elements;
+    let edellinen = null;
+    try { edellinen = localStorage.getItem("ku-laji"); } catch (_) {}
+    const onKm = () => { const o = ohjelmat[x.ohjelma.value]; return !!o?.km && !o?.maarat?.length; };   // lenkki, pyöräily: matka
+    const lkmNimi = () => (onKm() ? "Matka, km" : ohjelmat[x.ohjelma.value]?.maarat?.[0] || "Lukumäärä");
+    const valitse = () => { const o = ohjelmat[x.ohjelma.value]; if (!o) return;
+      $("#ku-lkm-nimi", f).textContent = lkmNimi();
+      x.lkm.step = onKm() ? "0.1" : "1"; x.lkm.inputMode = onKm() ? "decimal" : "numeric";
+      $$("[data-lkm]", f).forEach((b) => { const n = +b.dataset.lkm > 0 ? 1 : -1; b.dataset.lkm = n * (onKm() ? 1 : 10); if (n > 0) b.textContent = onKm() ? "+1" : "+10"; });
+      if (o.kesto_min) x.kesto.value = o.kesto_min; };
+    f.querySelectorAll("[name=ohjelma]").forEach((r) => { if (r.value === edellinen) r.checked = true; r.onchange = valitse; });
+    if (edellinen && ohjelmat[edellinen]) valitse();
+    $$("[data-kesto]", f).forEach((b) => (b.onclick = () => { x.kesto.value = Math.min(600, Math.max(5, (+x.kesto.value || 0) + +b.dataset.kesto)); }));
+    $$("[data-lkm]", f).forEach((b) => (b.onclick = () => { x.lkm.value = Math.round(Math.max(0, (+x.lkm.value || 0) + +b.dataset.lkm) * 10) / 10 || ""; }));
     f.onsubmit = async (e) => {
       e.preventDefault();
-      const x = f.elements, o = ohjelmat[x.ohjelma.value], kesto = +x.kesto.value || +x.pika.value;
-      if (!o) { ilmoita("Valitse ohjelma tai laji", true); return; }
+      const o = ohjelmat[x.ohjelma.value], kesto = +x.kesto.value, km = onKm() ? Math.round((+x.lkm.value || 0) * 10) / 10 : 0, lkm = onKm() ? 0 : Math.round(+x.lkm.value || 0);
+      if (!o) { ilmoita("Valitse laji", true); return; }
       if (!(kesto >= 5 && kesto <= 600)) { ilmoita("Kesto 5–600 minuuttia", true); return; }
-      const maarat = {};
-      f.querySelectorAll("[data-maara]").forEach((i) => { if (+i.value > 0) maarat[i.dataset.maara] = Math.round(+i.value); });
-      const km = x.km && x.km.value ? +x.km.value : null;
+      const nappi = f.querySelector(".ly-tallenna"); nappi.disabled = true;
       const { error } = await sb.from("omat_treenit").insert({ pelaaja_id: p.id, pvm: x.pvm.value, tyyppi: o.tyyppi, ohjelma: o.koodi, kesto_min: kesto,
-        maarat: Object.keys(maarat).length ? maarat : null, km, huomio: x.huomio.value.trim() || null });
+        maarat: lkm > 0 ? { [lkmNimi()]: lkm } : null, km: km > 0 ? km : null, huomio: null });
+      nappi.disabled = false;
       if (error) { ilmoita("Tallennus ei onnistunut: " + error.message, true); return; }
-      ilmoita("Treeni kirjattu"); opt.paivita();
+      try { localStorage.setItem("ku-laji", o.koodi); } catch (_) {}
+      ilmoita(`Tallennettu: ${o.nimi} ${kesto} min${lkm ? ` · ${lkm}` : km ? ` · ${String(km).replace(".", ",")} km` : ""}`); opt.paivita();
     };
   }
   $$("[data-poista-oma]", el).forEach((b) => (b.onclick = async () => {

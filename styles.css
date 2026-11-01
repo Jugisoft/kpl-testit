@@ -2125,3 +2125,89 @@ a.jtt-yla:hover { text-decoration: underline; }
   .ku-kk-min { font-size: 11px; }
   .ku-kk-vs { font-size: 11px; }
 }
+
+/* Uloskirjautuminen (1.11.2026) */
+.ulos-ilmoitus { min-height: 60vh; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; }
+.ulos-ilmoitus img { opacity: .9; animation: ulos-pulssi 1.2s ease-in-out infinite; }
+.ulos-ilmoitus h1 { font: italic 800 36px/1 var(--num); margin: 0; }
+@keyframes ulos-pulssi { 50% { opacity: .45; transform: scale(.96); } }
+.ulos-ok { max-width: 520px; margin: 0 0 18px; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.10); color: #bbf7d0; font-weight: 600; }
+body:not(.kirjautunut) main { padding-top: max(28px, env(safe-area-inset-top, 0px)); }
+
+/* Testit juoksutestien ilmeellä (1.11.2026, korjaamo) */
+.tst-ylaohjaimet { gap: 10px 18px; }
+.tst-luokat { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tst-luokat::-webkit-scrollbar { display: none; }
+.tst-luokka { flex: none; display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent; background: none; color: var(--ink-2); font: 600 14px/1 var(--text); padding: 9px 14px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.tst-luokka:hover { color: var(--ink); border-color: var(--line); }
+.tst-luokka .lkm { font: 700 12px/1 var(--num); padding: 3px 7px; border-radius: 999px; background: var(--line-2); color: var(--ink-3); }
+.tst-luokka[aria-selected="true"] { color: var(--ink); border-color: var(--cyan); background: rgba(245,168,0,.10); }
+.tst-luokka[aria-selected="true"] .lkm { background: var(--cyan); color: var(--musta); }
+.tst-luokka.tyhja-luokka { opacity: .5; }
+.tst-ala h3 { font: 600 12px/1 var(--text); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); margin: 18px 0 10px; }
+.tst-kortit { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.tst-kortti .jtt-tk-nimi { font-size: 19px; padding-right: 120px; min-height: 2.1em; }
+.tst-kortti .jtt-tk-arvo { margin-top: 4px; }
+.tst-kortti .tst-enn b { color: var(--ink); font: 700 15px var(--num); }
+.tst-kortti .merkki { font-size: 11px; vertical-align: 2px; }
+.tst-otsikko { margin: 34px 0 8px; padding-top: 22px; border-top: 1px solid var(--line-2); scroll-margin-top: 70px; }
+.tst-otsikko h2 { margin: 0 0 4px; font-size: clamp(30px, 4vw, 42px); text-transform: uppercase; letter-spacing: .01em; }
+.tst-otsikko .jtt-kuvaus { margin-bottom: 0; }
+.tst-taulu .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(160px, 2fr) 84px 92px 84px 84px; }
+.tst-ennatykset { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.tst-ennkortti { align-content: start; }
+.tst-enn-lista { margin: 8px 0 0; padding: 8px 0 0 22px; border-top: 1px solid var(--line-2); display: grid; gap: 4px; font-size: 13.5px; color: var(--ink-2); }
+.tst-enn-lista .num { font: 600 16px var(--num); color: var(--ink); margin-right: 4px; }
+@media (max-width: 1180px) { .tst-taulu .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(120px, 2fr) 76px 86px 76px; } }
+@media (max-width: 640px) {
+  .tst-ylaohjaimet { flex-direction: column; align-items: stretch; }
+  .tst-luokat { margin: 0 -14px; padding: 0 14px; }
+  .tst-kortit { grid-template-columns: 1fr; gap: 8px; }
+  .tst-kortti .jtt-tk-nimi { padding-right: 0; min-height: 0; font-size: 17px; }
+  .tst-kortti .tst-enn { display: none; }
+  .tst-ennatykset { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tst-enn-lista { display: none; }
+}
+
+/* Omatoimisen treenin pikakirjaus (1.11.2026) */
+.ku-pika { margin-top: 20px; }
+.ku-pika-lajit { display: flex; flex-wrap: wrap; gap: 6px; }
+.ku-pika-lajit .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; padding: 7px 12px; }
+.ku-pika-lajit .chip input { position: absolute; opacity: 0; pointer-events: none; }
+.ku-pika-lajit .chip:has(input:checked) { border-color: var(--cyan); background: rgba(245,168,0,.14); color: var(--ink); box-shadow: 0 0 0 1px var(--cyan) inset; }
+.ku-pika-rivi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ku-pika-kentta { display: grid; gap: 6px; min-width: 0; }
+.ku-pika .ly-maara { display: grid; grid-template-columns: 56px minmax(0, 1fr) 64px; gap: 8px; }
+.ku-pika .ly-maara input { width: 100%; min-width: 0; order: 0; }
+.ku-pika .ly-pm { padding-inline: 0; justify-content: center; }
+@media (max-width: 600px) {
+  .ku-pika-lajit { flex-wrap: nowrap; overflow-x: auto; margin: 0 -14px; padding: 2px 14px 6px; scrollbar-width: none; }
+  .ku-pika-lajit::-webkit-scrollbar { display: none; }
+  .ku-pika-lajit .chip { flex: none; padding: 9px 13px; }
+  .ku-pika-rivi { grid-template-columns: 1fr; }
+}
+
+/* Laittomat lyönnit (Oma peli / vastustaja, 1.11.2026) */
+.yk-lt-kpit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.yk-lt-kpit > div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line-2); min-width: 0; }
+.yk-lt-kpit b { font: 700 28px/1 var(--num); color: var(--ink); }
+.yk-lt-kpit > div:first-child b { color: var(--cyan); }
+.yk-lt-kpit span { font-size: 12px; color: var(--ink-3); }
+.yk-lt-sarja { display: grid; gap: 5px; }
+.yk-lt-j, .yk-lt-p { display: grid; align-items: center; gap: 10px; font-size: 13.5px; }
+.yk-lt-j { grid-template-columns: 82px minmax(0, 1fr) 58px; }
+.yk-lt-j .k { font: 600 13px var(--num); color: var(--ink-3); white-space: nowrap; }
+.yk-lt-j .tr, .yk-lt-p .tr { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.yk-lt-j .tr i, .yk-lt-p .tr i { display: block; height: 100%; border-radius: 4px; background: #8C877D; }
+.yk-lt-j .v { text-align: right; font-size: 14px; color: var(--ink-2); }
+.yk-lt-j.oma .k, .yk-lt-j.oma .v { color: var(--cyan); font-weight: 700; }
+.yk-lt-j.oma .tr i { background: var(--cyan); box-shadow: 0 0 8px rgba(245,168,0,.6); }
+.yk-lt-pelaajat { display: grid; gap: 7px; }
+.yk-lt-p { grid-template-columns: minmax(120px, 1.3fr) minmax(0, 1fr) 34px 58px; }
+.yk-lt-p .n { display: grid; min-width: 0; font-weight: 600; }
+.yk-lt-p .n small { font-weight: 400; font-size: 11.5px; color: var(--ink-3); }
+.yk-lt-p .c { text-align: right; font-size: 16px; }
+.yk-lt-p .pct { font-size: 13.5px; color: var(--ink-2); }
+.yk-lt-p .tr i { background: var(--red); opacity: .75; }
+.yk-lt-p.pieni-otos { opacity: .5; }
+@media (max-width: 600px) { .yk-lt-kpit b { font-size: 22px; } .yk-lt-p { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 28px 52px; gap: 8px; } }

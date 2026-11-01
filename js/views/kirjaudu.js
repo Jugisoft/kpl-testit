@@ -5,7 +5,9 @@ const paluu = () => location.origin + location.pathname;
 
 export async function nayta(main) {
   if (tila.jasen) { location.hash = "#/"; return; }
-  main.innerHTML = `
+  let ulos = false;
+  try { ulos = sessionStorage.getItem("kpl-ulos") === "1"; sessionStorage.removeItem("kpl-ulos"); } catch {}
+  main.innerHTML = `${ulos ? `<div class="ulos-ok" role="status">Olet kirjautunut ulos.</div>` : ""}
     <div class="kirjaudu-paa">
       <img src="img/kpl-logo-192.png" alt="Kouvolan Pallonlyöjät" width="96" height="96">
       <div><h1>KPL <em>Keskus</em></h1>
@@ -33,4 +35,5 @@ export async function nayta(main) {
     if (error) ilmoita("Linkin lähetys epäonnistui: " + error.message, true);
     else $("#linkki").innerHTML = `<p><strong>Linkki lähetetty osoitteeseen ${esc(email)}.</strong> Avaa se samalla laitteella ja selaimella.</p>`;
   };
+  window.scrollTo(0, 0);
 }

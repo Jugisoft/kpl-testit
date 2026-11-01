@@ -8,11 +8,13 @@ const LAHDE = "https://raw.githubusercontent.com/Jugisoft/ydin-2027/main/data/ou
 const KAUDET = [2027, 2026];   // lisää uusi kausi alkuun
 
 export const TULOS = {
-  kunnari: ["Kunnari", "#2EE59D"], juoksu: ["Juoksu", "#2EE59D"], eteni: ["Kärkietenijä eteni", "#F5A800"],
-  palo: ["Palo", "#FF3B4E"], koppi: ["Koppi", "#7DD3FC"], haava: ["Haava", "#A78BFA"],
+  kunnari: ["Kunnari", "#2EE59D"], juoksu: ["Juoksu", "#2EE59D"], eteni: ["Kärkilyönti", "#F5A800"],
+  palo: ["Palo", "#FF3B4E"], koppi: ["Koppi", "#7DD3FC"],
   laiton: ["Laiton", "#8C877D"], ei_edennyt: ["Ei edennyt", "#5E5850"], muu: ["Muu", "#3E3A35"],
 };
-const JARJ = ["juoksu", "kunnari", "eteni", "palo", "koppi", "haava", "laiton", "ei_edennyt", "muu"];
+// Haava yhdistetään koppiin (Jugi, korjaamo 1.11.2026).
+const YHDISTA = { haava: "koppi" };
+const JARJ = ["juoksu", "kunnari", "eteni", "palo", "koppi", "laiton", "ei_edennyt", "muu"];
 const KANSIOT = [["0-tilanne", ["0"]], ["1-tilanne", ["1"]], ["2-tilanne", ["2", "1–2"]], ["Takatilanne", ["3", "1–3", "2–3", "1–2–3"]]];
 const norm = (s) => (s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 
@@ -52,7 +54,7 @@ export async function piirraOttelulyonnit(el, pelaaja) {
   }
   if (!kaudet.length) { el.innerHTML = `<p class="tyhja">Pelaajalla ei ole Superpesiksen ottelulyöntejä${pelaaja.joukkue === "Ura" || pelaaja.joukkue === "PuMu" ? " (nousijajoukkue, Ykköspesis)" : ""}.</p>`; return; }
   if (!kaudet.some((k) => String(k.kausi) === s.kausi) && s.kausi !== "kaikki") s.kausi = String(kaudet[0].kausi);
-  const kaikki = kaudet.flatMap(({ kausi, d, h }) => d.l.map(([x, y, t, palot, lyonti, tulos, vaihe]) => ({ kausi, x, y, tilanne: h.tilanteet[t], palot, lyonti, tulos: h.tulokset[tulos], vaihe })));
+  const kaikki = kaudet.flatMap(({ kausi, d, h }) => d.l.map(([x, y, t, palot, lyonti, tulos, vaihe]) => ({ kausi, x, y, tilanne: h.tilanteet[t], palot, lyonti, tulos: YHDISTA[h.tulokset[tulos]] || h.tulokset[tulos], vaihe })));
   const piirra = () => {
     const L = kaikki.filter((l) => s.kausi === "kaikki" || String(l.kausi) === s.kausi);
     const kd = kaudet.find((k) => String(k.kausi) === s.kausi) || kaudet[0];
@@ -90,7 +92,7 @@ export async function piirraOttelulyonnit(el, pelaaja) {
         return `<button type="button" class="ok-pieni${s.tilanne === k ? " valittu" : ""}" data-kansio="${k}"><span class="ok-pieni-ots">${k} <span class="pieni">${a.length}</span></span>
           <div class="kentta-kehys">${kenttaSvg({ id: "ok-" + k, pisteet: pisteet(v), r: 0.9 })}</div>
           <span class="pieni">palo ${pros(lkm(a, "palo"), a)} % · koppi ${pros(lkm(a, "koppi"), a)} % · laiton ${pros(lkm(a, "laiton"), a)} %</span></button>`; }).join("")}</div>
-      <p class="vihje">Pisteet ovat pöytäkirjanpitäjän merkitsemiä kohtia, joten ne ovat likimääräisiä. Juoksu = lyönnin seurauksena tehtiin juoksu. Kärkietenijä eteni = onnistunut kärkilyönti (0-tilanteessa lyöjä kentälle). Ei edennyt = kärkilyönti epäonnistui ilman paloa tai koppia. Laiton-pisteet näkyvät rajojen ulkopuolella. Selitteet: <a href="#/ohje/vastustajat">Ohje</a>.</p>`;
+      <p class="vihje">Pisteet ovat pöytäkirjanpitäjän merkitsemiä kohtia, joten ne ovat likimääräisiä. Juoksu = lyönnin seurauksena tehtiin juoksu. Kärkilyönti = onnistunut kärkilyönti, kärkietenijä eteni (0-tilanteessa lyöjä kentälle). Koppi sisältää myös haavat. Ei edennyt = kärkilyönti epäonnistui ilman paloa tai koppia. Laiton-pisteet näkyvät rajojen ulkopuolella. Selitteet: <a href="#/ohje/vastustajat">Ohje</a>.</p>`;
     $$("[data-r]", el).forEach((b) => (b.onclick = () => { s[b.dataset.r] = b.dataset.k; piirra(); }));
     $$("[data-tulos]", el).forEach((b) => (b.onclick = () => { const t = b.dataset.tulos; s.piilossa.has(t) ? s.piilossa.delete(t) : s.piilossa.add(t); if (t === "juoksu") s.piilossa.has(t) ? s.piilossa.add("kunnari") : s.piilossa.delete("kunnari"); piirra(); }));
     $$("[data-kansio]", el).forEach((b) => (b.onclick = () => { s.tilanne = s.tilanne === b.dataset.kansio ? "" : b.dataset.kansio; piirra(); el.querySelector(".ok-suod")?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }));

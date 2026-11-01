@@ -5,6 +5,7 @@ import { sb, tila, nimi, lataaTulokset, SUPABASE_URL } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, testiParhaat, kuva, ilmoita, palkki } from "../util.js";
 import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
+import { piirraKuorma, luokitteluTagi, kytkeLuokittelu } from "../kuorma.js";
 
 const PAIVA = 864e5;
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
@@ -44,14 +45,16 @@ async function piirra(main) {
   const joukkue = tila.joukkueet.find((j) => j.id === p.joukkue_id);
   const vkLoppu = lisaaPv(viikko, 6);
 
-  const [kaikki, tav, ohj, missiot, kirjaukset, nh] = await Promise.all([
+  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     sb.from("tavoitteet").select("*").eq("pelaaja_id", pid).order("luotu"),
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
     oma ? sb.from("lyonti_missiot").select("*").eq("omistaja", omaEmail()).eq("arkistoitu", false) : Promise.resolve({ data: [] }),
     oma ? sb.from("lyonti_kirjaukset").select("*").eq("omistaja", omaEmail()) : Promise.resolve({ data: [] }),
-    haeNimenhuuto(p.joukkue_id, viikko, vkLoppu),
+    haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -35), lisaaPv(viikko, 13)),
   ]);
+  const nhKaikki = nhLaaja.tapahtumat || [];
+  const nh = { ...nhLaaja, tapahtumat: nhKaikki.filter((e) => e.pvm >= viikko && e.pvm <= vkLoppu) };
   const ohjelma = ohj.data || [];
   const kuit = ohjelma.length ? (await sb.from("ohjelma_kuittaukset").select("*").eq("pelaaja_id", pid).in("ohjelma_id", ohjelma.map((o) => o.id))).data || [] : [];
   const tehdyt = new Set(kuit.map((k) => k.ohjelma_id));
@@ -89,6 +92,8 @@ async function piirra(main) {
         <a class="btn" href="#/pelaaja/${pid}">Pelaajakortti</a>
       </div>
     </div>
+
+    <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
     <section id="minun-peli" aria-labelledby="mp-otsikko"></section>
 
@@ -152,6 +157,8 @@ async function piirra(main) {
       ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}`;
 
   piirraMinunPeli($("#minun-peli", main), p);
+  piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, paivita: () => piirra(main) });
+  kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));
 
   // --- tapahtumat ---
   $$("[data-vk]", main).forEach((b) => (b.onclick = () => { const n = +b.dataset.vk; viikko = n ? lisaaPv(viikko, n) : maanantai(tanaan()); piirra(main); }));
@@ -215,7 +222,7 @@ function nimenhuuto(nh) {
     ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}">
       <span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
       <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : "koko päivä"}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
-      ${e.url ? `<a class="btn oma-nh-linkki" href="${esc(e.url)}" target="_blank" rel="noopener">Ilmoittaudu ↗</a>` : ""}
+      <span class="oma-nh-luokka">${luokitteluTagi(e, tila.ohjaaja)}</span>
     </li>`; }).join("")}</ul>` : ""}
   </div>`;
 }

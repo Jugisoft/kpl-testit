@@ -1952,3 +1952,86 @@ a.jtt-yla:hover { text-decoration: underline; }
 .oma-nh-linkki { padding: 6px 10px; font-size: 13px; }
 .oma-nh-virhe { color: var(--amber); }
 @media (max-width: 600px) { .oma-nh-lista li { grid-template-columns: 44px minmax(0, 1fr); } .oma-nh-linkki { grid-column: 2; justify-self: start; } }
+
+/* Viikkoni: arki ja kuormitus (1.11.2026) */
+.ku { margin-top: 20px; }
+.ku .oma-osa-paa h2 { margin: 0; }
+.ku-tila { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-weight: 600; font-size: 13px; border: 1px solid var(--line); color: var(--ink); white-space: nowrap; }
+.ku-tila.hyva { background: var(--green-bg); border-color: rgba(46,229,157,.4); } .ku-tila.hyva span { color: var(--green); }
+.ku-tila.varoitus { background: var(--red-bg); border-color: rgba(255,59,78,.45); } .ku-tila.varoitus span { color: var(--red); }
+.ku-tila.info { background: var(--amber-bg); border-color: rgba(255,176,32,.4); } .ku-tila.info span { color: var(--amber); }
+.ku-luvut { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0 16px; }
+.ku-luvut div { display: grid; gap: 2px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: var(--radius); }
+.ku-luvut b { font-size: 30px; line-height: 1; color: var(--ink); white-space: nowrap; }
+.ku-luvut b small { font-size: 18px; color: var(--ink-3); }
+.ku-luvut span { font-size: 13px; color: var(--ink-2); }
+.ku-jakauma { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; }
+.ku-jakauma i { display: block; min-width: 4px; }
+.ku-selite { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 18px; padding: 0; font-size: 14px; color: var(--ink-2); }
+.ku-selite li { display: inline-flex; align-items: center; gap: 7px; }
+.ku-selite i, .ku-omat i, .ku-pv-lista i, .ku-luokka i, .ku-pallo { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.ku-selite b { color: var(--ink); font-size: 16px; }
+.ku-selite span { color: var(--ink-3); font-size: 13px; }
+.ku-selite.pieni-selite { font-size: 12px; margin: 6px 0 4px; }
+.ku-paivat { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.ku-pv { display: grid; grid-template-rows: 110px auto auto 1fr; gap: 4px; padding: 8px 6px; border-radius: var(--radius); border: 1px solid var(--line-2); background: var(--surface-2); min-width: 0; }
+.ku-pv.tanaan { border-color: var(--kpl); box-shadow: inset 0 0 0 1px var(--kpl); }
+.ku-pv.tuleva { background: transparent; border-style: dashed; }
+.ku-pv.tuleva .ku-pino { opacity: .55; }
+.ku-pylvas { display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+.ku-pino { display: flex; flex-direction: column-reverse; gap: 2px; width: 60%; max-width: 34px; }
+.ku-pino i { display: block; min-height: 3px; }
+.ku-pino i:last-child { border-radius: 4px 4px 0 0; }
+.ku-lepo { align-self: center; font-size: 12px; color: var(--ink-3); letter-spacing: .06em; text-transform: uppercase; }
+.ku-pv-nimi { text-align: center; font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+.ku-pv-nimi b { text-transform: uppercase; color: var(--ink); }
+.ku-pv-min { text-align: center; font-size: 15px; color: var(--ink); min-height: 1.2em; }
+.ku-pv-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 11.5px; line-height: 1.3; color: var(--ink-2); }
+.ku-pv-lista li { display: flex; gap: 5px; align-items: baseline; overflow: hidden; }
+.ku-pv-lista li i { width: 7px; height: 7px; transform: translateY(-1px); margin-right: -3px; }
+.ku-pv-lista li i:last-of-type { margin-right: 0; }
+.ku-pieni { margin: 8px 0 0; font-size: 12px; color: var(--ink-3); }
+.ku-huomiot { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.ku-huomiot li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border-left: 3px solid var(--ink-3); font-size: 14px; color: var(--ink-2); }
+.ku-huomiot li > span:first-child { font-weight: 700; text-align: center; color: var(--ink-3); }
+.ku-huomiot li.varoitus { border-left-color: var(--red); background: var(--red-bg); color: var(--ink); } .ku-huomiot li.varoitus > span:first-child { color: var(--red); }
+.ku-huomiot li.tuleva { border-left-color: var(--kpl); } .ku-huomiot li.tuleva > span:first-child { color: var(--kpl); }
+.ku-trendi { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; height: 170px; }
+.ku-vk { display: grid; grid-template-rows: auto 1fr auto; gap: 4px; text-align: center; min-width: 0; }
+.ku-vk-arvo { font-size: 14px; color: var(--ink-2); min-height: 1.2em; white-space: nowrap; }
+.ku-vk-pylvas { display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+.ku-vk .ku-pino { width: 55%; max-width: 44px; }
+.ku-vk-nimi { font-size: 12px; color: var(--ink-3); }
+.ku-vk.valittu .ku-vk-nimi, .ku-vk.valittu .ku-vk-arvo { color: var(--ink); font-weight: 600; }
+.ku-chipit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.ku-chipit .chip { display: inline-flex; align-items: center; gap: 6px; }
+.ku-kesto { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; }
+.ku-kesto input { width: 80px; }
+.ku-omat { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ku-omat li { display: flex; align-items: center; gap: 10px; font-size: 14px; padding: 6px 0; border-top: 1px solid var(--line-2); }
+.ku-omat li span { flex: 1; min-width: 0; }
+.ku-miten { margin-top: 16px; }
+.ku-miten summary { cursor: pointer; color: var(--ink-2); font-size: 14px; }
+.ku-tip { position: fixed; z-index: 100; pointer-events: none; max-width: 280px; padding: 6px 10px; border-radius: 6px; background: #000; border: 1px solid var(--line); color: var(--ink); font-size: 13px; opacity: 0; transition: opacity .1s; }
+.ku-tip.nakyy { opacity: 1; }
+.oma-nh-luokka { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.ku-luokka { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--ink-2); }
+.ku-luokka span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.ku-luokka em { font-style: normal; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.ku-luokka.korjattu { color: var(--ink); }
+.ku-editori { grid-column: 1 / -1; display: grid; gap: 6px; padding: 10px; border-radius: var(--radius); background: var(--surface-2); }
+.ku-editori select, .ku-editori input { padding: 6px 8px; }
+.ku-editori input { width: 90px; }
+@media (max-width: 900px) {
+  .ku-luvut { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ku-luvut b { font-size: 24px; }
+  .ku-paivat { gap: 4px; }
+  .ku-pv { grid-template-rows: 80px auto auto; padding: 6px 2px; }
+  .ku-pv-lista { display: none; }
+  .ku-pv-nimi { font-size: 11px; white-space: normal; line-height: 1.2; }
+  .ku-pv-min { font-size: 12px; }
+  .ku-trendi { gap: 4px; height: 140px; }
+  .ku-vk-arvo { font-size: 11px; }
+  .oma-nh-lista li { grid-template-columns: 52px minmax(0, 1fr); }
+  .oma-nh-luokka { grid-column: 2; justify-content: flex-start; }
+}

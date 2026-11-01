@@ -73,25 +73,7 @@ export async function piirraKuorma(el, p, opt) {
     ${paivaKaista(w, maxPv)}`).join("")}
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${h.teksti}</span></li>`).join("")}</ul>` : ""}
 
-    ${opt.oma ? `<form id="ku-uusi" class="paneeli ly-kirjaus ku-pika">
-      <div class="oma-osa-paa"><h2>Kirjaa omatoiminen treeni</h2><a class="pieni" href="#/treenit">Treenipäiväkirja →</a></div>
-      <div class="ku-pika-lajit" role="radiogroup" aria-label="Laji">${Object.values(ohjelmat).map((o) => `<label class="chip"><input type="radio" name="ohjelma" value="${o.koodi}"><i class="ku-pallo" style="background:${T[o.tyyppi].vari}"></i>${esc(o.nimi)}</label>`).join("")}</div>
-      <div class="ku-pika-rivi">
-        <div class="ku-pika-kentta"><span class="ku-ryhma-nimi">Kesto, min</span>
-          <div class="ly-maara"><button type="button" class="btn ly-pm" data-kesto="-15" aria-label="Vähennä 15 min">−</button>
-            <input name="kesto" type="number" inputmode="numeric" min="5" max="600" value="45" aria-label="Kesto minuutteina" required>
-            <button type="button" class="btn ly-pm" data-kesto="15">+15</button></div></div>
-        <div class="ku-pika-kentta"><span class="ku-ryhma-nimi" id="ku-lkm-nimi">Lukumäärä</span>
-          <div class="ly-maara"><button type="button" class="btn ly-pm" data-lkm="-10" aria-label="Vähennä 10">−</button>
-            <input name="lkm" type="number" inputmode="numeric" min="0" max="5000" placeholder="0" aria-labelledby="ku-lkm-nimi">
-            <button type="button" class="btn ly-pm" data-lkm="10">+10</button></div></div>
-      </div>
-      <div class="rivi">
-        <label class="ly-kentta">Päivä <input type="date" name="pvm" value="${tanaan()}" min="${lisaaPv(tanaan(), -14)}" max="${tanaan()}" required></label>
-        <button class="btn ensisij ly-tallenna">Tallenna</button>
-      </div>
-      <p class="pieni">Lyönnit kirjataan <a href="#/lyonnit">lyöntipäiväkirjaan</a>, ne lasketaan mukaan automaattisesti.</p>
-    </form>` : ""}
+    ${opt.oma ? `<a class="ku-kirjaa" href="#/treenit"><span><b>Kirjaa omatoiminen treeni</b><small>Treenipäiväkirjassa: valitse treeni, kesto ja päivä</small></span><i aria-hidden="true">→</i></a>` : ""}
     ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}</li>`; }).join("")}</ul>` : ""}
     <details class="ku-lisaa"><summary>Ensi viikko, kuusi viikkoa ja kuukausi</summary>
     ${[[a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko]) => `
@@ -130,37 +112,6 @@ export async function piirraKuorma(el, p, opt) {
   try { if (localStorage.getItem("ku-kk") === "1") kk.open = true; } catch (_) {}
   if (kk.open) piirraKk();
   kk.ontoggle = () => { try { localStorage.setItem("ku-kk", kk.open ? "1" : "0"); } catch (_) {} if (kk.open) piirraKk(); };
-  // Pikakirjaus (1.11.2026, korjaamo): laji, kesto, lukumäärä ja päivä – kuten lyöntipäiväkirja
-  const f = $("#ku-uusi", el);
-  if (f) {
-    const x = f.elements;
-    let edellinen = null;
-    try { edellinen = localStorage.getItem("ku-laji"); } catch (_) {}
-    const onKm = () => { const o = ohjelmat[x.ohjelma.value]; return !!o?.km && !o?.maarat?.length; };   // lenkki, pyöräily: matka
-    const lkmNimi = () => (onKm() ? "Matka, km" : ohjelmat[x.ohjelma.value]?.maarat?.[0] || "Lukumäärä");
-    const valitse = () => { const o = ohjelmat[x.ohjelma.value]; if (!o) return;
-      $("#ku-lkm-nimi", f).textContent = lkmNimi();
-      x.lkm.step = onKm() ? "0.1" : "1"; x.lkm.inputMode = onKm() ? "decimal" : "numeric";
-      $$("[data-lkm]", f).forEach((b) => { const n = +b.dataset.lkm > 0 ? 1 : -1; b.dataset.lkm = n * (onKm() ? 1 : 10); if (n > 0) b.textContent = onKm() ? "+1" : "+10"; });
-      if (o.kesto_min) x.kesto.value = o.kesto_min; };
-    f.querySelectorAll("[name=ohjelma]").forEach((r) => { if (r.value === edellinen) r.checked = true; r.onchange = valitse; });
-    if (edellinen && ohjelmat[edellinen]) valitse();
-    $$("[data-kesto]", f).forEach((b) => (b.onclick = () => { x.kesto.value = Math.min(600, Math.max(5, (+x.kesto.value || 0) + +b.dataset.kesto)); }));
-    $$("[data-lkm]", f).forEach((b) => (b.onclick = () => { x.lkm.value = Math.round(Math.max(0, (+x.lkm.value || 0) + +b.dataset.lkm) * 10) / 10 || ""; }));
-    f.onsubmit = async (e) => {
-      e.preventDefault();
-      const o = ohjelmat[x.ohjelma.value], kesto = +x.kesto.value, km = onKm() ? Math.round((+x.lkm.value || 0) * 10) / 10 : 0, lkm = onKm() ? 0 : Math.round(+x.lkm.value || 0);
-      if (!o) { ilmoita("Valitse laji", true); return; }
-      if (!(kesto >= 5 && kesto <= 600)) { ilmoita("Kesto 5–600 minuuttia", true); return; }
-      const nappi = f.querySelector(".ly-tallenna"); nappi.disabled = true;
-      const { error } = await sb.from("omat_treenit").insert({ pelaaja_id: p.id, pvm: x.pvm.value, tyyppi: o.tyyppi, ohjelma: o.koodi, kesto_min: kesto,
-        maarat: lkm > 0 ? { [lkmNimi()]: lkm } : null, km: km > 0 ? km : null, huomio: null });
-      nappi.disabled = false;
-      if (error) { ilmoita("Tallennus ei onnistunut: " + error.message, true); return; }
-      try { localStorage.setItem("ku-laji", o.koodi); } catch (_) {}
-      ilmoita(`Tallennettu: ${o.nimi} ${kesto} min${lkm ? ` · ${lkm}` : km ? ` · ${String(km).replace(".", ",")} km` : ""}`); opt.paivita();
-    };
-  }
   $$("[data-poista-oma]", el).forEach((b) => (b.onclick = async () => {
     const { error } = await sb.from("omat_treenit").delete().eq("id", b.dataset.poistaOma);
     if (error) ilmoita("Poisto ei onnistunut: " + error.message, true); else opt.paivita();

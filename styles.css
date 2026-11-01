@@ -2321,3 +2321,9 @@ body:not(.kirjautunut) main { padding-top: max(28px, env(safe-area-inset-top, 0p
 }
 @keyframes tr-nousu { from { transform: translateY(24px); opacity: 0; } }
 body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
+.ku-kirjaa { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(245,168,0,.45); background: linear-gradient(90deg, rgba(245,168,0,.12), rgba(245,168,0,.02)); color: var(--ink); text-decoration: none; }
+.ku-kirjaa:hover { border-color: var(--cyan); }
+.ku-kirjaa span { flex: 1; display: grid; gap: 2px; }
+.ku-kirjaa b { font: 700 19px/1.1 var(--num); text-transform: uppercase; color: var(--cyan); }
+.ku-kirjaa small { font-size: 13px; color: var(--ink-2); }
+.ku-kirjaa i { font-style: normal; font-size: 22px; color: var(--cyan); }

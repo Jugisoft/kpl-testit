@@ -25,7 +25,7 @@ export async function nayta(main, id) {
   pid = id || tila.omaPelaaja || null;
   if (!pid || !tila.pelaaja[pid]) {
     if (tila.ohjaaja) return valitsePelaaja(main);
-    main.innerHTML = `<h1>Oma Keskus</h1><p class="ingressi">Tunnustasi ei ole vielä liitetty pelaajaan. Pyydä ylläpitäjää liittämään se Hallinnassa, niin näet täällä omat testisi, tavoitteesi ja viikon ohjelman.</p>`;
+    main.innerHTML = `<h1>Oma Keskus</h1><p class="ingressi">Tunnustasi ei ole vielä liitetty pelaajaan. Pyydä ylläpitäjää liittämään se (Hallinta → Käyttäjät → sarake Pelaaja), niin näet täällä Minun pelini -osion, omat testisi, tavoitteesi ja viikon ohjelman.</p>`;
     return;
   }
   await piirra(main);

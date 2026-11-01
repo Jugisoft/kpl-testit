@@ -89,7 +89,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261101-3", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261101-4", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -134,9 +134,10 @@ function valikko() {
   const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
   if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
-  if (tila.omaPelaaja) ryhmat[0][1].push(OMA);
+  const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
+  if (pelaajaRooli) ryhmat[0][1].push(OMA);
   else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat);
-  const ala = tila.omaPelaaja ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ...ALAPALKKI.slice(2)] : ALAPALKKI;
+  const ala = pelaajaRooli ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ...ALAPALKKI.slice(2)] : ALAPALKKI;
   return [ryhmat, ala];
 }
 

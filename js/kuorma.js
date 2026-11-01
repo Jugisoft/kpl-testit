@@ -26,17 +26,20 @@ const pvLyh = (s) => `${+s.slice(8, 10)}.${+s.slice(5, 7)}.`;
 
 // --- luokittelu ---
 const SANAT = [
-  ["peli", /ottelu|\bpeli|\bvs\.?\b|turnau|harjoitusottelu|cup\b/i],
-  ["testi", /testi/i],
+  ["testi", /testi|cooper/i],
+  ["peli", /ottelu|\bpeli\b|\bpelit\b|\bvs\.?\b|turnau|\bcup\b/i],
   ["palauttava", /palaut|liikkuvuu|huolto|jooga|venyt|kehonhuolto/i],
-  ["fysiikka", /\bsali|voima|fysiik|kunto(?!lenk)|nopeu|loikk|plyo|ketteryy|hyppy/i],
-  ["aerobinen", /lenk|juoks|aerob|kestävyy|pyörä|hiihto|uinti|cooper|pk-/i],
+  ["fysiikka", /\bsali|voima|fysiik|kunto(?!lenk)|nopeu|loikk|plyo|ketteryy|hyppy|jumppa/i],
+  ["aerobinen", /lenk|juoks|aerob|kestävyy|pyörä|hiihto|uinti|pk-/i],
 ];
 export function arvaaTyyppi(otsikko) {
   for (const [k, re] of SANAT) if (re.test(otsikko || "")) return k;
   return "laji";
 }
 export function kestoMin(e) {
+  // otsikossa oleva kellonaika voittaa kalenterin keston (Nimenhuuto antaa usein oletuksena 2 h), esim. "klo 7.45-9.15"
+  const o = (e.otsikko || "").match(/(\d{1,2})[.:](\d{2})\s*[-–]\s*(\d{1,2})[.:](\d{2})/);
+  if (o) { const m = +o[3] * 60 + +o[4] - (+o[1] * 60 + +o[2]); if (m >= 10 && m <= 600) return m; }
   if (e.alku && e.loppu) {
     const [ah, am] = e.alku.split(":").map(Number), [lh, lm] = e.loppu.split(":").map(Number);
     const m = lh * 60 + lm - (ah * 60 + am);

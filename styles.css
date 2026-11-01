@@ -2101,3 +2101,27 @@ a.jtt-yla:hover { text-decoration: underline; }
 .ku-vko-paa h3 { margin: 0; }
 .ku-vko-sum { font-size: 18px; color: var(--ink); }
 .ku-mini { display: inline-flex; width: 140px; height: 8px; align-self: center; }
+/* Viikkoni: kuukausikalenteri (1.11.2026) */
+.ku-kk { margin-top: 14px; }
+.ku-kk > summary { cursor: pointer; font-weight: 600; color: var(--kpl); }
+.ku-kk-paa { display: flex; align-items: center; gap: 12px; margin: 12px 0 8px; }
+.ku-kk-paa b { font: 600 20px/1 var(--num); text-transform: capitalize; }
+.ku-kk-ruudukko { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) 64px; gap: 4px; }
+.ku-kk-vp { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); text-align: center; }
+.ku-kk-pv { min-height: 64px; padding: 5px 6px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line-2); display: grid; grid-template-rows: auto 1fr auto; gap: 2px; min-width: 0; }
+.ku-kk-pv.muu { opacity: .45; }
+.ku-kk-pv.tuleva { background: transparent; border-style: dashed; }
+.ku-kk-pv.tuleva .ku-kk-palkki { opacity: .55; }
+.ku-kk-pv.tanaan { border-color: var(--kpl); box-shadow: inset 0 0 0 1px var(--kpl); }
+.ku-kk-pv.eidataa { background: transparent; border-color: transparent; }
+.ku-kk-nro { font: 600 13px/1 var(--num); color: var(--ink-2); }
+.ku-kk-min { font-size: 14px; color: var(--ink); align-self: end; }
+.ku-kk-palkki { display: flex; gap: 1px; height: 6px; border-radius: 3px; overflow: hidden; }
+.ku-kk-palkki i { display: block; min-width: 2px; }
+.ku-kk-vs { align-self: center; text-align: right; font-size: 14px; color: var(--ink-2); }
+@media (max-width: 900px) {
+  .ku-kk-ruudukko { grid-template-columns: repeat(7, minmax(0, 1fr)) 40px; gap: 2px; }
+  .ku-kk-pv { min-height: 48px; padding: 3px; }
+  .ku-kk-min { font-size: 11px; }
+  .ku-kk-vs { font-size: 11px; }
+}

@@ -47,7 +47,7 @@ export async function haeKuormaRivit(pelaajat, nh, alku, loppu, testipaivat = {}
 // --- piirto ---
 // el = säiliö, p = pelaaja, opt = { viikko, nh: [tapahtumat], testipaivat: [pvm], oma: bool, paivita: fn }
 export async function piirraKuorma(el, p, opt) {
-  const alku = lisaaPv(opt.viikko, -35), loppu = lisaaPv(opt.viikko, 13);
+  const alku = lisaaPv(opt.viikko, -42), loppu = lisaaPv(opt.viikko, 41);
   const data = await haeKuormaRivit([p], opt.nh || [], alku, loppu, { [p.id]: opt.testipaivat || [] });
   if (data.virhe) { el.innerHTML = `<p class="pieni">Kuormatietoja ei saatu haettua: ${esc(data.virhe.message)}</p>`; return; }
   const rivit = data.tulos[p.id], ohjelmat = data.ohjelmat;
@@ -92,6 +92,7 @@ export async function piirraKuorma(el, p, opt) {
       ${w.yht ? `<span class="ku-jakauma ku-mini" aria-hidden="true">${w.tyypit.map((t) => `<i style="flex:${t.min};background:${t.vari}" data-tip="${t.nimi}: ${minStr(t.min)}"></i>`).join("")}</span><span class="pieni">${w.tyypit.map((t) => `${t.nimi.toLowerCase()} ${minStr(t.min)}`).join(" · ")}</span>` : ""}</div>
     ${paivaKaista(w, maxPv)}`).join("")}
     <p class="pieni ku-pieni">Tulevat päivät ovat suunniteltuja (katkoviiva). Lepo = päivä ilman merkittyä harjoitusta. Omatoimiset kursiivilla.</p>
+    <details class="ku-kk" id="ku-kk"><summary>Kuukausikalenteri</summary><div class="ku-kk-sisalto"></div></details>
 
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${h.teksti}</span></li>`).join("")}</ul>` : ""}
 
@@ -124,6 +125,13 @@ export async function piirraKuorma(el, p, opt) {
     </details>`;
 
   tooltip(el);
+  const kk = $("#ku-kk", el);
+  let kkAlku = opt.viikko.slice(0, 8) + "01";
+  const piirraKk = () => { $(".ku-kk-sisalto", kk).innerHTML = kuukausi(rivit, kkAlku, alku, loppu); tooltip(kk);
+    kk.querySelectorAll("[data-kk]").forEach((b) => (b.onclick = () => { kkAlku = siirraKk(kkAlku, +b.dataset.kk); piirraKk(); })); };
+  try { if (localStorage.getItem("ku-kk") === "1") kk.open = true; } catch (_) {}
+  if (kk.open) piirraKk();
+  kk.ontoggle = () => { try { localStorage.setItem("ku-kk", kk.open ? "1" : "0"); } catch (_) {} if (kk.open) piirraKk(); };
   const f = $("#ku-uusi", el);
   if (f) {
     const valinta = $("#ku-valinta", f);
@@ -156,6 +164,34 @@ export async function piirraKuorma(el, p, opt) {
   }));
   return { poissa: poissaVk };
 }
+// Kuukausikalenteri: ma–su-ruudukko, päivän minuutit pinottuna palkkina tyypeittäin
+const KK = ["tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu", "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu", "marraskuu", "joulukuu"];
+function siirraKk(kk, n) { const d = new Date(kk + "T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 8) + "01"; }
+function kuukausi(rivit, kkAlku, alku, loppu) {
+  const nyt = tanaan(), kkLoppu = lisaaPv(siirraKk(kkAlku, 1), -1);
+  const eka = maanantai(kkAlku), paivia = Math.ceil((Date.parse(kkLoppu) - Date.parse(eka)) / 864e5 / 7 + 0.01) * 7;
+  const kaikki = [...Array(paivia)].map((_, i) => lisaaPv(eka, i));
+  const pv = Object.fromEntries(kaikki.map((d) => [d, rivit.filter((r) => r.pvm === d)]));
+  const max = Math.max(120, ...kaikki.map((d) => pv[d].reduce((s, r) => s + r.min, 0)));
+  const kkMin = kaikki.filter((d) => d >= kkAlku && d <= kkLoppu).reduce((s, d) => s + pv[d].reduce((a, r) => a + r.min, 0), 0);
+  const vkSumma = (i) => kaikki.slice(i, i + 7).reduce((s, d) => s + pv[d].reduce((a, r) => a + r.min, 0), 0);
+  const ladattu = (d) => d >= alku && d <= loppu;
+  const kk = new Date(kkAlku + "T12:00:00Z");
+  return `<div class="ku-kk-paa"><button type="button" class="btn oma-nuoli" data-kk="-1" aria-label="Edellinen kuukausi"${siirraKk(kkAlku, -1) < alku.slice(0, 8) + "01" ? " disabled" : ""}>‹</button>
+      <b>${KK[kk.getUTCMonth()]} ${kk.getUTCFullYear()}</b><span class="pieni">${kkMin ? minStr(kkMin) : "ei merkittyjä harjoituksia"}</span>
+      <button type="button" class="btn oma-nuoli" data-kk="1" aria-label="Seuraava kuukausi"${siirraKk(kkAlku, 1) > loppu ? " disabled" : ""}>›</button></div>
+    <div class="ku-kk-ruudukko" role="grid">
+      ${["ma", "ti", "ke", "to", "pe", "la", "su", "vko"].map((x) => `<span class="ku-kk-vp" role="columnheader">${x}</span>`).join("")}
+      ${kaikki.map((d, i) => { const r = pv[d], min = r.reduce((s, x) => s + x.min, 0), muu = d < kkAlku || d > kkLoppu;
+        const solu = `<div class="ku-kk-pv${muu ? " muu" : ""}${d === nyt ? " tanaan" : ""}${d > nyt ? " tuleva" : ""}${!ladattu(d) ? " eidataa" : ""}" role="gridcell"${min ? ` data-tip="${pvLyh(d)}: ${ryhmita(r).map((g) => `${g[0].otsikko} ${g.reduce((s, x) => s + x.min, 0)} min`).join(", ")}"` : ""}>
+          <span class="ku-kk-nro">${+d.slice(8, 10)}</span>
+          ${min ? `<span class="ku-kk-min num">${minStr(min).replace(" min", "′").replace(" h", " h")}</span><span class="ku-kk-palkki" style="width:${Math.max(10, (100 * min) / max)}%">${TYYPIT.map((t) => { const m = r.filter((x) => x.tyyppi === t.k).reduce((s, x) => s + x.min, 0); return m ? `<i style="flex:${m};background:${t.vari}"></i>` : ""; }).join("")}</span>` : ""}
+        </div>`;
+        return solu + (i % 7 === 6 ? `<span class="ku-kk-vs num" role="gridcell">${vkSumma(i - 6) ? minStr(vkSumma(i - 6)).replace(" min", "′") : "–"}</span>` : "");
+      }).join("")}
+    </div>`;
+}
+
 function paivaKaista(w, maxPv) {
   return `<div class="ku-paivat" role="list" aria-label="Päivät ${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}">
       ${w.paivat.map((d) => `<div class="ku-pv${d.tanaan ? " tanaan" : ""}${d.tuleva ? " tuleva" : ""}" role="listitem">

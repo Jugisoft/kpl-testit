@@ -51,7 +51,7 @@ async function piirra(main) {
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
     oma ? sb.from("lyonti_missiot").select("*").eq("omistaja", omaEmail()).eq("arkistoitu", false) : Promise.resolve({ data: [] }),
     oma ? sb.from("lyonti_kirjaukset").select("*").eq("omistaja", omaEmail()) : Promise.resolve({ data: [] }),
-    haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -35), lisaaPv(viikko, 13)),
+    haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -42), lisaaPv(viikko, 41)),
     sb.from("poissaolot").select("uid").eq("pelaaja_id", pid),
   ]);
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));

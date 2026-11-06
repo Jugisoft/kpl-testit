@@ -2545,3 +2545,8 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
   .se-ohj { grid-column: 1 / -1; }
   .se-pelaaja > summary > .pieni { display: none; }
 }
+
+/* 6.11.2026: lyöntien kirjaus ajanjaksolle */
+.ly-aika, .ly-pikajakso { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ly-pikajakso[hidden], .ly-kentta[hidden] { display: none; }
+.ly-pikajakso .pieni { margin-left: 4px; }

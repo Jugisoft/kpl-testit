@@ -4,7 +4,10 @@ import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita, palkki } from "../util.js";
 import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 
-const LAJIT = ["Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
+// 6.11.2026: erittelemättömät = pelkkä kokonaismäärä (esim. 10 kumuraa + 10 pystäriä + 20 vaakamailaa = 40)
+const ERIT = "Erittelemättömät";
+const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
+const LAJIT = [ERIT, "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 
@@ -18,12 +21,13 @@ const maanantai = (s) => { const d = new Date(s + "T12:00:00Z"); return lisaaPv(
 function kaudenLoppu() { const t = tanaan(), y = +t.slice(0, 4), m = +t.slice(5, 7); return m >= 4 ? `${y + 1}-03-31` : `${y}-03-31`; }
 
 let valittuLaji = null;
+let aikaTapa = "pv";   // "pv" = yksi päivä, "jakso" = ajanjakso (kirjataan jakson viimeiselle päivälle)
 let maara = 0;
 
 // Mission tila: tehty, odotettu tähän päivään mennessä, tahti
 export function laske(m, kirjaukset) {
   const t = tanaan();
-  const omat = kirjaukset.filter((k) => k.omistaja === m.omistaja && sama(k.laji, m.laji) && k.pvm >= m.alku && k.pvm <= m.loppu);
+  const omat = kirjaukset.filter((k) => k.omistaja === m.omistaja && (sama(m.laji, KAIKKI) || sama(k.laji, m.laji)) && k.pvm >= m.alku && k.pvm <= m.loppu);
   const tehty = omat.reduce((s, k) => s + k.maara, 0);
   const kesto = Math.max(1, (pv(m.loppu) - pv(m.alku)) / PAIVA + 1);
   const kulunut = Math.max(0, Math.min(kesto, (pv(t) - pv(m.alku)) / PAIVA + 1));
@@ -125,7 +129,7 @@ async function paivakirja(main, email, muokattava) {
   const aktiiviset = missiot.filter((m) => !m.arkistoitu);
   const arkisto = missiot.filter((m) => m.arkistoitu);
   const kaytetyt = [...new Set([...aktiiviset.map((m) => m.laji), ...kirjaukset.map((k) => k.laji)])];
-  const lajit = [...kaytetyt, ...LAJIT.filter((l) => !kaytetyt.some((x) => sama(x, l)))];
+  const lajit = [ERIT, ...kaytetyt.filter((l) => !sama(l, ERIT)), ...LAJIT.slice(1).filter((l) => !kaytetyt.some((x) => sama(x, l)))];
   if (!valittuLaji || !lajit.some((l) => sama(l, valittuLaji))) valittuLaji = aktiiviset[0]?.laji || null;
   const t = tanaan(), vk = maanantai(t);
   const tamaVk = kirjaukset.filter((k) => k.pvm >= vk).reduce((s, k) => s + k.maara, 0);
@@ -150,24 +154,34 @@ async function paivakirja(main, email, muokattava) {
         ${LISAYS.map((n) => `<button type="button" class="btn ly-pm" data-delta="${n}">+${n}</button>`).join("")}
       </div>
       <div class="rivi">
-        <label class="ly-kentta">Päivä <input type="date" name="pvm" value="${t}" max="${t}" required></label>
+        <div class="ly-kentta">Ajankohta
+          <div class="ly-aika" role="group" aria-label="Ajankohta">
+            <button type="button" class="chip" data-aika="pv" aria-pressed="${aikaTapa === "pv"}">Yksi päivä</button>
+            <button type="button" class="chip" data-aika="jakso" aria-pressed="${aikaTapa === "jakso"}">Ajanjakso</button></div></div>
+        <label class="ly-kentta" data-jakso ${aikaTapa === "jakso" ? "" : "hidden"}>Alkaen <input type="date" name="alku" value="${maanantai(t)}" max="${t}"></label>
+        <label class="ly-kentta"><span data-pvm-otsikko>${aikaTapa === "jakso" ? "Päättyen" : "Päivä"}</span> <input type="date" name="pvm" value="${t}" max="${t}" required></label>
         <label class="ly-kentta ly-kasvaa">Huomio (vapaaehtoinen) <input type="text" name="huomio" maxlength="500" placeholder="esim. syöttökone, 2-raja"></label>
         <button class="btn ensisij ly-tallenna">Tallenna</button>
       </div>
+      <div class="ly-pikajakso" data-jakso ${aikaTapa === "jakso" ? "" : "hidden"}>
+        <button type="button" class="chip" data-pika="tama">Tämä viikko</button>
+        <button type="button" class="chip" data-pika="viime">Viime viikko</button>
+        <button type="button" class="chip" data-pika="7">Viimeiset 7 päivää</button>
+        <span class="pieni">Jakson lyönnit kirjataan yhtenä rivinä jakson viimeiselle päivälle.</span></div>
     </form>` : ""}
 
     <div class="osio-paa"><h2>Missiot</h2>${muokattava ? `<button class="btn" id="ly-uusi-m">+ Uusi missio</button>` : ""}</div>
     ${muokattava ? `<form id="ly-missio" class="paneeli ly-uusi" hidden>
       <div class="rivi">
-        <label class="ly-kentta">Laji <input type="text" name="laji" list="ly-lajilista" required maxlength="60" placeholder="esim. Pieni 2-raja"></label>
+        <label class="ly-kentta">Laji <input type="text" name="laji" list="ly-lajilista" required maxlength="60" placeholder="esim. Pieni 2-raja tai Kaikki lyönnit"></label>
         <label class="ly-kentta">Tavoite (lyöntiä) <input name="tavoite" type="number" min="1" required placeholder="2000" style="width:130px"></label>
         <label class="ly-kentta">Alkaa <input name="alku" type="date" value="${t}" required></label>
         <label class="ly-kentta">Päättyy <input name="loppu" type="date" value="${kaudenLoppu()}" required></label>
         <label class="ly-kentta ly-kasvaa">Nimi (vapaaehtoinen) <input type="text" name="nimi" maxlength="80" placeholder="esim. Talven 2-rajat"></label>
       </div>
-      <datalist id="ly-lajilista">${lajit.map((l) => `<option value="${esc(l)}">`).join("")}</datalist>
+      <datalist id="ly-lajilista"><option value="${KAIKKI}">${lajit.filter((l) => !sama(l, ERIT)).map((l) => `<option value="${esc(l)}">`).join("")}</datalist>
       <div class="rivi"><button class="btn ensisij">Luo missio</button><button type="button" class="btn" id="ly-peru-m">Peru</button></div>
-      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä.</p>
+      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. Laji <b>Kaikki lyönnit</b> laskee mukaan kaikki kirjaukset, myös erittelemättömät.</p>
     </form>` : ""}
     <details class="ly-selite"><summary>Mitä missiokortti näyttää?</summary>
       <dl>
@@ -194,13 +208,28 @@ async function paivakirja(main, email, muokattava) {
   oml.oninput = () => valitse(oml.value.trim() || null);
   $$("[data-delta]", f).forEach((b) => (b.onclick = () => { mi.value = Math.max(0, (+mi.value || 0) + +b.dataset.delta) || ""; maara = +mi.value || 0; }));
   mi.oninput = () => (maara = +mi.value || 0);
+  const ae = f.elements.alku, pe = f.elements.pvm;
+  $$("[data-aika]", f).forEach((b) => (b.onclick = () => {
+    aikaTapa = b.dataset.aika;
+    $$("[data-aika]", f).forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $$("[data-jakso]", f).forEach((x) => (x.hidden = aikaTapa !== "jakso"));
+    $("[data-pvm-otsikko]", f).textContent = aikaTapa === "jakso" ? "Päättyen" : "Päivä";
+  }));
+  $$("[data-pika]", f).forEach((b) => (b.onclick = () => {
+    const ma = maanantai(t);
+    const [a, l] = b.dataset.pika === "tama" ? [ma, t] : b.dataset.pika === "viime" ? [lisaaPv(ma, -7), lisaaPv(ma, -1)] : [lisaaPv(t, -6), t];
+    ae.value = a; pe.value = l;
+  }));
   f.onsubmit = async (e) => {
     e.preventDefault();
     const laji = (oml.value.trim() || valittuLaji || "").trim();
     if (!laji) return ilmoita("Valitse laji.", true);
     if (!(+mi.value > 0)) return ilmoita("Anna määrä.", true);
+    const jakso = aikaTapa === "jakso" && ae.value && ae.value < pe.value;
+    if (aikaTapa === "jakso" && ae.value > pe.value) return ilmoita("Alkupäivä on päättymispäivän jälkeen.", true);
+    const huom = [jakso ? `Jakso ${pvm(ae.value)}–${pvm(pe.value)}` : "", f.elements.huomio.value.trim()].filter(Boolean).join(" · ");
     const nappi = f.querySelector(".ly-tallenna"); nappi.disabled = true;
-    const { error } = await sb.from("lyonti_kirjaukset").insert({ laji, maara: +mi.value, pvm: f.elements.pvm.value, huomio: f.elements.huomio.value.trim() || null });
+    const { error } = await sb.from("lyonti_kirjaukset").insert({ laji, maara: +mi.value, pvm: pe.value, huomio: huom || null });
     nappi.disabled = false;
     if (error) return ilmoita("Tallennus epäonnistui: " + error.message, true);
     ilmoita(`Tallennettu: ${laji} ${mi.value}`);

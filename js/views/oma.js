@@ -228,18 +228,19 @@ function nimenhuuto(nh, poissa, voiMerkita) {
   if (!nh || nh.kalenteri === false) return "";
   if (nh.virhe) return `<p class="pieni oma-nh-virhe">Nimenhuudon tapahtumia ei saatu haettua: ${esc(nh.virhe)}</p>`;
   const t = nh.tapahtumat || [];
+  const ohj = nh.lahde === "ohjelma"; // 6.11.2026: ryhmä ilman Nimenhuutoa, tapahtumat valmennuksen viikko-ohjelmasta
   return `<div class="oma-nh">
-    <div class="oma-nh-paa"><span class="oma-nh-merkki">Nimenhuuto</span><span class="pieni">${t.length ? `${t.length} tapahtumaa tällä viikolla` : "ei tapahtumia tällä viikolla"}</span></div>
-    ${t.length && voiMerkita ? `<p class="pieni oma-nh-ohje">Tiedoksi – ilmoittautumiset tehdään Nimenhuudossa. Jos et ollut mukana, paina <b>Olin poissa</b>, niin kuorma-arvio pysyy oikeana.</p>` : ""}
+    <div class="oma-nh-paa"><span class="oma-nh-merkki">${ohj ? "Viikko-ohjelma" : "Nimenhuuto"}</span><span class="pieni">${t.length ? `${t.length} tapahtumaa tällä viikolla` : "ei tapahtumia tällä viikolla"}</span></div>
+    ${t.length && voiMerkita ? `<p class="pieni oma-nh-ohje">${ohj ? "Valmennuksen viikko-ohjelma (muutokset mahdollisia)." : "Tiedoksi – ilmoittautumiset tehdään Nimenhuudossa."} Jos et ollut mukana, paina <b>Olin poissa</b>, niin kuorma-arvio pysyy oikeana.</p>` : ""}
     ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}${poissa.has(e.uid) ? " poissa" : ""}">
       <span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
-      <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : "koko päivä"}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
+      <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : (ohj ? "aika tarkentuu" : "koko päivä")}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
       <span class="oma-nh-luokka">${luokitteluTagi(e, tila.ohjaaja)}${poissaNappi(e, poissa, voiMerkita)}</span>
     </li>`; }).join("")}</ul>` : ""}
   </div>`;
 }
 
-// ---------- Tulevat testit (6.11.2026): ryhmän tulevat testikerrat + Nimenhuudon testitapahtumat
+// ---------- Tulevat testit (6.11.2026): ryhmän tulevat testikerrat + Nimenhuudon / viikko-ohjelman testitapahtumat
 // (otsikossa testi/Cooper tai valmentaja luokitellut Testi-osan). Samana päivänä testikerta ja tapahtuma yhdistetään.
 function tulevatTestit(p, tapahtumat) {
   const nyt = tanaan();

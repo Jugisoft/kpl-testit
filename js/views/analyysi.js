@@ -1,8 +1,6 @@
-// Analyysi: KPL sarjan rinnalla, linkit YDIN-analytiikkaan ja tulossa olevat työkalut.
+// Analyysi: KPL sarjan rinnalla ja tulossa olevat työkalut. YDIN-linkit piilotettu 6.11.2026 (ei tarvita toistaiseksi).
 import { $, esc } from "../util.js";
 import { haeSiirtomarkkinat, haeKoosteet, aikaSitten } from "../keskus.js";
-
-const YDIN = "https://jugisoft.github.io/ydin-2027/";
 
 export async function nayta(main) {
   const [d, koosteet] = await Promise.all([haeSiirtomarkkinat(), haeKoosteet()]);
@@ -29,16 +27,6 @@ export async function nayta(main) {
     <h2>Tietopankki</h2>
     ${koosteet.length ? `<ul class="linkkilista">${koosteet.slice(0, 8).map((k) => `<li><a href="#/muistio/${esc(k.aihe.replace("vastustaja:", ""))}">${esc(k.otsikko)}</a><span class="pieni">${k.huomioita} muistiinpanosta, päivitetty ${aikaSitten(k.paivitetty)}</span></li>`).join("")}</ul>`
       : `<p>Koosteita ei vielä ole. Jarvis kokoaa ne <a href="#/muistio">muistiinpanoista</a> pyydettäessä.</p>`}
-
-    <h2>YDIN-analytiikka</h2>
-    <p>Koko sarjan tilastot ja analyysit pesistulokset.fi:n datasta. Julkinen sivusto, avautuu uuteen välilehteen.</p>
-    <ul class="linkkilista">
-      <li><a href="${YDIN}kausi-2026.html" target="_blank" rel="noopener">Kausi 2026</a><span class="pieni">Sarjataulukko, tunnusluvut ja kauden kulku</span></li>
-      <li><a href="${YDIN}joukkueet.html" target="_blank" rel="noopener">Joukkueet</a><span class="pieni">Joukkuekohtaiset sisä- ja ulkopelin luvut</span></li>
-      <li><a href="${YDIN}pelaajat.html" target="_blank" rel="noopener">Pelaajat</a><span class="pieni">Pelaajakortit ja vertailu</span></li>
-      <li><a href="${YDIN}lukkarit.html" target="_blank" rel="noopener">Lukkarit</a><span class="pieni">Lukkareiden tunnusluvut</span></li>
-      <li><a href="${YDIN}vertailu.html" target="_blank" rel="noopener">Vertailu</a><span class="pieni">Kaksi joukkuetta tai pelaajaa rinnakkain</span></li>
-    </ul>
 
     <h2>Juoksuodotus</h2>
     <p>Montako juoksua vuorosta keskimäärin syntyy pesätilanteen ja palojen mukaan, milloin kärkilyönti kannattaa ja paljonko kunkin lyöjän lyöntivuorot tuottivat juoksuja yli sarjan keskitason. Kausi 2026.</p>

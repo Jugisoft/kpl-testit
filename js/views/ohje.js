@@ -48,7 +48,7 @@ const SIVUT = [
       ["Rajoitus", "Luvut eivät huomioi pelipaikkaa, ulkopeliä eikä nuorten kehitystä: ne kertovat mittakaavan, eivät joukkueen tasoa."],
     ] },
   { id: "analyysi", nimi: "Analyysi", linkki: "#/analyysi",
-    mita: "KPL:n sisäpeli 2026 sarjan rinnalla, linkit YDIN 2027 -analytiikkaan, juoksuodotukseen ja vastustajakortteihin.",
+    mita: "KPL:n sisäpeli 2026 sarjan rinnalla, tietopankki sekä linkit juoksuodotukseen ja vastustajakortteihin.",
     kohdat: [
       ["YHT-sija", "KPL:n kunnarit + lyödyt + tuodut runkosarjassa 2026 ja sija sarjassa."],
       ["KL-sija", "Onnistuneet kärkilyönnit eli kuinka usein lyönnillä saatiin kärkietenijä seuraavalle pesälle (0-tilanteessa lyöjä kentälle)."],
@@ -108,7 +108,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261106-1",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261106-2",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],

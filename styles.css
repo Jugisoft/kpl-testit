@@ -2499,3 +2499,9 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
   .tro-kortit { grid-template-columns: 1fr; }
   .tro-tai { margin-left: 14px; }
 }
+/* 6.11.2026: viikon ohjelman päivä ja treeniohjelmakytkös */
+.oma-pv-tag { font: 700 12px/1 var(--num); letter-spacing: .06em; text-transform: uppercase; color: var(--kpl); background: rgba(245,168,0,.12); border-radius: 99px; padding: 4px 8px; }
+.oma-ohj-linkit { margin: 4px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.oma-ohj-linkit a { color: var(--kpl); }
+.oma-auto { color: var(--green); font-size: 12px; }
+.oma-kuittaus.auto { background: var(--green-bg); border-color: var(--green); color: var(--green); }

@@ -49,6 +49,8 @@ async function piirra(main, pid, vainLuku) {
   const tamaVk = omat.filter((o) => o.pvm >= vk);
   const vkMin = tamaVk.reduce((s, o) => s + (o.kesto_min || 0), 0);
   const kerrat4 = omat.filter((o) => o.pvm > lisaaPv(t, -28)).length;
+  // 6.11.2026: Treeniohjelmat-sivun "Kirjaa tehdyksi" valitsee ohjelman valmiiksi
+  try { const v = sessionStorage.getItem("kpl-treeni-valitse"); if (v) { sessionStorage.removeItem("kpl-treeni-valitse"); if (!vainLuku && ohjelmat[v]) valittu = v; } } catch { /* ohitetaan */ }
   if (valittu && !ohjelmat[valittu]) valittu = null;
 
   const nappi = (o) => `<button type="button" class="tr-nappi" data-oh="${o.koodi}" aria-pressed="${valittu === o.koodi}" style="--v:${T[o.tyyppi]?.vari || "#888"}">
@@ -96,7 +98,7 @@ async function piirra(main, pid, vainLuku) {
       </div>
       <div class="tr-paivat" role="radiogroup" aria-label="Päivä">${pv.map((d, i) => `<label class="chip"><input type="radio" name="pvm" value="${d}"${i === 0 ? " checked" : ""}>${["Tänään", "Eilen", "Toissapäivänä"][i]}</label>`).join("")}
         <label class="chip tr-muu-pv">Muu päivä <input type="date" name="muupvm" min="${lisaaPv(tanaan(), -14)}" max="${tanaan()}"></label></div>
-      ${o.kuvaus ? `<details class="tr-ohjelma"><summary>Näytä ohjelma</summary><ul>${o.kuvaus.split("\n").filter((l) => l.trim()).map((l) => `<li>${linkit(l)}</li>`).join("")}</ul>${o.lahde ? `<p class="pieni">Lähde: ${esc(o.lahde)}</p>` : ""}</details>` : ""}
+      ${o.kuvaus ? `<details class="tr-ohjelma"><summary>Näytä ohjelma</summary><ul>${o.kuvaus.split("\n").filter((l) => l.trim()).map((l) => `<li>${linkit(l)}</li>`).join("")}</ul>${o.lahde ? `<p class="pieni">Lähde: ${esc(o.lahde)} · <a href="#/ohjelmat/${o.koodi}">Avaa koko ruudulle →</a></p>` : ""}</details>` : ""}
       <button class="btn ensisij tr-tallenna">Tallenna treeni</button>`;
     $(".tr-sulje", lomake).onclick = () => { valittu = null; lomake.hidden = true; $$("[data-oh]", main).forEach((b) => b.setAttribute("aria-pressed", false)); };
     $$("[data-d]", lomake).forEach((b) => (b.onclick = () => { const i = lomake.elements[b.dataset.k], v = Math.round(((+i.value || 0) + +b.dataset.d) * 10) / 10; i.value = Math.min(+i.max, Math.max(+i.min, v)) || ""; }));

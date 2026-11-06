@@ -24,6 +24,7 @@ import * as ohje from "./js/views/ohje.js";
 import * as korjaamo from "./js/views/korjaamo.js";
 import * as oma from "./js/views/oma.js";
 import * as kooste from "./js/views/kooste.js";
+import * as seuranta from "./js/views/seuranta.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -57,6 +58,7 @@ const reitit = [
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
   { polku: /^\/oma(?:\/([\w-]+))?$/, nakyma: oma, osio: "oma" },
   { polku: /^\/kooste$/, nakyma: kooste, osio: "kooste" },
+  { polku: /^\/seuranta$/, nakyma: seuranta, osio: "kooste" },
 ];
 
 // Sivupalkki (16.10.2026, YDIN 2027:n mallin mukaan): ryhmät, kuvakkeet, Testien alasivut sisennettynä.
@@ -121,7 +123,7 @@ const RYHMAT_PSU = [
   ]],
 ];
 const ALAPALKKI_PSU = [["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"], ["Pelaajat", "#/pelaajat", "muistio"], ["Vertailu", "#/vertailu", "analyysi"]];
-const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
+const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|seuranta|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
 // Juniori-pelaaja (1.11.2026): oma Keskus, junioreiden testit (luku), lyöntipäiväkirja
 const OMA = ["Oma Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
 const TREENIT = ["Treenipäiväkirja", "#/treenit", "treeni", (p) => /^\/treenit/.test(p)];
@@ -146,12 +148,13 @@ function valikko() {
   if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
   const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
   const koosteL = ["Viikkokooste", "#/kooste", "kooste", (p) => /^\/kooste/.test(p)];
-  if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, TREENIT, OHJELMAT]]), ALAPALKKI_PSU];
+  const seurantaL = ["Pelaajaseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026: tavoitteet + omatoimiset
+  if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, TREENIT, OHJELMAT]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
   ryhmat[1][1].unshift(TREENIT, OHJELMAT);   // treenipäiväkirja kaikille: pelaaja kirjaa, valmentaja katsoo pelaajan kirjauksia
   if (pelaajaRooli) ryhmat[0][1].push(OMA);
-  else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat, koosteL);
+  else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat, koosteL, seurantaL);
   // pelaajalla puhelimen alapalkissa Oma, Treeni ja Lyönnit (1.11.2026); Testit ja Oma peli Valikossa
   const ala = pelaajaRooli ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ALAPALKKI[1]] : ALAPALKKI;
   return [ryhmat, ala];

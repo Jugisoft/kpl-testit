@@ -19,10 +19,11 @@ export async function nayta(main) {
   const pelaajat = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen);
   const alku = lisaaPv(viikko, -35), loppu = lisaaPv(viikko, 6);
 
-  const [nh, tulokset, arkisto] = await Promise.all([
+  const [nh, tulokset, arkisto, tavRes] = await Promise.all([
     haeKalenteri(joukkue, alku, loppu),
     lataaTulokset().then(testiParhaat),
     sb.from("viikkokoosteet").select("id,viikko,luotu,teksti,lahetetty").eq("joukkue_id", joukkue).order("viikko", { ascending: false }).limit(12),
+    pelaajat.length ? sb.from("tavoitteet").select("luotu").in("pelaaja_id", pelaajat.map((p) => p.id)) : Promise.resolve({ data: [] }),
   ]);
   const testipaivat = {};
   for (const t of tulokset) if (t.pvm >= alku && t.pvm <= loppu) (testipaivat[t.pelaaja] ||= new Set()).add(t.pvm);
@@ -46,6 +47,7 @@ export async function nayta(main) {
       <span>Laskettu<b>${nyt ? `ma–${pvLyh(k.viite)}` : "koko viikko"}</b></span>
       <span>Osallistuminen viikolla<b>${k.os == null ? "–" : `${k.os} %`}</b></span>
       <span>Osallistuminen 4 vk<b>${k.os4 == null ? "–" : `${k.os4} %`}</b></span>
+      <a class="ko-tag-linkki" href="#/seuranta">Tavoitteita<b>${(tavRes.data || []).length}${(tavRes.data || []).filter((g) => g.luotu.slice(0, 10) >= viikko).length ? ` (${(tavRes.data || []).filter((g) => g.luotu.slice(0, 10) >= viikko).length} uutta)` : ""} →</b></a>
       <span>Omatoimisia kirjanneet<b>${k.kirjanneet}/${k.rivit.length}</b></span>
       <span>Omatoimisten mediaani<b>${minStr(k.mediaaniOma)}</b></span>
     </div>
@@ -94,3 +96,4 @@ export async function nayta(main) {
   const sel = $("#ko-ryhma", main);
   if (sel) sel.onchange = () => { joukkue = +sel.value; nayta(main); };
 }
+

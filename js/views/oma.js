@@ -376,7 +376,7 @@ function testiValinnat(omatTestit) {
   return (ensin.length ? `<optgroup label="Testatut">${ensin.map(opt).join("")}</optgroup>` : "") + `<optgroup label="Muut testit">${muut.map(opt).join("")}</optgroup>`;
 }
 
-function tavoiteTila(g, omat) {
+export function tavoiteTila(g, omat) {
   const a = omat.filter((x) => x.testi === g.testi), raja = g.luotu.slice(0, 10);
   const ennen = a.filter((x) => x.pvm < raja), jalkeen = a.filter((x) => x.pvm >= raja);
   const lahto = ennen.length ? paras(g.testi, ennen.map((x) => x.arvo)) : a[0]?.arvo ?? null;

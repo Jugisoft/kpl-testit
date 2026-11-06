@@ -2550,3 +2550,15 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ly-aika, .ly-pikajakso { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ly-pikajakso[hidden], .ly-kentta[hidden] { display: none; }
 .ly-pikajakso .pieni { margin-left: 4px; }
+
+/* 6.11.2026: useita lajeja yhdellä kirjauksella */
+.ly-kirjaus-paa { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.ly-monta[hidden], .ly-yksi[hidden] { display: none; }
+.ly-yksi { display: flex; flex-direction: column; gap: 14px; }
+.ly-monta-ruudukko { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.ly-monta-rivi { display: grid; grid-template-columns: 1fr 86px; gap: 8px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; color: var(--ink); }
+.ly-monta-rivi:focus-within { border-color: var(--kpl); }
+.ly-monta-rivi input[type=number] { text-align: right; font-variant-numeric: tabular-nums; }
+.ly-monta-rivi input[type=text] { min-width: 0; }
+.ly-monta-yht { margin: 10px 0 0; color: var(--ink-2); }
+.ly-monta-yht b { font-size: 20px; color: var(--ink); }

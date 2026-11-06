@@ -7,7 +7,7 @@ import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 // 6.11.2026: erittelemättömät = pelkkä kokonaismäärä (esim. 10 kumuraa + 10 pystäriä + 20 vaakamailaa = 40)
 const ERIT = "Erittelemättömät";
 const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
-const LAJIT = [ERIT, "Pomppu", "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
+const LAJIT = [ERIT, "Pomppu", "Näpy", "Vaakamaila", "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 
@@ -21,6 +21,7 @@ const maanantai = (s) => { const d = new Date(s + "T12:00:00Z"); return lisaaPv(
 function kaudenLoppu() { const t = tanaan(), y = +t.slice(0, 4), m = +t.slice(5, 7); return m >= 4 ? `${y + 1}-03-31` : `${y}-03-31`; }
 
 let valittuLaji = null;
+let monta = false;     // 6.11.2026: useita lajeja yhdellä kirjauksella (esim. 50 pomppua, 20 näpyä, 30 vaakamailaa)
 let aikaTapa = "pv";   // "pv" = yksi päivä, "jakso" = ajanjakso (kirjataan jakson viimeiselle päivälle)
 let maara = 0;
 
@@ -145,14 +146,23 @@ async function paivakirja(main, email, muokattava) {
     </div>
 
     ${muokattava ? `<form id="ly-kirjaus" class="paneeli ly-kirjaus">
-      <h2>Kirjaa lyönnit</h2>
+      <div class="ly-kirjaus-paa"><h2>Kirjaa lyönnit</h2>
+        <div class="ly-aika" role="group" aria-label="Kirjaustapa">
+          <button type="button" class="chip" data-monta="0" aria-pressed="${!monta}">Yksi laji</button>
+          <button type="button" class="chip" data-monta="1" aria-pressed="${monta}">Useita lajeja</button></div></div>
+      <div class="ly-monta" ${monta ? "" : "hidden"}>
+        <div class="ly-monta-ruudukko">${lajit.map((l) => `<label class="ly-monta-rivi"><span>${esc(l)}</span><input type="number" inputmode="numeric" min="0" max="5000" placeholder="0" data-monta-laji="${esc(l)}" aria-label="${esc(l)}, määrä"></label>`).join("")}
+          <div class="ly-monta-rivi"><input type="text" data-monta-oma maxlength="60" placeholder="Muu laji…" aria-label="Muu laji"><input type="number" inputmode="numeric" min="0" max="5000" placeholder="0" data-monta-omamaara aria-label="Muun lajin määrä"></div></div>
+        <p class="ly-monta-yht">Yhteensä <b class="num" data-monta-yht>0</b> lyöntiä</p>
+      </div>
+      <div class="ly-yksi" ${monta ? "hidden" : ""}>
       <div class="ly-lajit" role="group" aria-label="Laji">${lajit.map((l) => `<button type="button" class="chip" data-laji="${esc(l)}" aria-pressed="${!!valittuLaji && sama(l, valittuLaji)}">${esc(l)}</button>`).join("")}
         <input type="text" class="ly-oma-laji" name="omalaji" placeholder="Muu laji…" maxlength="60" aria-label="Muu laji"></div>
       <div class="ly-maara">
         <button type="button" class="btn ly-pm" data-delta="-10" aria-label="Vähennä 10">−</button>
-        <input name="maara" type="number" inputmode="numeric" min="1" max="5000" value="${maara || ""}" placeholder="0" aria-label="Määrä" required>
+        <input name="maara" type="number" inputmode="numeric" min="1" max="5000" value="${maara || ""}" placeholder="0" aria-label="Määrä">
         ${LISAYS.map((n) => `<button type="button" class="btn ly-pm" data-delta="${n}">+${n}</button>`).join("")}
-      </div>
+      </div></div>
       <div class="rivi">
         <div class="ly-kentta">Ajankohta
           <div class="ly-aika" role="group" aria-label="Ajankohta">
@@ -209,6 +219,16 @@ async function paivakirja(main, email, muokattava) {
   $$("[data-delta]", f).forEach((b) => (b.onclick = () => { mi.value = Math.max(0, (+mi.value || 0) + +b.dataset.delta) || ""; maara = +mi.value || 0; }));
   mi.oninput = () => (maara = +mi.value || 0);
   const ae = f.elements.alku, pe = f.elements.pvm;
+  $$("[data-monta]", f).forEach((b) => (b.onclick = () => {
+    monta = b.dataset.monta === "1";
+    $$("[data-monta]", f).forEach((x) => x.setAttribute("aria-pressed", x === b));
+    $(".ly-monta", f).hidden = !monta; $(".ly-yksi", f).hidden = monta;
+  }));
+  const montaRivit = () => [
+    ...$$("[data-monta-laji]", f).map((i) => ({ laji: i.dataset.montaLaji, maara: Math.round(+i.value || 0) })),
+    { laji: $("[data-monta-oma]", f).value.trim(), maara: Math.round(+$("[data-monta-omamaara]", f).value || 0) },
+  ].filter((x) => x.laji && x.maara > 0);
+  $$(".ly-monta input", f).forEach((i) => (i.oninput = () => ($("[data-monta-yht]", f).textContent = luku(montaRivit().reduce((s2, x) => s2 + x.maara, 0)))));
   $$("[data-aika]", f).forEach((b) => (b.onclick = () => {
     aikaTapa = b.dataset.aika;
     $$("[data-aika]", f).forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -223,17 +243,20 @@ async function paivakirja(main, email, muokattava) {
   f.onsubmit = async (e) => {
     e.preventDefault();
     const laji = (oml.value.trim() || valittuLaji || "").trim();
-    if (!laji) return ilmoita("Valitse laji.", true);
-    if (!(+mi.value > 0)) return ilmoita("Anna määrä.", true);
+    const rivit = monta ? montaRivit() : [{ laji, maara: +mi.value }];
+    if (monta && !rivit.length) return ilmoita("Anna määrä vähintään yhdelle lajille.", true);
+    if (monta && $("[data-monta-omamaara]", f).value && !$("[data-monta-oma]", f).value.trim()) return ilmoita("Anna muun lajin nimi.", true);
+    if (!monta && !laji) return ilmoita("Valitse laji.", true);
+    if (!monta && !(+mi.value > 0)) return ilmoita("Anna määrä.", true);
     const jakso = aikaTapa === "jakso" && ae.value && ae.value < pe.value;
     if (aikaTapa === "jakso" && ae.value > pe.value) return ilmoita("Alkupäivä on päättymispäivän jälkeen.", true);
     const huom = [jakso ? `Jakso ${pvm(ae.value)}–${pvm(pe.value)}` : "", f.elements.huomio.value.trim()].filter(Boolean).join(" · ");
     const nappi = f.querySelector(".ly-tallenna"); nappi.disabled = true;
-    const { error } = await sb.from("lyonti_kirjaukset").insert({ laji, maara: +mi.value, pvm: pe.value, huomio: huom || null });
+    const { error } = await sb.from("lyonti_kirjaukset").insert(rivit.map((x) => ({ laji: x.laji, maara: x.maara, pvm: pe.value, huomio: huom || null })));
     nappi.disabled = false;
     if (error) return ilmoita("Tallennus epäonnistui: " + error.message, true);
-    ilmoita(`Tallennettu: ${laji} ${mi.value}`);
-    maara = 0; valittuLaji = laji;
+    ilmoita(`Tallennettu: ${rivit.map((x) => `${x.laji} ${x.maara}`).join(", ")}`);
+    maara = 0; if (!monta) valittuLaji = laji;
     paivakirja(main, email, true);
   };
   const mf = $("#ly-missio");

@@ -7,7 +7,7 @@ import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 // 6.11.2026: erittelemättömät = pelkkä kokonaismäärä (esim. 10 kumuraa + 10 pystäriä + 20 vaakamailaa = 40)
 const ERIT = "Erittelemättömät";
 const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
-const LAJIT = [ERIT, "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
+const LAJIT = [ERIT, "Pomppu", "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 

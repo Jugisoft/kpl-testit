@@ -2414,3 +2414,14 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 
 /* Sisäpeli (KPL): pelaajan Keskus-luvut pelaajakortin alla (6.11.2026) */
 .sp-keskusdata { margin-top: 28px; }
+
+/* 6.11.2026: Testit-sivun luokkavalinta puhelimella 2 × 2 -ruudukkona samaan leveyteen kuin ryhmävalinta
+   (ennen vaakarivi oli ~620 px leveä ja levitti sivun iPhonella). Vain ≤640 px, selainversio ennallaan. */
+@media (max-width: 640px) {
+  .tst-ylaohjaimet > * { min-width: 0; }
+  .tst-luokat { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 6px; margin: 0; padding: 0; overflow: visible; }
+  .tst-luokka { justify-content: space-between; gap: 6px; min-width: 0; white-space: normal; text-align: left; line-height: 1.15; font-size: 13px; padding: 9px 10px 9px 12px; border-color: var(--line); background: var(--surface); border-radius: 12px; }
+  .tst-luokka[aria-selected="true"] { border-color: var(--cyan); background: rgba(245,168,0,.10); }
+}
+/* Viikon ohjelma -kortin seuraava tapahtuma */
+.ti-teksti small b.ti-seur { font: 600 12.5px/1.3 var(--text); color: var(--ink); }

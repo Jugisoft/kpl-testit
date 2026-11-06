@@ -91,7 +91,7 @@ async function piirra(main) {
       </div>
     </div>
 
-    ${tilanne({ p, oma, joukkue, valmiit, ohjelma, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+    ${tilanne({ p, oma, joukkue, valmiit, ohjelma, nh, poissa, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
 
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
@@ -112,7 +112,7 @@ async function piirra(main) {
               ${o.kuvaus ? `<p class="pieni">${esc(o.kuvaus)}</p>` : ""}
             </div>
             ${tila.ohjaaja ? `<button class="linkkinappi" data-poista-ohj="${o.id}" aria-label="Poista harjoite ${esc(o.otsikko)}">Poista</button>` : ""}
-          </li>`).join("") || `<li class="tyhja">Tälle viikolle ei ole vielä ohjelmaa.</li>`}</ol>
+          </li>`).join("") || `<li class="tyhja">${nh.tapahtumat && nh.tapahtumat.length ? "Ei valmentajan lisäharjoitteita tälle viikolle – yhteiset treenit yllä." : "Tälle viikolle ei ole vielä ohjelmaa."}</li>`}</ol>
         ${tila.ohjaaja ? `
         <details class="oma-tav-uusi"><summary>+ Lisää harjoite viikolle ${viikkoNro(viikko)}</summary>
         <form id="ohj-uusi" class="oma-lomake">
@@ -265,13 +265,22 @@ function treeniKortti(a, tamaViikko) {
     iso: "", tila: tl });
 }
 const minStrLyh = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}` : `${m} min`);
-function tilanne({ p, oma, valmiit, ohjelma, tavRivit, omat, missiot, kirjaukset, normaalit }) {
+function tilanne({ p, oma, valmiit, ohjelma, nh, poissa, tavRivit, omat, missiot, kirjaukset, normaalit }) {
   const kortit = [];
   kortit.push(`<a class="ti-kortti ti-lataa" id="ti-treeni" href="#viikkoni" data-ti="viikkoni"><span class="ti-ots">Treenit tällä viikolla</span><span class="ti-runko">${rengas([], "…", "")}</span></a>`);
-  const n = ohjelma.length;
+  // Viikon ohjelma = valmentajan harjoitteet + Nimenhuudon tapahtumat (6.11.2026: Cooper ym. puuttuivat kortista).
+  // Tapahtuma lasketaan tehdyksi, kun sen päivä on ohi (ei peruttu, ei "Olin poissa").
+  const tnyt = tanaan();
+  const nhT = ((nh && nh.tapahtumat) || []).filter((e) => !e.peruttu && !(poissa && poissa.has(e.uid)));
+  const nhOhi = nhT.filter((e) => e.pvm < tnyt).length;
+  const n = ohjelma.length + nhT.length, tehty = valmiit + nhOhi;
+  const seur = nhT.filter((e) => e.pvm >= tnyt).sort((a, b) => (a.pvm + (a.alku || "")).localeCompare(b.pvm + (b.alku || "")))[0];
+  const pvNimi = (e) => { if (e.pvm === tnyt) return "tänään"; if (e.pvm === lisaaPv(tnyt, 1)) return "huomenna"; const d = new Date(e.pvm + "T12:00:00Z"); return `${VKP[d.getUTCDay()]} ${d.getUTCDate()}.${d.getUTCMonth() + 1}.`; };
+  const lyhyt = (t) => String(t || "").replace(/^[^:]{1,20}:\s*/, "");
+  const osat = [ohjelma.length ? `${ohjelma.length - valmiit} harjoitetta jäljellä` : "", nhT.length ? `${nhT.length} yhteistä treeniä` : ""].filter(Boolean).join(" · ");
   kortit.push(kortti_({ kohde: "oma-ohjelma", otsikko: "Viikon ohjelma",
-    rengasHtml: rengas(n ? [{ ...pros1((100 * valmiit) / n), vari: valmiit === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${valmiit}/${n}` : "–", n ? "tehty" : ""),
-    ala: n ? (valmiit === n ? "Kaikki tehty 👏" : `${n - valmiit} harjoitetta jäljellä`) : "Ei ohjelmaa tälle viikolle" }));
+    rengasHtml: rengas(n ? [{ ...pros1((100 * tehty) / n), vari: tehty === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${tehty}/${n}` : "–", n ? "tehty" : ""),
+    ala: n ? `${tehty === n ? "Kaikki tehty 👏" : esc(osat)}${seur ? `<br><small>Seuraavaksi ${esc(pvNimi(seur))}${seur.alku ? ` klo ${esc(seur.alku.slice(0, 5))}` : ""}: <b class="ti-seur">${esc(lyhyt(seur.otsikko))}</b></small>` : ""}` : "Ei ohjelmaa tälle viikolle" }));
   const tt = tavRivit.filter((g) => tila.testi[g.testi]).map((g) => ({ g, ...tavoiteTila(g, omat) }));
   const saav = tt.filter((x) => x.saavutettu).length, ka = tt.length ? tt.reduce((x, y) => x + y.pct, 0) / tt.length : 0;
   const lahin = tt.filter((x) => !x.saavutettu).sort((a, b) => b.pct - a.pct)[0];

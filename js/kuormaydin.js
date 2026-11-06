@@ -211,10 +211,10 @@ export function koosteTeksti(k, ryhma) {
     `KPL Keskus – viikkokooste ${ryhma}, viikko ${pvLyh(k.viikko)}–${pvLyh(k.viite)}`,
     `Koko kooste: ${KOOSTE_URL}`,
     "",
-    `Osallistuminen ryhmätreeneihin: tällä viikolla ${osTxt(k.os)} · 4 viikkoa ${osTxt(k.os4)}`,
+    `Osallistuminen ryhmätreeneihin: tällä viikolla ${osTxt(k.os)} · 4 viikkoa ${osTxt(k.os4)} · paljon poissa (alle ${OS_RAJA} % 4 vk): ${k.rivit.filter((r) => r.ry4Yht >= 4 && r.os4 < OS_RAJA).length} pelaajaa`,
     "",
-    "POIKKEAMAT",
-    ...(h.length ? h.map((x) => `${x.taso === "varoitus" ? "⚠ " : "• "}${x.teksti}`) : ["Ei poikkeamia tällä viikolla."]),
+    "KUORMA JA MUUT POIKKEAMAT",
+    ...(h.length ? h.map((x) => `${x.taso === "varoitus" ? "⚠ " : "• "}${x.teksti}`) : ["Ei kuormaan liittyviä poikkeamia."]),
     ...(m.length ? ["", `MATALA OSALLISTUMINEN (4 viikkoa alle ${OS_SEURAA} % tai tällä viikolla puolet tai alle)`, ...m.map((r) => `• ${r.nimi}: ${r.os4} % (${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}) · tällä viikolla ${r.ryhmaMukana}/${r.ryhmaYht}`)] : []),
     "",
     "Ryhmätreeni lasketaan pois, jos pelaaja on OUT Nimenhuudossa tai merkinnyt Olin poissa. Kuormat, omatoimiset ja kaikki pelaajat koko koosteessa.",
@@ -229,7 +229,7 @@ export function koosteHtml(k, ryhma) {
   const merkki = { varoitus: ["▲", "#d6283b"], huomio: ["◆", "#c27a00"], info: ["i", "#6f685d"] };
   const ruutu = (otsikko, arvo, alla) => `<td width="33%" style="padding:12px 14px;background:#f6f3ee;border-radius:8px;vertical-align:top">
       <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6f685d">${otsikko}</div>
-      <div style="font-size:28px;font-weight:700;line-height:1.2;color:${vari(typeof arvo === "number" ? arvo : null)}">${typeof arvo === "number" ? `${arvo} %` : hEsc(arvo)}</div>
+      <div style="font-size:28px;font-weight:700;line-height:1.2;color:${typeof arvo === "number" ? vari(arvo) : arvo === "0" ? "#13865d" : arvo === "–" ? "#8a8378" : "#d6283b"}">${typeof arvo === "number" ? `${arvo} %` : hEsc(arvo)}</div>
       <div style="font-size:12px;color:#6f685d">${alla}</div></td>`;
   return `<!doctype html><html><body style="margin:0;padding:0;background:#ffffff">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="center" style="padding:20px 12px">
@@ -244,8 +244,8 @@ export function koosteHtml(k, ryhma) {
   ${ruutu("Osallistuminen", k.os4 ?? "–", "4 viikkoa")}
   ${ruutu("Paljon poissa", String(k.rivit.filter((r) => r.ry4Yht >= 4 && r.os4 < OS_RAJA).length), `pelaajaa · ${h.filter((x) => x.taso === "varoitus").length ? `${h.filter((x) => x.taso === "varoitus").length} kuormavaroitusta` : "ei kuormavaroituksia"}`)}
 </tr></table></td></tr>
-<tr><td style="padding:20px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#6f685d">Poikkeamat</td></tr>
-<tr><td>${h.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${h.map((x) => `<tr><td width="22" valign="top" style="padding:6px 0;color:${merkki[x.taso][1]};font-weight:700">${merkki[x.taso][0]}</td><td style="padding:6px 0;border-bottom:1px solid #ece7df">${hEsc(x.teksti)}</td></tr>`).join("")}</table>` : `<div style="color:#13865d">Ei poikkeamia tällä viikolla.</div>`}</td></tr>
+<tr><td style="padding:20px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#6f685d">Kuorma ja muut poikkeamat</td></tr>
+<tr><td>${h.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${h.map((x) => `<tr><td width="22" valign="top" style="padding:6px 0;color:${merkki[x.taso][1]};font-weight:700">${merkki[x.taso][0]}</td><td style="padding:6px 0;border-bottom:1px solid #ece7df">${hEsc(x.teksti)}</td></tr>`).join("")}</table>` : `<div style="color:#6f685d">Ei kuormaan liittyviä poikkeamia.</div>`}</td></tr>
 ${m.length ? `<tr><td style="padding:22px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#6f685d">Matalin osallistuminen · 4 viikkoa</td></tr>
 <tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${m.map((r) => `<tr>
   <td width="34%" style="padding:5px 8px 5px 0;font-size:14px;white-space:nowrap">${hEsc(r.nimi)}</td>

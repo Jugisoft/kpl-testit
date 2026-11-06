@@ -2411,3 +2411,6 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
   .la-m-rivi { grid-template-columns: 58px minmax(0, 1fr) 54px; } .la-m-rivi small { display: none; }
   .la-selitteet { grid-template-columns: 1fr; }
 }
+
+/* Sisäpeli (KPL): pelaajan Keskus-luvut pelaajakortin alla (6.11.2026) */
+.sp-keskusdata { margin-top: 28px; }

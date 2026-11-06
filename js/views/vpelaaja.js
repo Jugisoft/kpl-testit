@@ -8,6 +8,12 @@ import { haeLiitteet, lataaTiedostot, tiedostoValitsin } from "../liitteet.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 import { haeProfiili, profiiliKehys, kytkeKehys, piirraVikalista, poistuVikalista } from "../profiili.js";
 import { piirraOttelulyonnit } from "../lyontikartta.js";
+import { piirraMinunPeli } from "../minunpeli.js";
+import { piirraLyontianalyysi } from "../lyontianalyysi.js";
+
+// KPL:n pelaaja Muistiossa → sama pelaaja Keskuksen pelaajissa (nimen mukaan), jotta näytetään samat luvut kuin pelaajan omassa Keskuksessa
+const nimiAvain = (x) => (x || "").toLowerCase().replace(/\s+/g, " ").trim();
+export const keskusPelaaja = (vp) => (tila.pelaajat || []).find((p) => nimiAvain(`${p.etunimi} ${p.sukunimi}`) === nimiAvain(vp?.nimi)) || null;
 
 let kanava = null;
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } poistuVikalista(); }
@@ -29,7 +35,9 @@ export async function nayta(main, id, valilehti) {
   const p = pelaajat.get(id);
   if (!p) { main.innerHTML = `<h1>Pelaajaa ei löydy</h1><p><a class="btn" href="#/muistio">Muistio</a></p>`; return; }
   const [{ data: kirjaukset }, maarat, profiili] = await Promise.all([sb.from("huomiot").select("*").eq("pelaaja_id", id).order("luotu", { ascending: false }), kommenttimaarat(), haeProfiili(id)]);
-  if (!valilehti || (valilehti === "profiili" && !profiili)) valilehti = profiili ? "profiili" : "lyonnit";
+  const kpl = p.joukkue === "KPL";   // 6.11.2026: omille pelaajille ei käsin kirjattavia lyöntejä, vaan samat luvut kuin omassa Keskuksessa
+  if (kpl && (valilehti === "lyonnit" || valilehti === "ottelut")) valilehti = "pelidata";
+  if (!valilehti || (valilehti === "profiili" && !profiili)) valilehti = profiili ? "profiili" : kpl ? "pelidata" : "lyonnit";
   const liitteet = await haeLiitteet(kirjaukset.map((h) => h.id));
   let lista = kirjaukset;
   asetaKonteksti({ huomiot: lista, maarat, pelaajat, liitteet, osio: null, auki: new Set(), uudelleenpiirra: () => { lista = kontekstinHuomiot(); piirraValilehti(); } });
@@ -47,7 +55,7 @@ export async function nayta(main, id, valilehti) {
       </div></div>
     </div>
     <div class="valilehdet" role="tablist">
-      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ["lyonnit", "Lyönnit", lkm("lyonti")], ["ottelut", "Ottelulyönnit", ""], ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
+      ${[...(profiili ? [["profiili", "Profiili", ""]] : []), ...(kpl ? [["pelidata", "Pelidata", ""]] : [["lyonnit", "Lyönnit", lkm("lyonti")], ["ottelut", "Ottelulyönnit", ""]]), ["ulkopeli", "Ulkopeli", lkm("ulkopeli")], ["muistiinpanot", "Muistiinpanot", lkm("muistiinpano")]]
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/vp/${id}/${k}" aria-selected="${valilehti === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>
     <div id="vp-sisalto"></div>`;
@@ -64,6 +72,13 @@ export async function nayta(main, id, valilehti) {
   const piirraValilehti = () => {
     const el = $("#vp-sisalto"); if (!el) return;
     if (valilehti === "profiili") return piirraProfiili(el, p, profiili);
+    if (valilehti === "pelidata") {
+      const kp = keskusPelaaja(p);
+      el.innerHTML = `<section id="minun-peli" aria-labelledby="mp-otsikko"><p class="lataa">Ladataan pelidataa…</p></section><section id="lyontianalyysi" aria-labelledby="la-otsikko"></section>
+        ${kp?.pesistulokset_id ? (tila.ohjaaja ? `<p class="pieni"><a href="#/oma/${kp.id}">Avaa pelaajan oma Keskus</a></p>` : "") : `<p class="pieni">${kp ? "Pelaajalle ei ole merkitty pesistulokset-tunnusta" : "Pelaajaa ei löytynyt Keskuksen pelaajista samalla nimellä"}, joten Superpesis-lukuja ei voi näyttää.</p>`}`;
+      piirraMinunPeli($("#minun-peli", el), kp); piirraLyontianalyysi($("#lyontianalyysi", el), kp);
+      return;
+    }
     if (valilehti === "ottelut") return piirraOttelulyonnit(el, p);
     if (valilehti === "ulkopeli") return piirraUlkopeli(el, p, lista, lisaa, poista);
     if (valilehti === "muistiinpanot") return piirraMuistiinpanot(el, p, lista, lisaa);

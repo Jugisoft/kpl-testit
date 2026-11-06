@@ -1,15 +1,17 @@
 // Vastustajan purku: sisäpeli pelaajittain ja tilanteittain (roolit + lyönnit),
 // ulkopeli kollektiivisesti tilanteittain (fläppitaulu, yhteinen kuvaus, havainnot).
-import { sb } from "../db.js";
+import { sb, tila } from "../db.js";
 import { $, $$, esc, ilmoita } from "../util.js";
 import { tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, md, sukunimiJarjestys, haeSiirtomarkkinat, omaEmail } from "../keskus.js";
 import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAINOT, tyyppiTieto } from "../kentta.js";
-import { chipit, kytkeChipit, T, PALOT, LYONNIT, voiPoistaa, nimiTaulu } from "./vpelaaja.js";
+import { chipit, kytkeChipit, T, PALOT, LYONNIT, voiPoistaa, nimiTaulu, keskusPelaaja } from "./vpelaaja.js";
 import { kortti, kytkeKortit, kontekstinHuomiot } from "./muistio.js";
 import { piirraFlappi, onLuonnosta } from "./flappi.js";
 import { kuvaKehys, kytkeKuva } from "../pelaajakuva.js";
 import { profiiliIdt } from "../profiili.js";
 import { piirraOttelulyonnit } from "../lyontikartta.js";
+import { piirraMinunPeli } from "../minunpeli.js";
+import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 
 // Välimuisti valitun joukkueen rakenteisista kirjauksista, jaetuista teksteistä ja Pelikirjan kuvioista
 const V = { joukkue: null, kirj: [], tekstit: new Map(), kuviot: [], nimi: "", profiilit: new Map(), tilastot: null };
@@ -150,6 +152,7 @@ function tilannejako(rivit) {
 export function piirraSisapeli(el, pelaajat) {
   const piirra = () => piirraSisapeli(el, pelaajat);
   const joukkue = V.joukkue;
+  const kpl = joukkue === "KPL";   // 6.11.2026: omille pelaajille ei käsin kirjattavia lyöntejä, vaan samat luvut kuin pelaajan omassa Keskuksessa
   const kaikki = [...pelaajat.values()].filter((p) => p.joukkue === joukkue).sort(sukunimiJarjestys);
   const akt = kaikki.filter((p) => p.aktiivinen);
   const lyonnit = V.kirj.filter((h) => h.tyyppi === "lyonti");
@@ -195,6 +198,7 @@ export function piirraSisapeli(el, pelaajat) {
   };
   const muistiinpanot = valittuP ? kontekstinHuomiot().filter((h) => h.pelaaja_id === valittuP.id && h.tyyppi === "muistiinpano").slice(0, 3) : [];
   const indeksi = rivit.findIndex((p) => p.id === s.pelaaja);
+  const kp = kpl && valittuP ? keskusPelaaja(valittuP) : null;
 
   el.innerHTML = `
     ${tekstiLohko("sisapeli:yleinen", "Sisäpelin yleiskuva", "Miten joukkue pelaa sisällä? Esim. pelinjohtajan tyyli, lyöntijärjestyksen runko, jokerit, mitä tilanteita he hakevat.")}
@@ -211,19 +215,24 @@ export function piirraSisapeli(el, pelaajat) {
       <div class="pki-tiedot">
         <div class="pki-paa"><h2>${valittuP.numero != null ? `<span class="num pki-nro">${valittuP.numero}</span>` : ""}${esc(valittuP.nimi)}</h2>
           ${V.profiilit.has(valittuP.id) ? `<a class="btn pieni-nappi ensisij" href="#/vp/${valittuP.id}/profiili">Pelaajaprofiili v${V.profiilit.get(valittuP.id).versio}</a>` : ""}
+          ${kp && tila.ohjaaja ? `<a class="btn pieni-nappi" href="#/oma/${kp.id}">Oma Keskus</a>` : ""}
           <a class="pieni" href="#/vp/${valittuP.id}">Pelaajasivu</a>${indeksi >= 0 ? `<span class="pieni harmaa">${indeksi + 1} / ${rivit.length}</span>` : ""}</div>
         <label class="pki-kuvaus"><span class="sr">Kuvaus</span><input type="text" id="pki-kuvaus" maxlength="300" value="${esc(valittuP.kuvaus || "")}" placeholder="Lyhyt kuvaus, esim. vasenkätinen kärkilyöjä, nopea etenijä"></label>
         <div class="pki-osa"><span class="osa-nimi">Suunniteltu rooli <span class="pieni">napauta valitaksesi</span></span>
           <div class="chipit pieni-chipit" id="pki-roolit">${SARAKKEET.map((t) => `<button type="button" class="chip rooli-chip" data-rooli="${esc(t)}" aria-pressed="${(valittuP.roolit || []).includes(t)}">${esc(t === "Jokeri" ? "Jokeri" : lyhyt(t) + "-tilanne").replace("Ajo-tilanne", "Ajolähtö")}</button>`).join("")}</div></div>
-        <div class="pki-osa"><span class="osa-nimi">Mitä lyö</span>${profiili(omat)}</div>
-        ${ryhmaYhteenveto(omat, (h) => h.tiedot?.tilanne || "Tilanne ei kirjattu", "Tilanne", "Tilanteittain")}
+        ${kpl ? "" : `<div class="pki-osa"><span class="osa-nimi">Mitä lyö</span>${profiili(omat)}</div>
+        ${ryhmaYhteenveto(omat, (h) => h.tiedot?.tilanne || "Tilanne ei kirjattu", "Tilanne", "Tilanteittain")}`}
         ${muistiinpanot.length ? `<div class="pki-osa"><span class="osa-nimi">Muistiinpanot</span><ul class="pki-mp">${muistiinpanot.map((h) => `<li><a href="#/huomio/${h.id}">${esc(h.otsikko)}</a> <span class="pieni harmaa">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></li>`).join("")}</ul></div>` : ""}
       </div>
     </section>
-    <section class="pki-ottelut"><div class="osio-paa"><h2>Ottelulyönnit</h2><a class="pieni" href="#/vp/${valittuP.id}/ottelut">Avaa pelaajasivulla</a></div><div id="pki-ok"></div></section>` : `
+    ${kpl ? `<div class="sp-keskusdata">
+      <section id="minun-peli" aria-labelledby="mp-otsikko"><p class="lataa">Ladataan pelidataa…</p></section>
+      <section id="lyontianalyysi" aria-labelledby="la-otsikko"></section>
+      ${kp?.pesistulokset_id ? "" : `<p class="pieni">${kp ? "Pelaajalle ei ole merkitty pesistulokset-tunnusta" : "Pelaajaa ei löytynyt Keskuksen pelaajista samalla nimellä"}, joten Superpesis-lukuja ei voi näyttää.</p>`}
+    </div>` : `<section class="pki-ottelut"><div class="osio-paa"><h2>Ottelulyönnit</h2><a class="pieni" href="#/vp/${valittuP.id}/ottelut">Avaa pelaajasivulla</a></div><div id="pki-ok"></div></section>`}` : `
     ${tilannejako(rivit)}`}
 
-    <div class="kirjaus-ruudukko" id="lyonnit">
+    ${kpl ? "" : `<div class="kirjaus-ruudukko" id="lyonnit">
       <form class="paneeli kirjauslomake" id="vly-lomake">
         <h2>Kirjaa lyönti</h2>
         <label class="kentta">Lyöjä ${pelaajaValinta("pelaaja", lyv.pelaaja, "Valitse pelaaja")}</label>
@@ -250,7 +259,7 @@ export function piirraSisapeli(el, pelaajat) {
             <td>${voiPoistaa(h) ? `<button class="linkkinappi" data-poista="${h.id}">Poista</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="8" class="tyhja">${omat.length ? "Ei lyöntejä tässä tilanteessa." : "Ei vielä lyöntejä. Kirjaa ensimmäinen lomakkeella."}</td></tr>`}
         </tbody></table></div>
       </section>
-    </div>
+    </div>`}
 
     <details class="muut-pelaajat"><summary>Pelaajien hallinta</summary>
       <p class="pieni">Kokoonpano 2027 sopimustilanteen mukaan. Numeron ja kokoonpanon voi muuttaa pelaajasivulla.</p>
@@ -274,7 +283,8 @@ export function piirraSisapeli(el, pelaajat) {
   $$("[data-valitse]", el).forEach((b) => (b.onclick = () => valitse(b.dataset.valitse)));
 
   if (valittuP) {
-    piirraOttelulyonnit($("#pki-ok", el), valittuP);
+    if (kpl) { piirraMinunPeli($("#minun-peli", el), kp); piirraLyontianalyysi($("#lyontianalyysi", el), kp); }
+    else piirraOttelulyonnit($("#pki-ok", el), valittuP);
     kytkeKuva(el, valittuP, piirra);
     $("#pki-kuvaus", el).onchange = async (e) => {
       const kuvaus = e.target.value.trim() || null;
@@ -310,6 +320,7 @@ export function piirraSisapeli(el, pelaajat) {
 
   // Kirjauslomake
   const f = $("#vly-lomake", el);
+  if (!f) return;
   const kentta = () => { $("#vly-kentta", el).innerHTML = kenttaSvg({ id: "vly-valinta", valittu: lyv.piste, aktiivinen: true }); $("#vly-valinta", el).onclick = (e) => { lyv.piste = kenttaPiste(e.currentTarget, e); kentta(); }; };
   kentta();
   ["tilanne", "palot", "lyonti", "tyyppi", "tulos"].forEach((k) => kytkeChipit(f, lyv, k));

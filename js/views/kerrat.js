@@ -73,9 +73,13 @@ function uusiLomake(el) {
       </div>
       <div>
         <h3 style="margin-top:0">Testit</h3>
-        <div class="chipit" style="margin-bottom:10px">${PAKETIT.map((p, i) => `<button type="button" class="chip" data-paketti="${i}">+ ${esc(p.nimi)}</button>`).join("")}</div>
-        ${ryhmat.map(([r, rn]) => `<div class="testiryhma"><span class="osa-nimi">${esc(rn)}</span><div class="chipit" style="margin-bottom:6px">${tila.testit.filter((t) => (r ? t.luokka === r : !LUOKKANIMI[t.luokka]) && !t.johdettu && t.aktiivinen).map((t) => `<label class="chip"><input type="checkbox" name="testi" value="${t.koodi}">${esc(t.nimi)}</label>`).join("")}</div></div>`).join("")}
-        <label class="chip" style="margin-top:8px"><input type="checkbox" name="piikit">Piikkiajat (yksittäiset kärkiajat)</label>
+        <!-- 6.11.2026: testit pudotusvalikoissa luokittain (aiemmin kaikki painikkeina allekkain) -->
+        <div class="tv-rivi">
+          <label class="kentta tv-paketti">Valmis paketti<select id="paketti"><option value="">Lisää paketti…</option>${PAKETIT.map((p, i) => `<option value="${i}">${esc(p.nimi)}</option>`).join("")}</select></label>
+          ${ryhmat.map(([r, rn]) => testiValikko(r, rn)).join("")}
+        </div>
+        <div class="tv-valitut"><span class="osa-nimi">Valitut testit</span><div class="chipit" id="valitut-testit"></div></div>
+        <label class="tv-piikit"><input type="checkbox" name="piikit"> Piikkiajat (yksittäiset kärkiajat)</label>
       </div>
       <div>
         <div class="rivi vali"><h3 style="margin:0">Osallistujat</h3><span class="pieni" id="valittuja"></span></div>
@@ -90,7 +94,20 @@ function uusiLomake(el) {
   const valitseJoukkue = () => { $$("input[name=pelaaja]", f).forEach((i) => (i.checked = i.closest("details") ? false : i.dataset.joukkue === f.joukkue.value)); laske(); };
   f.joukkue.onchange = valitseJoukkue; valitseJoukkue();
   f.addEventListener("change", laske);
-  $$("[data-paketti]", f).forEach((b) => (b.onclick = () => PAKETIT[b.dataset.paketti].testit.forEach((t) => { const i = f.querySelector(`input[name=testi][value="${t}"]`); if (i) i.checked = true; })));
+  // testivalikot: laskurit, valitut-lista, paketit ja vain yksi valikko kerrallaan auki
+  const paivitaTestit = () => {
+    $$(".tv-valikko", f).forEach((d) => { const n = $$("input[name=testi]:checked", d).length; $(".tv-lkm", d).textContent = n ? n : ""; d.classList.toggle("on-valittu", n > 0); });
+    const val = $$("input[name=testi]:checked", f);
+    $("#valitut-testit").innerHTML = val.length ? val.map((i) => `<button type="button" class="chip tv-poista" data-pois="${i.value}" title="Poista">${esc(tila.testi[i.value]?.nimi || i.value)} <span aria-hidden="true">×</span></button>`).join("") : '<span class="pieni">Ei vielä valittuja – valitse paketti tai avaa luokka.</span>';
+    $$("[data-pois]", f).forEach((b) => (b.onclick = () => { const i = f.querySelector(`input[name=testi][value="${b.dataset.pois}"]`); if (i) i.checked = false; paivitaTestit(); }));
+  };
+  $("#paketti").onchange = (e) => { if (e.target.value === "") return; PAKETIT[e.target.value].testit.forEach((t) => { const i = f.querySelector(`input[name=testi][value="${t}"]`); if (i) i.checked = true; }); e.target.value = ""; paivitaTestit(); };
+  $$(".tv-valikko", f).forEach((d) => d.addEventListener("toggle", () => { if (d.open) $$(".tv-valikko", f).forEach((m) => m !== d && (m.open = false)); }));
+  $$("[data-kaikki]", f).forEach((b) => (b.onclick = () => { const r = b.closest(".tv-ryhma"); const kaikki = $$("input[name=testi]", r).every((i) => i.checked); $$("input[name=testi]", r).forEach((i) => (i.checked = !kaikki)); paivitaTestit(); }));
+  const sulje = (e) => { if (!f.isConnected) return document.removeEventListener("click", sulje); if (!e.target.closest(".tv-valikko")) $$(".tv-valikko[open]", f).forEach((d) => (d.open = false)); };
+  document.addEventListener("click", sulje);
+  f.addEventListener("change", (e) => { if (e.target.name === "testi") paivitaTestit(); });
+  paivitaTestit();
   $("#peru").onclick = () => (el.innerHTML = "");
   f.onsubmit = async (e) => {
     e.preventDefault();
@@ -107,4 +124,17 @@ function uusiLomake(el) {
     location.hash = `#/syota/${k.id}`;
   };
   f.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Yksi testiluokka pudotusvalikkona: sisällä alaluokat (lajitaidossa testisarjat, esim. Näpy, Kovat, Lyöntitesti).
+function testiValikko(luokka, luokkaNimi) {
+  const testit = tila.testit.filter((t) => (luokka ? t.luokka === luokka : !LUOKKANIMI[t.luokka]) && !t.johdettu && t.aktiivinen);
+  const ryhma = (t) => { const m = t.nimi.match(/^([^:]{2,40}):\s*(.+)$/); return m ? [m[1].replace(/^Edustuksen lyöntitesti$/, "Lyöntitesti (edustus)"), m[2]] : [t.alaluokka || "Muut", t.nimi]; };
+  const osat = new Map();
+  for (const t of testit) { const [r, n] = ryhma(t); if (!osat.has(r)) osat.set(r, []); osat.get(r).push([t, n]); }
+  return `<details class="tv-valikko"><summary><span>${esc(luokkaNimi)}</span><b class="tv-lkm"></b><span class="tv-nuoli" aria-hidden="true">▾</span></summary>
+    <div class="tv-paneeli">${[...osat].map(([r, lista]) => `<div class="tv-ryhma">
+      <div class="tv-ryhma-paa"><span class="osa-nimi">${esc(r)}</span>${lista.length > 2 ? '<button type="button" class="linkkinappi" data-kaikki>kaikki</button>' : ""}</div>
+      ${lista.map(([t, n]) => `<label class="tv-rivi-valinta"><input type="checkbox" name="testi" value="${t.koodi}"><span>${esc(n)}</span>${t.yksikko ? `<small>${esc(t.yksikko)}</small>` : ""}</label>`).join("")}
+    </div>`).join("")}</div></details>`;
 }

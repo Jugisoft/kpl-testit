@@ -2439,3 +2439,35 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ko-ryhma small { display: block; font: 600 11px/1.2 var(--text); color: var(--ink-3); letter-spacing: .02em; }
 .ko-ryhma small.seuraa { color: var(--amber); }
 .ko-ryhma small.ala { color: var(--red); }
+
+/* 6.11.2026: uuden testikerran testivalinta pudotusvalikoina */
+.tv-rivi { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.tv-paketti select { min-width: 190px; }
+.tv-valikko { position: relative; }
+.tv-valikko > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); cursor: pointer; font-weight: 600; user-select: none; }
+.tv-valikko > summary::-webkit-details-marker { display: none; }
+.tv-valikko[open] > summary, .tv-valikko > summary:hover { border-color: var(--kpl); }
+.tv-valikko.on-valittu > summary { background: rgba(245,168,0,.12); border-color: var(--kpl); color: var(--kpl); }
+.tv-lkm:empty { display: none; }
+.tv-lkm { min-width: 20px; padding: 0 6px; border-radius: 99px; background: var(--kpl); color: var(--musta); font: 700 13px/20px var(--num); text-align: center; }
+.tv-nuoli { color: var(--ink-3); font-size: 12px; transition: transform .15s; }
+.tv-valikko[open] .tv-nuoli { transform: rotate(180deg); }
+.tv-paneeli { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: max-content; min-width: 260px; max-width: min(420px, 90vw); max-height: 60vh; overflow: auto; padding: 10px 12px; display: grid; gap: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 18px 40px -12px rgba(0,0,0,.7); }
+.tv-ryhma { display: grid; gap: 2px; }
+.tv-ryhma-paa { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 2px; border-bottom: 1px solid var(--line-2); margin-bottom: 2px; }
+.tv-ryhma-paa .linkkinappi { font-size: 12px; }
+.tv-rivi-valinta { display: flex; align-items: center; gap: 10px; padding: 5px 6px; border-radius: 6px; cursor: pointer; }
+.tv-rivi-valinta:hover { background: rgba(255,255,255,.04); }
+.tv-rivi-valinta input { width: 17px; height: 17px; accent-color: var(--kpl); flex: none; }
+.tv-rivi-valinta small { margin-left: auto; color: var(--ink-3); font-size: 12px; }
+.tv-rivi-valinta:has(input:checked) span { color: var(--ink); font-weight: 600; }
+.tv-valitut { margin-top: 12px; display: grid; gap: 6px; }
+.tv-valitut .chip { padding: 4px 10px; font-size: 14px; }
+.tv-valitut .chip span { color: var(--ink-3); }
+.tv-piikit { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.tv-piikit input { accent-color: var(--kpl); }
+@media (max-width: 600px) {
+  .tv-rivi { display: grid; grid-template-columns: 1fr; }
+  .tv-valikko > summary { width: 100%; justify-content: space-between; }
+  .tv-paneeli { position: static; width: auto; max-width: none; margin-top: 6px; box-shadow: none; }
+}

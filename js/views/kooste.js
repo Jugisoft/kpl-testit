@@ -55,13 +55,14 @@ export async function nayta(main) {
 
     <section class="paneeli">
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
-      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmän treenit oletetaan tehdyiksi, ellei pelaaja ole merkinnyt poissaoloa.</p>
+      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmätreenit = mukana / ryhmän treenit viikolla (OUT Nimenhuudossa tai Olin poissa = ei mukana, muuten oletus: mukana).</p>
       <div class="ko-taulu" role="table" aria-label="Treenimäärät pelaajittain">
-        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
+        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit (OUT Nimenhuudossa tai Olin poissa = ei mukana)">Ryhmä&shy;treenit</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
         ${k.rivit.map((r) => `<div class="ko-rivi" role="row">
           <a role="cell" href="#/oma/${r.id}" class="ko-nimi">${esc(r.nimi)}</a>
           <span role="cell" class="ko-palkki"><span class="ku-jakauma" style="width:${Math.max(2, (100 * r.min) / maxMin)}%">${TYYPIT.filter((t) => r.tyypit[t.k]).map((t) => `<i style="flex:${r.tyypit[t.k]};background:${t.vari}" data-tip="${t.nimi}: ${minStr(r.tyypit[t.k])}"></i>`).join("")}</span></span>
           <span role="cell" class="num">${r.min ? minStr(r.min) : "–"}</span>
+          <span role="cell" class="num ko-ryhma${r.ryhmaYht && r.ryhmaMukana * 2 <= r.ryhmaYht ? " ko-ei" : ""}" title="${r.ryhmaOut ? `OUT ${r.ryhmaOut}` : ""}">${r.ryhmaYht ? `${r.ryhmaMukana}/${r.ryhmaYht}${r.ryhmaOut ? `<small> OUT ${r.ryhmaOut}</small>` : ""}` : "–"}</span>
           <span role="cell" class="num">${r.omaMin ? minStr(r.omaMin) : "–"}</span>
           <span role="cell" class="num ko-acwr ${r.acwr == null ? "" : r.acwr > 1.5 ? "korkea" : r.acwr < 0.6 ? "matala" : "ok"}">${r.acwr == null ? "–" : `${r.acwr > 1.5 ? "▲ " : ""}${desi(r.acwr, 2)}`}</span>
           <span role="cell" class="num${r.lepoViim7 === 0 ? " ko-ei" : ""}">${r.lepoViim7}</span>
@@ -74,7 +75,7 @@ export async function nayta(main) {
     <section class="paneeli ku-perusta ko-perusta">
       <b>Mihin arvio perustuu</b>
       <ul>
-        <li><span>1</span><span>Ryhmän treenit Nimenhuudosta (valmentaja voi korjata tyypin ja keston, pelaaja merkitsee poissaolon).</span></li>
+        <li><span>1</span><span>Ryhmän treenit Nimenhuudosta (valmentaja voi korjata tyypin ja keston). Nimenhuudon OUT tai pelaajan Olin poissa = ei mukana, muuten oletus: mukana.</span></li>
         <li><span>2</span><span>Pelaajan omat kirjaukset ohjelmakirjastosta (Voima 1–3, Piiri 1–2, juoksut, syötöt määrinä, lenkit km) ja lyöntipäiväkirja.</span></li>
         <li><span>3</span><span>Rasitus = treenityypin tai ohjelman <b>arvio</b> 0–10 × minuutit. Ei sykettä eikä pelaajan omaa tuntemusta.</span></li>
         <li><span>4</span><span>Kuorma × taso = viim. 7 pv / edellisten 4 vk keskiarvo. Yli 1,5 on tutkimuksissa liitetty kohonneeseen vammariskiin (Hulin ym. 2016). <b>Liian kova</b> = vähintään kaksi merkkiä (nousu > 1,5, ei lepopäivää 7 pv:ään, 4+ raskasta päivää putkeen) tai nousu > 1,8.</span></li>

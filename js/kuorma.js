@@ -28,16 +28,19 @@ export async function haeOhjelmat() {
 // Pelaajien kuormadata yhdellä kertaa (pelaajan sivu ja valmentajan kooste)
 export async function haeKuormaRivit(pelaajat, nh, alku, loppu, testipaivat = {}) {
   const ids = pelaajat.map((p) => p.id);
-  const [ohjelmat, omat, poissa, ly] = await Promise.all([
+  const [ohjelmat, omat, poissa, ly, ilmo] = await Promise.all([
     haeOhjelmat(),
     sb.from("omat_treenit").select("*").in("pelaaja_id", ids).gte("pvm", alku).lte("pvm", loppu).order("pvm"),
     sb.from("poissaolot").select("pelaaja_id,uid").in("pelaaja_id", ids),
     sb.rpc("kuorma_lyonnit", { p_alku: alku, p_loppu: loppu }),
+    // 6.11.2026: Nimenhuudon OUT = ei mukana (taulu ilmoittautumiset; jos haku epäonnistuu, oletus pysyy)
+    sb.from("ilmoittautumiset").select("pelaaja_id,uid").eq("tila", "OUT").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
   ]);
   const virhe = omat.error || poissa.error;
   return { virhe, ohjelmat, omat: omat.data || [], poissa: poissa.data || [], tulos: Object.fromEntries(pelaajat.map((p) => [p.id, kokoa({
     nh, ohjelmat,
     poissa: new Set((poissa.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
+    out: new Set((ilmo.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
     omat: (omat.data || []).filter((o) => o.pelaaja_id === p.id),
     lyonnit: (ly.data || []).filter((l) => l.pelaaja_id === p.id),
     testipaivat: testipaivat[p.id] || [],
@@ -96,7 +99,7 @@ export async function piirraKuorma(el, p, opt) {
     </details>
     <details class="ku-miten"><summary>Mihin arvio perustuu</summary>
       <ul class="ku-perusta-lista pieni">
-        <li>Ryhmän treenit Nimenhuudosta: oletus on, että olit mukana. Merkitse poissaolo viikon ohjelmassa.</li>
+        <li>Ryhmän treenit Nimenhuudosta: OUT Nimenhuudossa tai Olin poissa = et ollut mukana, muuten oletus on, että olit mukana.</li>
         <li>Omat kirjaukset ja lyöntipäiväkirja (100 lyöntiä ≈ 30 min lajia).</li>
         <li>Testipäivät testituloksista.</li>
         <li>Rasitus on <b>arvio</b>: treenityypin tai ohjelman tyypillinen rasitus × minuutit. Ei sykettä eikä omaa tuntemusta.</li>

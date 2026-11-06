@@ -61,6 +61,7 @@ async function piirra(main) {
   ]);
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
   const ilmo = new Map((ilmoRes.data || []).map((x) => [x.uid, x.tila]));
+  const eiMukana = new Set([...poissa, ...[...ilmo].filter(([, v]) => v === "OUT").map(([u]) => u)]); // poissa + OUT
   ilmo.haettu = (ilmoRes.data || []).reduce((m, x) => (x.haettu > m ? x.haettu : m), "");
   const nhKaikki = (nhLaaja.tapahtumat || []).filter((e) => e.pvm <= lisaaPv(viikko, 41));
   const tulevat = tulevatTestit(p, nhLaaja.tapahtumat || []);
@@ -98,7 +99,7 @@ async function piirra(main) {
       </div>
     </div>
 
-    ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+    ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa: eiMukana, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
 
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
@@ -244,11 +245,11 @@ function nimenhuuto(nh, poissa, voiMerkita) {
   const haettuTxt = ilmo.haettu ? (() => { const d = new Date(ilmo.haettu); return `IN/OUT päivitetty ${d.getDate()}.${d.getMonth() + 1}. klo ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`; })() : "";
   return `<div class="oma-nh">
     <div class="oma-nh-paa"><span class="oma-nh-merkki">${ohj ? "Viikko-ohjelma" : "Nimenhuuto"}</span><span class="pieni">${t.length ? `${t.length} tapahtumaa tällä viikolla` : "ei tapahtumia tällä viikolla"}</span></div>
-    ${t.length && voiMerkita ? `<p class="pieni oma-nh-ohje">${ohj ? "Valmennuksen viikko-ohjelma (muutokset mahdollisia)." : "Tiedoksi – ilmoittautumiset tehdään Nimenhuudossa."} Jos et ollut mukana, paina <b>Olin poissa</b>, niin kuorma-arvio pysyy oikeana.</p>` : ""}
-    ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}${poissa.has(e.uid) ? " poissa" : ""}">
+    ${t.length && voiMerkita ? `<p class="pieni oma-nh-ohje">${ohj ? "Valmennuksen viikko-ohjelma (muutokset mahdollisia)." : "Tiedoksi – ilmoittautumiset tehdään Nimenhuudossa. OUT-treeni ei laske kuormaan."} Jos et ollut mukana muuten, paina <b>Olin poissa</b>, niin kuorma-arvio pysyy oikeana.</p>` : ""}
+    ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}${poissa.has(e.uid) || ilmo.get(e.uid) === "OUT" ? " poissa" : ""}">
       <span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
       <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : (ohj ? "aika tarkentuu" : "koko päivä")}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
-      <span class="oma-nh-luokka">${ilmoMerkki(e)}${luokitteluTagi(e, tila.ohjaaja)}${poissaNappi(e, poissa, voiMerkita)}</span>
+      <span class="oma-nh-luokka">${ilmoMerkki(e)}${luokitteluTagi(e, tila.ohjaaja)}${ilmo.get(e.uid) === "OUT" ? "" : poissaNappi(e, poissa, voiMerkita)}</span>
     </li>`; }).join("")}</ul>` : ""}
     ${t.length && haettuTxt && !ohj ? `<p class="pieni oma-ilmo-aika">${haettuTxt} · lähde Nimenhuuto</p>` : ""}
   </div>`;

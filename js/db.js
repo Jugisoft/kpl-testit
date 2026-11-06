@@ -65,7 +65,7 @@ export async function tarkistaRooli() {
   tila.istunto = data.session;
   // Käyttöoikeusluokat (31.10.2026): rajaus on tietokannassa (RLS), tämä vain piilottaa näkymät, joihin ei ole pääsyä.
   // tila.valmentaja = miesten alue (admin, valmentaja, pelaaja); tila.valmennus = Valmennus-osio (admin, valmentaja).
-  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = tila.juniori = tila.ohjaaja = false; tila.rooli = null; tila.omaPelaaja = null;
+  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = tila.juniori = tila.spJuniori = tila.ohjaaja = false; tila.rooli = null; tila.omaPelaaja = null;
   if (tila.istunto) {
     const [v, a, vm, r] = await Promise.all([sb.rpc("on_valmentaja"), sb.rpc("on_admin"), sb.rpc("on_valmennus"), sb.rpc("kayttajan_rooli")]);
     tila.valmentaja = !!v.data;
@@ -80,13 +80,14 @@ export async function tarkistaRooli() {
   tila.juniori = tila.rooli === "juniori";
   tila.ohjaaja = ["admin", "valmentaja", "psu"].includes(tila.rooli);
   tila.psu = tila.rooli === "psu";
-  tila.spPelaaja = tila.rooli === "pelaaja";
+  tila.spJuniori = tila.rooli === "sp_juniori";   // 6.11.2026: miesten SP -pelaaja + juniori (molemmat alueet)
+  tila.spPelaaja = tila.rooli === "pelaaja" || tila.spJuniori;
   tila.jasen = !!tila.rooli;
 }
 
 // Testiryhmät, jotka roolille näytetään (null = kaikki)
 export function sallitutRyhmat() {
-  return tila.psu || tila.juniori ? ["juniorit"] : tila.spPelaaja ? ["superpesis"] : null;
+  return tila.spJuniori ? null : tila.psu || tila.juniori ? ["juniorit"] : tila.spPelaaja ? ["superpesis"] : null;
 }
 
 export async function lataaPelaajat() {

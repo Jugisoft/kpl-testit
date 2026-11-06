@@ -3,7 +3,7 @@ import { sb, tila, nimi, lataaPelaajat, lataaPerus, SUPABASE_URL } from "../db.j
 import { LUOKAT } from "./testit.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 
-const ROOLIT = { admin: "Master (ylläpitäjä)", valmentaja: "Master-valmennus", pelaaja: "Miesten SP -pelaaja", psu: "PSU-valmennus", juniori: "Juniori-pelaaja" };
+const ROOLIT = { admin: "Master (ylläpitäjä)", valmentaja: "Master-valmennus", pelaaja: "Miesten SP -pelaaja", psu: "PSU-valmennus", juniori: "Juniori-pelaaja", sp_juniori: "Miesten SP -pelaaja + juniori" };
 // Pelaajaliitos (1.11.2026): tunnus ↔ pelaaja, pelaajan oma Keskus
 const pelaajaSel = (v) => `<select data-pelaaja-v="${esc(v.email)}" aria-label="Pelaaja: ${esc(v.email)}"><option value="">– ei pelaajaa –</option>${tila.joukkueet.map((j) => `<optgroup label="${esc(j.nimi)}">${tila.pelaajat.filter((x) => x.joukkue_id === j.id).map((x) => `<option value="${x.id}"${x.id === v.pelaaja_id ? " selected" : ""}>${esc(nimi(x))}</option>`).join("")}</optgroup>`).join("")}</select>`;
 
@@ -22,6 +22,7 @@ export async function nayta(main) {
       <li><b>Master-valmennus</b>: kaikki: miesten ja junioreiden testit, Muistio Valmennus-osioineen, vastustajat, Pelikirja, analyysit.</li>
       <li><b>Miesten SP -pelaaja</b>: miesten asiat (testit, Muistio, vastustajat, Pelikirja, analyysit), mutta ei junioreiden testituloksia eikä Muistion Valmennus-osiota.</li>
       <li><b>Juniori-pelaaja</b>: oma Keskus (viikko-ohjelma, tavoitteet, omat testit), junioreiden testitulokset luettavissa ja lyöntipäiväkirja. Ei syötä tuloksia. Liitä tunnus pelaajaan sarakkeessa <b>Pelaaja</b>.</li>
+      <li><b>Miesten SP -pelaaja + juniori</b>: molempien oikeudet yhdessä: miesten asiat kuten SP-pelaajalla sekä junioreiden testitulokset. Oma Keskus, Treenipäiväkirja ja lyöntipäiväkirja. Liitä tunnus pelaajaan sarakkeessa <b>Pelaaja</b>.</li>
       <li><b>PSU-valmennus</b> (Poikien Superpesis ja Poikien Ykköspesis): vain junioreiden testit, pelaajat ja reaktioajat. Ei miesten testituloksia, muistiinpanoja, vastustajia, Pelikirjaa eikä siirtomarkkinoita.</li>
     </ul>
     <p class="pieni">Pelaajaryhmän alue: <b>Miehet Superpesis</b> kuuluu miesten alueeseen, <b>Juniorit</b> ja <b>Vanhat</b> PSU:n alueeseen.</p>

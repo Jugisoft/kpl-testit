@@ -1951,6 +1951,10 @@ a.jtt-yla:hover { text-decoration: underline; }
 .oma-nh-teksti small { color: var(--ink-3); font-size: 13px; }
 .oma-nh-linkki { padding: 6px 10px; font-size: 13px; }
 .oma-nh-virhe { color: var(--amber); }
+.oma-tulevat { margin: 0 0 14px; padding: 10px 12px; border: 1px solid rgba(144,133,233,.35); border-radius: 10px; background: rgba(144,133,233,.06); }
+.oma-tulevat .oma-nh-merkki, .oma-tulevat .oma-nh-pv b { color: #b3a9ff; }
+.oma-tulevat .oma-nh-lista li { grid-template-columns: 52px minmax(0, 1fr); }
+@media (max-width: 600px) { .oma-tulevat .oma-nh-lista li { grid-template-columns: 44px minmax(0, 1fr); } }
 @media (max-width: 600px) { .oma-nh-lista li { grid-template-columns: 44px minmax(0, 1fr); } .oma-nh-linkki { grid-column: 2; justify-self: start; } }
 
 /* Viikkoni: arki ja kuormitus (1.11.2026) */

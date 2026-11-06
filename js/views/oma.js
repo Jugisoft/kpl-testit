@@ -7,6 +7,7 @@ import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot } from "../kuorma.js";
+import { osat as tapOsat, lyhytOtsikko } from "../kuormaydin.js";
 
 const PAIVA = 864e5;
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
@@ -52,11 +53,13 @@ async function piirra(main) {
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
     oma ? sb.from("lyonti_missiot").select("*").eq("omistaja", omaEmail()).eq("arkistoitu", false) : Promise.resolve({ data: [] }),
     oma ? sb.from("lyonti_kirjaukset").select("*").eq("omistaja", omaEmail()) : Promise.resolve({ data: [] }),
-    haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -42), lisaaPv(viikko, 41)),
+    // loppu vähintään 90 pv tästä päivästä, jotta tulevat testit näkyvät (6.11.2026)
+    haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -42), [lisaaPv(viikko, 41), lisaaPv(tanaan(), 90)].sort()[1]),
     sb.from("poissaolot").select("uid").eq("pelaaja_id", pid),
   ]);
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
-  const nhKaikki = nhLaaja.tapahtumat || [];
+  const nhKaikki = (nhLaaja.tapahtumat || []).filter((e) => e.pvm <= lisaaPv(viikko, 41));
+  const tulevat = tulevatTestit(p, nhLaaja.tapahtumat || []);
   const nh = { ...nhLaaja, tapahtumat: nhKaikki.filter((e) => e.pvm >= viikko && e.pvm <= vkLoppu) };
   const ohjelma = ohj.data || [];
   const kuit = ohjelma.length ? (await sb.from("ohjelma_kuittaukset").select("*").eq("pelaaja_id", pid).in("ohjelma_id", ohjelma.map((o) => o.id))).data || [] : [];
@@ -91,7 +94,7 @@ async function piirra(main) {
       </div>
     </div>
 
-    ${tilanne({ p, oma, joukkue, valmiit, ohjelma, nh, poissa, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+    ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
 
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
@@ -148,6 +151,7 @@ async function piirra(main) {
 
     <section id="oma-testit" aria-labelledby="testit-otsikko">
       <div class="oma-osa-paa"><h2 id="testit-otsikko">${oma ? "Minun testini" : "Testit"}</h2><a class="pieni" href="#/pelaaja/${pid}">Kaikki tulokset pelaajakortilla</a></div>
+      ${tulevatLista(tulevat)}
       ${normaalit.length ? `<div class="kpi-rivi">${normaalit.slice(0, 12).map(testiKortti).join("")}</div>` : `<p class="tyhja">Ei vielä testituloksia.</p>`}
     </section>
 
@@ -235,6 +239,37 @@ function nimenhuuto(nh, poissa, voiMerkita) {
   </div>`;
 }
 
+// ---------- Tulevat testit (6.11.2026): ryhmän tulevat testikerrat + Nimenhuudon testitapahtumat
+// (otsikossa testi/Cooper tai valmentaja luokitellut Testi-osan). Samana päivänä testikerta ja tapahtuma yhdistetään.
+function tulevatTestit(p, tapahtumat) {
+  const nyt = tanaan();
+  const lista = (tila.kerrat || []).filter((k) => k.joukkue_id === p.joukkue_id && k.pvm >= nyt)
+    .map((k) => ({ pvm: k.pvm, alku: null, paikka: null, otsikko: k.nimi || "Testikerta", testit: (k.testit || []).filter((t) => tila.testi[t]).map((t) => tila.testi[t].nimi) }));
+  for (const e of tapahtumat) {
+    if (e.peruttu || e.pvm < nyt || !tapOsat(e).osat.some((o) => o.tyyppi === "testi")) continue;
+    const k = lista.find((x) => x.pvm === e.pvm && !x.alku);
+    if (k) Object.assign(k, { alku: e.alku, paikka: e.paikka });
+    else lista.push({ pvm: e.pvm, alku: e.alku, paikka: e.paikka, otsikko: lyhytOtsikko(e.otsikko) || "Testit", testit: [] });
+  }
+  return lista.sort((a, b) => (a.pvm + (a.alku || "")).localeCompare(b.pvm + (b.alku || "")));
+}
+function pvNimi(e) {
+  const nyt = tanaan();
+  if (e.pvm === nyt) return "tänään";
+  if (e.pvm === lisaaPv(nyt, 1)) return "huomenna";
+  const d = new Date(e.pvm + "T12:00:00Z"); return `${VKP[d.getUTCDay()]} ${d.getUTCDate()}.${d.getUTCMonth() + 1}.`;
+}
+function tulevatLista(t) {
+  if (!t.length) return "";
+  const nyt = tanaan();
+  return `<div class="oma-tulevat"><div class="oma-nh-paa"><span class="oma-nh-merkki">Tulevat testit</span><span class="pieni">${t.length} tulossa</span></div>
+    <ul class="oma-nh-lista">${t.slice(0, 5).map((e) => { const d = new Date(e.pvm + "T12:00:00Z"), pv = Math.round((Date.parse(e.pvm) - Date.parse(nyt)) / PAIVA);
+      const milloin = pv === 0 ? "tänään" : pv === 1 ? "huomenna" : `${pv} pv päästä`;
+      return `<li><span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
+      <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b><small>${milloin}${e.alku ? ` · klo ${esc(e.alku)}` : ""}${e.paikka ? ` · ${esc(e.paikka.split(",")[0])}` : ""}${e.testit.length ? ` · ${esc(e.testit.join(", "))}` : ""}</small></span></li>`; }).join("")}</ul>
+    ${t.length > 5 ? `<p class="pieni">+ ${t.length - 5} muuta</p>` : ""}</div>`;
+}
+
 // ---------- Tilannekortit (1.11.2026, korjaamo): kokonaistilanne yhdellä silmäyksellä.
 // Neljä korttia renkailla: viikon treenit (minuutit tyypeittäin), viikon ohjelma, tavoitteet, lyöntimissio
 // (tai testit, jos missioita ei ole / valmentaja katsoo). Kortti vierittää omaan osioonsa.
@@ -265,7 +300,7 @@ function treeniKortti(a, tamaViikko) {
     iso: "", tila: tl });
 }
 const minStrLyh = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}` : `${m} min`);
-function tilanne({ p, oma, valmiit, ohjelma, nh, poissa, tavRivit, omat, missiot, kirjaukset, normaalit }) {
+function tilanne({ p, oma, valmiit, tulevat = [], ohjelma, nh, poissa, tavRivit, omat, missiot, kirjaukset, normaalit }) {
   const kortit = [];
   kortit.push(`<a class="ti-kortti ti-lataa" id="ti-treeni" href="#viikkoni" data-ti="viikkoni"><span class="ti-ots">Treenit tällä viikolla</span><span class="ti-runko">${rengas([], "…", "")}</span></a>`);
   // Viikon ohjelma = valmentajan harjoitteet + Nimenhuudon tapahtumat (6.11.2026: Cooper ym. puuttuivat kortista).
@@ -275,7 +310,6 @@ function tilanne({ p, oma, valmiit, ohjelma, nh, poissa, tavRivit, omat, missiot
   const nhOhi = nhT.filter((e) => e.pvm < tnyt).length;
   const n = ohjelma.length + nhT.length, tehty = valmiit + nhOhi;
   const seur = nhT.filter((e) => e.pvm >= tnyt).sort((a, b) => (a.pvm + (a.alku || "")).localeCompare(b.pvm + (b.alku || "")))[0];
-  const pvNimi = (e) => { if (e.pvm === tnyt) return "tänään"; if (e.pvm === lisaaPv(tnyt, 1)) return "huomenna"; const d = new Date(e.pvm + "T12:00:00Z"); return `${VKP[d.getUTCDay()]} ${d.getUTCDate()}.${d.getUTCMonth() + 1}.`; };
   const lyhyt = (t) => String(t || "").replace(/^[^:]{1,20}:\s*/, "");
   const osat = [ohjelma.length ? `${ohjelma.length - valmiit} harjoitetta jäljellä` : "", nhT.length ? `${nhT.length} yhteistä treeniä` : ""].filter(Boolean).join(" · ");
   kortit.push(kortti_({ kohde: "oma-ohjelma", otsikko: "Viikon ohjelma",
@@ -299,7 +333,8 @@ function tilanne({ p, oma, valmiit, ohjelma, nh, poissa, tavRivit, omat, missiot
     const kaudella = normaalit.filter((x) => x.kausiParas != null).length;
     kortit.push(kortti_({ kohde: "oma-testit", otsikko: "Testit tällä kaudella",
       rengasHtml: rengas(kaudella ? [{ ...pros1((100 * pbt.length) / kaudella), vari: "var(--green)", hehku: true }] : [], kaudella ? `${pbt.length}/${kaudella}` : "–", kaudella ? "ennätystä" : ""),
-      ala: kaudella ? (pbt.length ? `Uusi ennätys: ${pbt.slice(0, 2).map((x) => esc(tila.testi[x.t].nimi)).join(", ")}` : "Ei vielä uusia ennätyksiä") : "Ei testejä tällä kaudella" }));
+      ala: (kaudella ? (pbt.length ? `Uusi ennätys: ${pbt.slice(0, 2).map((x) => esc(tila.testi[x.t].nimi)).join(", ")}` : "Ei vielä uusia ennätyksiä") : "Ei testejä tällä kaudella")
+        + (tulevat.length ? `<br><small>Seuraava ${esc(pvNimi(tulevat[0]))}: <b class="ti-seur">${esc(tulevat[0].otsikko)}</b></small>` : "") }));
   }
   return `<section class="ti" aria-label="Kokonaistilanne">${kortit.join("")}</section>`;
 }

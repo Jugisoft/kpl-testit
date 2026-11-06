@@ -1,5 +1,6 @@
 // Kuormitusanalyysin ydin (1.11.2026). Puhdas logiikka ilman selain- tai tietokantariippuvuuksia: sama tiedosto
-// käytetään selaimessa (Viikkoni, Viikkokooste) ja Supabase-funktiossa viikkokooste (kopio supabase/functions/...).
+// käytetään selaimessa (Viikkoni, Viikkokooste) ja Supabase-funktiossa viikkokooste, joka tuo tämän tiedoston GitHubista
+// (raw.githubusercontent.com/Jugisoft/kpl-testit/<commit>/js/kuormaydin.js) – muutoksen jälkeen funktio julkaistaan uudelleen.
 // Rasitus on ARVIO: kuorma (AU) = arvioitu rasitus 0–10 treenityypistä tai ohjelmasta × minuutit (sRPE-menetelmän
 // periaate, Foster ym. 2001). Akuutti:krooninen = viim. 7 pv / edellisten 4 viikon keskiarvo; yli 1,5 on tutkimuksissa
 // liitetty kohonneeseen vammariskiin (Hulin ym. 2016; katsaus Arazi ym. 2020, Front Physiol).
@@ -17,6 +18,7 @@ export const RASKAS = 450; // AU/päivä, esim. 90 min lajia tai 75 min fysiikka
 export const LYONTI_MIN = 0.3; // lyöntipäiväkirja: 100 lyöntiä ≈ 30 min lajia
 export const LYONTI_RPE = 4;
 export const RAJA_NOUSU = 1.5, RAJA_KEVYT = 0.6;
+export const OS_RAJA = 60, OS_SEURAA = 75; // ryhmätreenien osallistuminen 4 vk: alle 60 % = paljon poissa, alle 75 % = seuraa
 
 const PAIVA = 864e5;
 export const lisaaPv = (s, n) => new Date(new Date(s + "T12:00:00Z").getTime() + n * PAIVA).toISOString().slice(0, 10);
@@ -158,8 +160,12 @@ export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
     const syotot = {}; let km = 0;
     for (const o of omat) { for (const [k, v] of Object.entries(o.maarat || {})) syotot[k] = (syotot[k] || 0) + (+v || 0); km += +o.km || 0; }
     const lyonnit = tot.filter((r) => r.lahde === "lyonti").reduce((s, r) => s + r.maara, 0);
+    // ryhmätreenien osallistuminen (6.11.2026): viikko ja 4 viikkoa viitepäivään
     const ry = (p.rivit.ryhma || []).filter(vk);
-    return { ryhmaYht: ry.length, ryhmaMukana: ry.filter((x) => x.mukana).length, ryhmaOut: ry.filter((x) => x.syy === "OUT").length, id: p.id, nimi: p.nimi, min: minuutit(tot), au: summa(tot), omaMin: minuutit(tot, (r) => r.lahde === "oma" || r.lahde === "lyonti"), omaKpl: omat.length,
+    const ry4 = (p.rivit.ryhma || []).filter((x) => x.pvm > lisaaPv(viite, -28) && x.pvm <= viite);
+    const pros = (a) => (a.length ? Math.round((100 * a.filter((x) => x.mukana).length) / a.length) : null);
+    return { ryhmaYht: ry.length, ryhmaMukana: ry.filter((x) => x.mukana).length, ryhmaOut: ry.filter((x) => x.syy === "OUT").length, os: pros(ry),
+      ry4Yht: ry4.length, ry4Mukana: ry4.filter((x) => x.mukana).length, ry4Out: ry4.filter((x) => x.syy === "OUT").length, os4: pros(ry4), id: p.id, nimi: p.nimi, min: minuutit(tot), au: summa(tot), omaMin: minuutit(tot, (r) => r.lahde === "oma" || r.lahde === "lyonti"), omaKpl: omat.length,
       tyypit: Object.fromEntries(TYYPIT.map((t) => [t.k, minuutit(tot, (r) => r.tyyppi === t.k)])), acwr: a.acwr, lepoViim7: a.lepoViim7, pisin: a.pisin,
       maarat: Object.fromEntries(Object.entries(syotot).filter(([, v]) => v > 0)), km, lyonnit,
       ohjelmat: [...new Set(omat.map((r) => r.otsikko))] };
@@ -167,42 +173,86 @@ export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
   const omaMinuutit = rivit.map((r) => r.omaMin).sort((a, b) => a - b);
   const mediaani = omaMinuutit.length ? omaMinuutit[Math.floor(omaMinuutit.length / 2)] : 0;
   const havainnot = [];
+  // putki on poikkeama vain, jos se on selvästi ryhmän tavallista pidempi (koko ryhmä treenaa usein peräkkäisinä päivinä)
+  const putket = rivit.map((r) => r.pisin).sort((a, b) => a - b);
+  const putkiMed = putket.length ? putket[Math.floor(putket.length / 2)] : 0;
   for (const r of rivit) {
     const syy = [];
     if (r.acwr != null && r.acwr > RAJA_NOUSU) syy.push(`kuorma ${desi(r.acwr)} × oma 4 viikon taso (raja 1,5)`);
     if (r.lepoViim7 === 0) syy.push("ei lepopäivää 7 päivään");
-    if (r.pisin >= 4) syy.push(`${r.pisin} raskasta päivää peräkkäin`);
+    if (r.pisin >= 4 && r.pisin >= putkiMed + 2) syy.push(`${r.pisin} raskasta päivää peräkkäin (ryhmässä tavallisesti ${putkiMed})`);
     if (syy.length >= 2 || (r.acwr != null && r.acwr > 1.8)) havainnot.push({ taso: "varoitus", pelaaja: r.nimi, teksti: `${r.nimi}: kuormitus on liian kova – ${syy.join(", ")}. Keskustele ja kevennä.` });
     else if (syy.length) havainnot.push({ taso: "huomio", pelaaja: r.nimi, teksti: `${r.nimi}: ${syy.join(", ")}. Seuraa.` });
     if (r.acwr != null && r.acwr < RAJA_KEVYT) havainnot.push({ taso: "info", pelaaja: r.nimi, teksti: `${r.nimi}: viikko selvästi kevyempi kuin oma taso (${Math.round(r.acwr * 100)} %). Sairaus, loukkaantuminen vai tauko?` });
-    if (r.ryhmaYht >= 2 && r.ryhmaMukana * 2 <= r.ryhmaYht) havainnot.push({ taso: "info", pelaaja: r.nimi, teksti: `${r.nimi}: mukana ${r.ryhmaMukana}/${r.ryhmaYht} ryhmätreenissä${r.ryhmaOut ? ` (OUT ${r.ryhmaOut})` : ""}.` });
+    if (r.ry4Yht >= 4 && r.os4 < OS_RAJA) havainnot.push({ taso: "huomio", pelaaja: r.nimi, koodi: "poissa", teksti: `${r.nimi}: osallistuminen 4 viikossa ${r.os4} % (${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}), tällä viikolla ${r.ryhmaMukana}/${r.ryhmaYht}. Paljon poissa – selvitä syy.` });
+    else if (r.ryhmaYht >= 2 && r.ryhmaMukana * 2 <= r.ryhmaYht) havainnot.push({ taso: "info", pelaaja: r.nimi, koodi: "poissa", teksti: `${r.nimi}: tällä viikolla mukana ${r.ryhmaMukana}/${r.ryhmaYht} ryhmätreenissä${r.ryhmaOut ? ` (OUT ${r.ryhmaOut})` : ""}.` });
     if (mediaani >= 60 && r.omaMin >= 2 * mediaani && r.omaMin >= 180) havainnot.push({ taso: "huomio", pelaaja: r.nimi, teksti: `${r.nimi}: omatoimista harjoittelua ${minStr(r.omaMin)}, yli kaksinkertainen ryhmän mediaaniin (${minStr(mediaani)}).` });
   }
   const eiOmia = rivit.filter((r) => !r.omaKpl && !r.lyonnit).map((r) => r.nimi);
-  if (eiOmia.length && eiOmia.length < rivit.length) havainnot.push({ taso: "info", teksti: `Ei omatoimisia kirjauksia tällä viikolla: ${eiOmia.join(", ")}.` });
+  if (eiOmia.length && eiOmia.length < rivit.length) havainnot.push({ taso: "info", koodi: "eiomia", teksti: `Ei omatoimisia kirjauksia tällä viikolla: ${eiOmia.join(", ")}.` });
   const kirjanneet = rivit.filter((r) => r.omaKpl || r.lyonnit).length;
   const jarj = { varoitus: 0, huomio: 1, info: 2 };
   havainnot.sort((a, b) => jarj[a.taso] - jarj[b.taso]);
-  return { viikko, viite, rivit: rivit.sort((a, b) => b.au - a.au), havainnot, mediaaniOma: mediaani, kirjanneet };
+  const sum = (k) => rivit.reduce((s, r) => s + r[k], 0);
+  const os = sum("ryhmaYht") ? Math.round((100 * sum("ryhmaMukana")) / sum("ryhmaYht")) : null;
+  const os4 = sum("ry4Yht") ? Math.round((100 * sum("ry4Mukana")) / sum("ry4Yht")) : null;
+  return { viikko, viite, rivit: rivit.sort((a, b) => b.au - a.au), havainnot, mediaaniOma: mediaani, kirjanneet, os, os4 };
 }
 
-// Kooste tekstiksi (sähköposti ja arkisto)
+// Kooste tekstiksi (sähköpostin tekstiversio ja arkisto) – 6.11.2026: linkki ensin, vain poikkeamat ja osallistuminen
+export const KOOSTE_URL = "https://jugisoft.github.io/kpl-testit/#/kooste";
+// sähköpostissa poissaolot näkyvät osallistumiskaaviossa, joten ne eivät toistu poikkeamalistassa
+const poikkeamat = (k) => k.havainnot.filter((h) => h.koodi !== "eiomia" && h.koodi !== "poissa");
+const matalat = (k) => k.rivit.filter((r) => (r.ry4Yht >= 2 && r.os4 < OS_SEURAA) || (r.ryhmaYht >= 2 && r.ryhmaMukana * 2 <= r.ryhmaYht)).sort((a, b) => a.os4 - b.os4 || a.os - b.os || a.nimi.localeCompare(b.nimi, "fi"));
+const osTxt = (x) => (x == null ? "–" : `${x} %`);
 export function koosteTeksti(k, ryhma) {
-  const r = k.rivit;
-  const rivi = (x) => `• ${x.nimi}: ${minStr(x.min)}${x.ryhmaYht ? ` · ryhmätreenit ${x.ryhmaMukana}/${x.ryhmaYht}${x.ryhmaOut ? ` (OUT ${x.ryhmaOut})` : ""}` : ""} (${x.omaMin ? `omatoimisia ${minStr(x.omaMin)}` : "ei omatoimisia"})${x.acwr != null ? ` · kuorma ${desi(x.acwr, 2)} × oma taso` : ""}${Object.keys(x.maarat).length ? ` · ${Object.entries(x.maarat).map(([a, b]) => `${a.toLowerCase()} ${b}`).join(", ")}` : ""}${x.km ? ` · ${desi(x.km)} km` : ""}${x.lyonnit ? ` · ${x.lyonnit} lyöntiä` : ""}`;
+  const h = poikkeamat(k), m = matalat(k);
   return [
     `KPL Keskus – viikkokooste ${ryhma}, viikko ${pvLyh(k.viikko)}–${pvLyh(k.viite)}`,
+    `Koko kooste: ${KOOSTE_URL}`,
     "",
-    "HAVAINNOT",
-    ...(k.havainnot.length ? k.havainnot.map((h) => `${h.taso === "varoitus" ? "⚠ " : "• "}${h.teksti}`) : ["• Ei erityisiä havaintoja."]),
+    `Osallistuminen ryhmätreeneihin: tällä viikolla ${osTxt(k.os)} · 4 viikkoa ${osTxt(k.os4)}`,
     "",
-    `TREENIMÄÄRÄT (ma–${VKP[(new Date(k.viite + "T12:00:00Z").getUTCDay() + 6) % 7]}), suurimmasta kuormasta alkaen`,
-    ...r.map(rivi),
+    "POIKKEAMAT",
+    ...(h.length ? h.map((x) => `${x.taso === "varoitus" ? "⚠ " : "• "}${x.teksti}`) : ["Ei poikkeamia tällä viikolla."]),
+    ...(m.length ? ["", `MATALA OSALLISTUMINEN (4 viikkoa alle ${OS_SEURAA} % tai tällä viikolla puolet tai alle)`, ...m.map((r) => `• ${r.nimi}: ${r.os4} % (${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}) · tällä viikolla ${r.ryhmaMukana}/${r.ryhmaYht}`)] : []),
     "",
-    `Omatoimisia kirjanneet: ${k.kirjanneet}/${r.length}. Omatoimisen harjoittelun mediaani ${minStr(k.mediaaniOma)}.`,
-    "",
-    "MIHIN ARVIO PERUSTUU: ryhmän Nimenhuuto-treenit (OUT Nimenhuudossa tai Olin poissa = ei mukana, muuten oletus: pelaaja oli mukana), pelaajan omat kirjaukset, lyöntipäiväkirja (100 lyöntiä ≈ 30 min) ja testipäivät. Rasitus on arvio treenityypistä tai ohjelmasta × minuutit – ei sykettä eikä pelaajan omaa rasitusarviota. 'Kuorma × oma taso' = viimeiset 7 päivää jaettuna edellisten 4 viikon keskiarvolla; yli 1,5 on tutkimuksissa liitetty kohonneeseen vammariskiin (Hulin ym. 2016). Havainnot ovat keskustelun pohja, eivät diagnoosi.",
-    "",
-    "Koko kooste: https://jugisoft.github.io/kpl-testit/#/kooste",
+    "Ryhmätreeni lasketaan pois, jos pelaaja on OUT Nimenhuudossa tai merkinnyt Olin poissa. Kuormat, omatoimiset ja kaikki pelaajat koko koosteessa.",
   ].join("\n");
+}
+
+// Sähköpostin HTML (6.11.2026): sähköpostiohjelmiin sopiva taulukkoasettelu, kaikki tyylit rivissä.
+const hEsc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+export function koosteHtml(k, ryhma) {
+  const h = poikkeamat(k), m = matalat(k), muut = k.rivit.filter((r) => r.ry4Yht >= 2).length - m.length;
+  const vari = (p) => (p == null ? "#8a8378" : p < OS_RAJA ? "#d6283b" : p < OS_SEURAA ? "#c27a00" : "#13865d");
+  const merkki = { varoitus: ["▲", "#d6283b"], huomio: ["◆", "#c27a00"], info: ["i", "#6f685d"] };
+  const ruutu = (otsikko, arvo, alla) => `<td width="33%" style="padding:12px 14px;background:#f6f3ee;border-radius:8px;vertical-align:top">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6f685d">${otsikko}</div>
+      <div style="font-size:28px;font-weight:700;line-height:1.2;color:${vari(typeof arvo === "number" ? arvo : null)}">${typeof arvo === "number" ? `${arvo} %` : hEsc(arvo)}</div>
+      <div style="font-size:12px;color:#6f685d">${alla}</div></td>`;
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#ffffff">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td align="center" style="padding:20px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;font-family:Arial,Helvetica,sans-serif;color:#1d1b18;font-size:15px;line-height:1.5">
+<tr><td style="border-top:4px solid #F5A800;padding:14px 0 4px">
+  <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#a37000;font-weight:700">KPL Keskus · Viikkokooste</div>
+  <div style="font-size:22px;font-weight:700">${hEsc(ryhma)} · viikko ${pvLyh(k.viikko)}–${pvLyh(k.viite)}</div>
+</td></tr>
+<tr><td style="padding:12px 0 18px"><a href="${KOOSTE_URL}" style="display:inline-block;background:#F5A800;color:#181818;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:8px">Avaa koko kooste →</a></td></tr>
+<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="6"><tr>
+  ${ruutu("Osallistuminen", k.os ?? "–", "tällä viikolla")}
+  ${ruutu("Osallistuminen", k.os4 ?? "–", "4 viikkoa")}
+  ${ruutu("Paljon poissa", String(k.rivit.filter((r) => r.ry4Yht >= 4 && r.os4 < OS_RAJA).length), `pelaajaa · ${h.filter((x) => x.taso === "varoitus").length ? `${h.filter((x) => x.taso === "varoitus").length} kuormavaroitusta` : "ei kuormavaroituksia"}`)}
+</tr></table></td></tr>
+<tr><td style="padding:20px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#6f685d">Poikkeamat</td></tr>
+<tr><td>${h.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${h.map((x) => `<tr><td width="22" valign="top" style="padding:6px 0;color:${merkki[x.taso][1]};font-weight:700">${merkki[x.taso][0]}</td><td style="padding:6px 0;border-bottom:1px solid #ece7df">${hEsc(x.teksti)}</td></tr>`).join("")}</table>` : `<div style="color:#13865d">Ei poikkeamia tällä viikolla.</div>`}</td></tr>
+${m.length ? `<tr><td style="padding:22px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#6f685d">Matalin osallistuminen · 4 viikkoa</td></tr>
+<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${m.map((r) => `<tr>
+  <td width="34%" style="padding:5px 8px 5px 0;font-size:14px;white-space:nowrap">${hEsc(r.nimi)}</td>
+  <td style="padding:5px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ece7df;border-radius:4px"><tr><td width="${Math.max(2, r.os4)}%" style="background:${vari(r.os4)};height:12px;border-radius:4px;font-size:0;line-height:0">&nbsp;</td><td style="font-size:0;line-height:0">&nbsp;</td></tr></table></td>
+  <td width="128" align="right" style="padding:5px 0 5px 10px;font-size:13px;white-space:nowrap"><b style="color:${vari(r.os4)}">${r.os4} %</b> <span style="color:#6f685d">${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? ` · OUT ${r.ry4Out}` : ""}</span></td>
+</tr>`).join("")}</table>
+<div style="font-size:12px;color:#6f685d;padding-top:6px">Palkki = osallistuminen 4 viikossa · punainen alle ${OS_RAJA} % (paljon poissa – selvitä syy) · keltainen alle ${OS_SEURAA} %${muut > 0 ? ` · muut ${muut} pelaajaa ${OS_SEURAA} % tai yli` : ""}.</div></td></tr>` : ""}
+<tr><td style="padding:22px 0 0;font-size:12px;color:#6f685d;border-top:1px solid #ece7df">Ryhmätreeni lasketaan pois, jos pelaaja on OUT Nimenhuudossa tai merkinnyt Olin poissa; muuten oletus on, että hän oli mukana. Kuormat, omatoimiset treenit ja kaikki pelaajat: <a href="${KOOSTE_URL}" style="color:#a37000">koko kooste</a>.</td></tr>
+</table></td></tr></table></body></html>`;
 }

@@ -2436,4 +2436,6 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .oma-ilmo.in { color: var(--green); background: var(--green-bg); border-color: rgba(46,229,157,.35); }
 .oma-ilmo.out { color: var(--red); background: var(--red-bg); border-color: rgba(255,59,78,.35); }
 .oma-ilmo-aika { margin: 8px 0 0; font-size: 12px; color: var(--ink-3); }
-.ko-ryhma small { display: block; font: 600 11px/1.2 var(--text); color: var(--red); letter-spacing: .04em; }
+.ko-ryhma small { display: block; font: 600 11px/1.2 var(--text); color: var(--ink-3); letter-spacing: .02em; }
+.ko-ryhma small.seuraa { color: var(--amber); }
+.ko-ryhma small.ala { color: var(--red); }

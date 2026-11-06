@@ -4,7 +4,7 @@
 import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, testiParhaat } from "../util.js";
 import { haeKuormaRivit, haeKalenteri, tooltip } from "../kuorma.js";
-import { TYYPIT, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, kooste as laskeKooste } from "../kuormaydin.js";
+import { TYYPIT, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, kooste as laskeKooste } from "../kuormaydin.js";
 
 let viikko = maanantai(tanaanHki());
 let joukkue = null;
@@ -34,7 +34,7 @@ export async function nayta(main) {
   main.innerHTML = `
     <div class="ko-paa">
       <div><p class="oma-yla">Valmennus</p><h1>Viikkokooste</h1>
-        <p class="ingressi">Kuka on treenannut minkäkin verran ja mitä huomattavaa. Valmistuu automaattisesti perjantaisin klo 13 ja lähtee valmentajille sähköpostilla.</p></div>
+        <p class="ingressi">Kuka on treenannut minkäkin verran ja mitä huomattavaa. Valmistuu automaattisesti sunnuntaisin ja lähtee valmentajille sähköpostilla klo 12 (Nimenhuudon IN/OUT päivitetään klo 10).</p></div>
       <div class="rivi">
         ${ryhmat.length > 1 ? `<label class="kentta">Ryhmä<select id="ko-ryhma">${ryhmat.map((r) => `<option value="${r.id}"${r.id === joukkue ? " selected" : ""}>${esc(r.nimi)}</option>`).join("")}</select></label>` : ""}
         <div class="rivi"><button class="btn oma-nuoli" data-vk="-7" aria-label="Edellinen viikko">‹</button><button class="btn oma-nuoli" data-vk="0">Nyt</button><button class="btn oma-nuoli" data-vk="7" aria-label="Seuraava viikko">›</button></div>
@@ -44,6 +44,8 @@ export async function nayta(main) {
       <span>Ryhmä<b>${esc(j.nimi)}</b></span>
       <span>Viikko<b>${pvLyh(viikko)}–${pvLyh(lisaaPv(viikko, 6))}</b></span>
       <span>Laskettu<b>${nyt ? `ma–${pvLyh(k.viite)}` : "koko viikko"}</b></span>
+      <span>Osallistuminen viikolla<b>${k.os == null ? "–" : `${k.os} %`}</b></span>
+      <span>Osallistuminen 4 vk<b>${k.os4 == null ? "–" : `${k.os4} %`}</b></span>
       <span>Omatoimisia kirjanneet<b>${k.kirjanneet}/${k.rivit.length}</b></span>
       <span>Omatoimisten mediaani<b>${minStr(k.mediaaniOma)}</b></span>
     </div>
@@ -57,12 +59,12 @@ export async function nayta(main) {
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
       <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmätreenit = mukana / ryhmän treenit viikolla (OUT Nimenhuudossa tai Olin poissa = ei mukana, muuten oletus: mukana).</p>
       <div class="ko-taulu" role="table" aria-label="Treenimäärät pelaajittain">
-        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit (OUT Nimenhuudossa tai Olin poissa = ei mukana)">Ryhmä&shy;treenit</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
+        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit tällä viikolla ja osallistumis-% 4 viikossa (OUT Nimenhuudossa tai Olin poissa = ei mukana)">Osallis&shy;tuminen</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
         ${k.rivit.map((r) => `<div class="ko-rivi" role="row">
           <a role="cell" href="#/oma/${r.id}" class="ko-nimi">${esc(r.nimi)}</a>
           <span role="cell" class="ko-palkki"><span class="ku-jakauma" style="width:${Math.max(2, (100 * r.min) / maxMin)}%">${TYYPIT.filter((t) => r.tyypit[t.k]).map((t) => `<i style="flex:${r.tyypit[t.k]};background:${t.vari}" data-tip="${t.nimi}: ${minStr(r.tyypit[t.k])}"></i>`).join("")}</span></span>
           <span role="cell" class="num">${r.min ? minStr(r.min) : "–"}</span>
-          <span role="cell" class="num ko-ryhma${r.ryhmaYht && r.ryhmaMukana * 2 <= r.ryhmaYht ? " ko-ei" : ""}" title="${r.ryhmaOut ? `OUT ${r.ryhmaOut}` : ""}">${r.ryhmaYht ? `${r.ryhmaMukana}/${r.ryhmaYht}${r.ryhmaOut ? `<small> OUT ${r.ryhmaOut}</small>` : ""}` : "–"}</span>
+          <span role="cell" class="num ko-ryhma" title="4 viikkoa: ${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}">${r.ryhmaYht ? `${r.ryhmaMukana}/${r.ryhmaYht}` : "–"}${r.os4 == null ? "" : `<small class="${r.os4 < OS_RAJA ? "ala" : r.os4 < OS_SEURAA ? "seuraa" : ""}">${r.os4} % 4 vk</small>`}</span>
           <span role="cell" class="num">${r.omaMin ? minStr(r.omaMin) : "–"}</span>
           <span role="cell" class="num ko-acwr ${r.acwr == null ? "" : r.acwr > 1.5 ? "korkea" : r.acwr < 0.6 ? "matala" : "ok"}">${r.acwr == null ? "–" : `${r.acwr > 1.5 ? "▲ " : ""}${desi(r.acwr, 2)}`}</span>
           <span role="cell" class="num${r.lepoViim7 === 0 ? " ko-ei" : ""}">${r.lepoViim7}</span>
@@ -84,7 +86,7 @@ export async function nayta(main) {
 
     <section class="paneeli">
       <h2 class="ko-h2">Perjantain koosteet</h2>
-      ${(arkisto.data || []).length ? `<ul class="ko-arkisto">${arkisto.data.map((a) => `<li><details><summary><b>Viikko ${pvLyh(a.viikko)}</b> <span class="pieni">tehty ${new Date(a.luotu).toLocaleString("fi-FI", { timeZone: "Europe/Helsinki", dateStyle: "short", timeStyle: "short" })}${a.lahetetty ? " · lähetetty sähköpostilla" : ""}</span></summary><pre>${esc(a.teksti)}</pre></details></li>`).join("")}</ul>` : `<p class="tyhja">Ensimmäinen kooste tallentuu perjantaina klo 13.</p>`}
+      ${(arkisto.data || []).length ? `<ul class="ko-arkisto">${arkisto.data.map((a) => `<li><details><summary><b>Viikko ${pvLyh(a.viikko)}</b> <span class="pieni">tehty ${new Date(a.luotu).toLocaleString("fi-FI", { timeZone: "Europe/Helsinki", dateStyle: "short", timeStyle: "short" })}${a.lahetetty ? " · lähetetty sähköpostilla" : ""}</span></summary><pre>${esc(a.teksti)}</pre></details></li>`).join("")}</ul>` : `<p class="tyhja">Ensimmäinen kooste tallentuu sunnuntaina klo 11.30.</p>`}
     </section>`;
 
   tooltip(main);

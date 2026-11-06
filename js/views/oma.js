@@ -5,6 +5,7 @@ import { sb, tila, nimi, lataaTulokset, SUPABASE_URL } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, testiParhaat, kuva, ilmoita, palkki } from "../util.js";
 import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
+import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot } from "../kuorma.js";
 
 const PAIVA = 864e5;
@@ -155,9 +156,11 @@ async function piirra(main) {
     ${oma ? `<section id="oma-missiot" aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
       ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
 
-    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>`;
+    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>
+    <section id="lyontianalyysi" aria-labelledby="la-otsikko"></section>`;
 
   piirraMinunPeli($("#minun-peli", main), p);
+  piirraLyontianalyysi($("#lyontianalyysi", main), p);
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));

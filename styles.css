@@ -2329,3 +2329,85 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ku-kirjaa i { font-style: normal; font-size: 22px; color: var(--cyan); }
 .tr-valinta { display: flex; justify-content: flex-end; margin-bottom: 6px; }
 @media (max-width: 600px) { .tr-valinta { justify-content: stretch; } }
+
+/* Lyöntianalyysi 2026 (6.11.2026): Pesäpalloliiton data Oman Keskuksen alaosassa */
+#lyontianalyysi .oma-osa-paa { margin-top: 36px; }
+.la-leima { font: 600 12px/1 var(--text); letter-spacing: .04em; text-transform: uppercase; color: var(--kpl); border: 1px solid rgba(245,168,0,.4); border-radius: 999px; padding: 6px 10px; }
+.la-yla { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; margin-bottom: 16px; }
+.la-kpit { margin: 0; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.la-kpi .arvo { font-size: 36px; }
+.la-kpi-ero { text-align: right; }
+.la-ero { font: 600 13px/1 var(--text); color: var(--ink-3); white-space: nowrap; }
+.la-ero.hyva { color: var(--green); }
+.la-ero.heikko { color: var(--red); }
+.la-jakauma h3 { margin: 0 0 10px; }
+.la-j-rivi { display: grid; grid-template-columns: 86px minmax(0, 1fr) 36px; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-3); margin-bottom: 6px; }
+.la-j-rivi b { text-align: right; font-size: 17px; color: var(--ink-2); }
+.la-j-rivi.analysoitu span, .la-j-rivi.analysoitu b { color: var(--ink); font-weight: 600; }
+.la-j-rivi.analysoitu .mp-palkki i { background: var(--kpl); }
+.la-tilanteet { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.la-runko { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+.la-runko h3 { margin-top: 0; }
+.la-kartta { margin: 0; display: grid; gap: 10px; }
+.la-kartta figcaption { display: grid; grid-template-columns: 1fr 1fr; text-align: center; font: 600 15px/1.2 var(--num); letter-spacing: .03em; color: var(--ink-2); }
+.la-kartta.yksi figcaption { grid-template-columns: 1fr; }
+.la-kartta img { width: 100%; height: auto; display: block; border-radius: 10px; background: #181716; }
+.la-kartta.yksi img { max-width: 360px; margin: 0 auto; }
+.la-selitteet { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.la-selitteet b { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .04em; }
+.la-selite { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-2); }
+.la-selite i { font-style: normal; font-size: 15px; margin-right: 4px; }
+.la-matriisi { width: 100%; border-collapse: separate; border-spacing: 4px; table-layout: fixed; }
+.la-matriisi th { font: 600 13px/1.2 var(--text); color: var(--ink-3); text-align: center; background: none; position: static; padding: 2px; }
+.la-matriisi tbody th { text-align: left; width: 82px; }
+.la-matriisi td { height: 58px; border-radius: 8px; text-align: center; vertical-align: middle; padding: 4px; border: 1px solid var(--line-2); }
+.la-matriisi td b { display: block; font-size: 22px; color: var(--ink); }
+.la-matriisi td small { font-size: 11px; color: var(--ink-3); }
+.la-matriisi td.tumma b { color: #181818; }
+.la-matriisi td.tumma small { color: rgba(24,24,24,.72); }
+.la-matriisi td.pieni-otos b { opacity: .55; }
+.la-matriisi tr.yht td, .la-matriisi td.yhtsar { box-shadow: inset 0 0 0 1px rgba(245,168,0,.35); }
+.la-matriisi tr.yht th { color: var(--ink); }
+.la-merkki { margin-top: 18px; }
+.la-merkki h3 { margin: 0 0 8px; }
+.la-m-rivi { display: grid; grid-template-columns: 70px minmax(0, 1fr) 62px 72px; gap: 10px; align-items: center; font-size: 13px; color: var(--ink-2); margin-bottom: 8px; }
+.la-m-rivi b { text-align: right; font-size: 18px; color: var(--ink); }
+.la-m-rivi small { color: var(--ink-3); }
+.la-m-palkit { display: grid; gap: 3px; }
+.la-m-palkit .mp-palkki { height: 8px; }
+.la-m-palkit .oma i { background: var(--kpl); }
+.la-pienet { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.la-pienet div, .la-luku { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: var(--line-2); }
+.la-pienet span, .la-luku span { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+.la-pienet b { font-size: 24px; }
+.la-luvut { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.la-luku b { font-size: 28px; }
+.la-luku small { font-size: 12px; color: var(--ink-2); }
+.la-valinnat table { width: 100%; }
+.la-valinnat th, .la-valinnat td { padding: 7px 6px; font-size: 14px; white-space: nowrap; }
+.la-valinnat td:first-child { white-space: normal; }
+.la-valinnat td.num { text-align: right; font-family: var(--num); font-size: 16px; }
+.la-valinnat tr.yht td { font-weight: 700; border-top: 1px solid var(--line); }
+.la-valinnat tr.pieni-otos td { color: var(--ink-3); }
+.la-valinnat .himmea { color: var(--ink-3); }
+.la-kl.hyva { color: var(--green); font-weight: 700; }
+.la-kl.heikko { color: var(--red); }
+.la-osuus { position: relative; min-width: 52px; height: 20px; border-radius: 4px; background: var(--line-2); overflow: hidden; }
+.la-osuus i { position: absolute; inset: 0 auto 0 0; background: rgba(245,168,0,.35); }
+.la-osuus span { position: relative; display: block; text-align: right; padding-right: 6px; font-size: 14px; line-height: 20px; }
+.la-lahde { margin: 4px 0 0; max-width: 90ch; color: var(--ink-3); }
+@media (max-width: 1100px) { .la-yla { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1000px) { .la-runko { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .la-kpit { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .la-kpi { padding: 12px; }
+  .la-kpi .arvo { font-size: 28px; }
+  .la-kpi .ala { font-size: 12px; }
+  .la-kpi-ero { grid-column: 1 / -1; text-align: left; }
+  .la-mob-pois { display: none; }
+  .la-pienet { grid-template-columns: 1fr 1fr; }
+  .la-luvut { grid-template-columns: 1fr 1fr; }
+  .la-matriisi { border-spacing: 3px; } .la-matriisi td { height: 50px; padding: 2px; } .la-matriisi td b { font-size: 16px; } .la-matriisi tbody th { width: 60px; font-size: 12px; }
+  .la-m-rivi { grid-template-columns: 58px minmax(0, 1fr) 54px; } .la-m-rivi small { display: none; }
+  .la-selitteet { grid-template-columns: 1fr; }
+}

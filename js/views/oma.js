@@ -47,7 +47,7 @@ async function piirra(main) {
   const joukkue = tila.joukkueet.find((j) => j.id === p.joukkue_id);
   const vkLoppu = lisaaPv(viikko, 6);
 
-  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes] = await Promise.all([
+  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     sb.from("tavoitteet").select("*").eq("pelaaja_id", pid).order("luotu"),
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
@@ -56,11 +56,15 @@ async function piirra(main) {
     // loppu vähintään 90 pv tästä päivästä, jotta tulevat testit näkyvät (6.11.2026)
     haeNimenhuuto(p.joukkue_id, lisaaPv(viikko, -42), [lisaaPv(viikko, 41), lisaaPv(tanaan(), 90)].sort()[1]),
     sb.from("poissaolot").select("uid").eq("pelaaja_id", pid),
+    // 6.11.2026: Nimenhuudon IN/OUT (Jarvis tuo taulun ilmoittautumiset); jos taulua ei ole, näkymä toimii ilman
+    sb.from("ilmoittautumiset").select("uid,tila,haettu").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
   ]);
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
+  const ilmo = new Map((ilmoRes.data || []).map((x) => [x.uid, x.tila]));
+  ilmo.haettu = (ilmoRes.data || []).reduce((m, x) => (x.haettu > m ? x.haettu : m), "");
   const nhKaikki = (nhLaaja.tapahtumat || []).filter((e) => e.pvm <= lisaaPv(viikko, 41));
   const tulevat = tulevatTestit(p, nhLaaja.tapahtumat || []);
-  const nh = { ...nhLaaja, tapahtumat: nhKaikki.filter((e) => e.pvm >= viikko && e.pvm <= vkLoppu) };
+  const nh = { ...nhLaaja, ilmo, tapahtumat: nhKaikki.filter((e) => e.pvm >= viikko && e.pvm <= vkLoppu) };
   const ohjelma = ohj.data || [];
   const kuit = ohjelma.length ? (await sb.from("ohjelma_kuittaukset").select("*").eq("pelaaja_id", pid).in("ohjelma_id", ohjelma.map((o) => o.id))).data || [] : [];
   const tehdyt = new Set(kuit.map((k) => k.ohjelma_id));
@@ -229,14 +233,24 @@ function nimenhuuto(nh, poissa, voiMerkita) {
   if (nh.virhe) return `<p class="pieni oma-nh-virhe">Nimenhuudon tapahtumia ei saatu haettua: ${esc(nh.virhe)}</p>`;
   const t = nh.tapahtumat || [];
   const ohj = nh.lahde === "ohjelma"; // 6.11.2026: ryhmä ilman Nimenhuutoa, tapahtumat valmennuksen viikko-ohjelmasta
+  const ilmo = nh.ilmo || new Map();
+  const ilmoMerkki = (e) => {
+    if (ohj || e.peruttu || !ilmo.haettu) return "";
+    const v = ilmo.get(e.uid);
+    return v === "IN" ? '<span class="oma-ilmo in" title="Ilmoittautunut Nimenhuudossa">IN</span>'
+      : v === "OUT" ? '<span class="oma-ilmo out" title="Ilmoittanut poissaolon Nimenhuudossa">OUT</span>'
+      : '<span class="oma-ilmo ei" title="Ei ilmoittautumista Nimenhuudossa">–</span>';
+  };
+  const haettuTxt = ilmo.haettu ? (() => { const d = new Date(ilmo.haettu); return `IN/OUT päivitetty ${d.getDate()}.${d.getMonth() + 1}. klo ${String(d.getHours()).padStart(2, "0")}.${String(d.getMinutes()).padStart(2, "0")}`; })() : "";
   return `<div class="oma-nh">
     <div class="oma-nh-paa"><span class="oma-nh-merkki">${ohj ? "Viikko-ohjelma" : "Nimenhuuto"}</span><span class="pieni">${t.length ? `${t.length} tapahtumaa tällä viikolla` : "ei tapahtumia tällä viikolla"}</span></div>
     ${t.length && voiMerkita ? `<p class="pieni oma-nh-ohje">${ohj ? "Valmennuksen viikko-ohjelma (muutokset mahdollisia)." : "Tiedoksi – ilmoittautumiset tehdään Nimenhuudossa."} Jos et ollut mukana, paina <b>Olin poissa</b>, niin kuorma-arvio pysyy oikeana.</p>` : ""}
     ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}${poissa.has(e.uid) ? " poissa" : ""}">
       <span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
       <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : (ohj ? "aika tarkentuu" : "koko päivä")}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
-      <span class="oma-nh-luokka">${luokitteluTagi(e, tila.ohjaaja)}${poissaNappi(e, poissa, voiMerkita)}</span>
+      <span class="oma-nh-luokka">${ilmoMerkki(e)}${luokitteluTagi(e, tila.ohjaaja)}${poissaNappi(e, poissa, voiMerkita)}</span>
     </li>`; }).join("")}</ul>` : ""}
+    ${t.length && haettuTxt && !ohj ? `<p class="pieni oma-ilmo-aika">${haettuTxt} · lähde Nimenhuuto</p>` : ""}
   </div>`;
 }
 

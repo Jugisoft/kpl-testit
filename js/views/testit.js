@@ -249,7 +249,7 @@ export async function nayta(main, ryhma, luokka, testi) {
           const m = r.ed ? parannus(t, r.v, r.ed.arvo) : null, plus = m > 0, miinus = m < 0;
           return `<div class="jtt-r${kor ? " korostettu" : ""}" role="row">
             <span role="cell"><button class="jtt-sija" data-kor="${p.id}" aria-pressed="${kor}" title="Korosta kaaviossa">${r.sija?.sija ?? "–"}</button></span>
-            <span role="cell" class="jtt-nimi"><a href="#/pelaaja/${p.id}">${kuva(p)}<span><b>${esc(nimi(p))}</b><small>${g === "superpesis" ? "Superpesis" : sy ? `${sy} · ${kevat(r.x.pvm) - sy} v` : "juniori"}</small></span></a></span>
+            <span role="cell" class="jtt-nimi"><a href="#/pelaaja/${p.id}">${kuva(p)}<span><b>${esc(nimi(p))}</b><small>${g === "superpesis" ? "Superpesis" : sy ? `${sy} · ${+r.x.pvm.slice(0, 4) - sy} v` : "juniori"}</small></span></a></span>
             <span role="cell" class="jtt-rata" aria-hidden="true"><i class="jtt-md" style="left:${pos(md)}%"></i>
               ${r.ed ? `<i class="jtt-yhd ${plus ? "plus" : miinus ? "miinus" : ""}" style="left:${Math.min(pos(r.ed.arvo), pos(r.v))}%;width:${Math.abs(pos(r.v) - pos(r.ed.arvo))}%"></i><i class="jtt-pallo haamu" style="left:${pos(r.ed.arvo)}%" title="Edellinen ${fmt(r.ed.arvo)} (${pvmLyhyt(r.ed.pvm)})"></i>` : ""}
               <i class="jtt-pallo${r.uusiPb ? " pb" : ""}" style="left:${pos(r.v)}%"></i></span>

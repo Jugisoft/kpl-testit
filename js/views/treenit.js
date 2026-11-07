@@ -12,6 +12,8 @@ const RYHMAJARJ = ["Voimat", "Juoksut", "Lisäosat", "Omatoiminen laji", "Omatoi
 const linkit = (l) => esc(l).replace(/(https?:\/\/[^\s]+)/g, (u) => `<a href="${u}" target="_blank" rel="noopener">video ↗</a>`);
 const lyhyt = (n) => n.replace(/\s*\((.*)\)$/, "");
 const tarkenne = (n) => n.match(/\((.*)\)$/)?.[1] || "";
+// 7.11.2026: rasitus säädettävissä kirjauksessa (oletus = ohjelman tai treenityypin arvio)
+const RPE_SANA = (r) => (r <= 2 ? "tosi kevyt" : r <= 4 ? "kevyt" : r <= 6 ? "kohtalainen" : r <= 8 ? "raskas" : "tosi raskas");
 let valittu = null;
 
 export async function nayta(main, id) {
@@ -70,7 +72,7 @@ async function piirra(main, pid, vainLuku) {
 
     <section class="tr-ryhma"><h2>Viimeisimmät kirjaukset</h2>
       ${omat.length ? `<ul class="tr-hist">${omat.slice(0, 20).map((o) => { const oh = ohjelmat[o.ohjelma], ty = T[o.tyyppi] || T.laji, lisa = maaratTeksti(o), d = new Date(o.pvm + "T12:00:00Z");
-        return `<li style="--v:${ty.vari}"><span class="tr-h-pvm"><b>${VKP[d.getUTCDay()]}</b>${pvLyh(o.pvm)}</span><span class="tr-h-nimi">${esc(oh?.nimi || ty.nimi)}<small>${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}</small></span>
+        return `<li style="--v:${ty.vari}"><span class="tr-h-pvm"><b>${VKP[d.getUTCDay()]}</b>${pvLyh(o.pvm)}</span><span class="tr-h-nimi">${esc(oh?.nimi || ty.nimi)}<small>${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.rpe ? ` · rasitus ${o.rpe}/10` : ""}</small></span>
           ${!vainLuku && o.pvm >= lisaaPv(t, -14) ? `<button class="linkkinappi" data-poista="${o.id}" aria-label="Poista ${esc(oh?.nimi || "")} ${pvLyh(o.pvm)}">Poista</button>` : ""}</li>`; }).join("")}</ul>`
         : `<p class="tyhja">Ei vielä kirjauksia. Valitse yltä tehty treeni.</p>`}
     </section>
@@ -87,21 +89,26 @@ async function piirra(main, pid, vainLuku) {
         <input type="number" name="${esc(nimi)}" inputmode="${desim ? "decimal" : "numeric"}" step="${desim ? "0.1" : "1"}" min="${ala}" max="${yla}" value="${arvo ?? ""}" placeholder="0">
         <button type="button" class="btn ly-pm" data-d="${d}" data-k="${esc(nimi)}">+${String(d).replace(".", ",")}</button></div></div>`;
     const pv = [0, 1, 2].map((n) => lisaaPv(tanaan(), -n));
+    const oletusRpe = o.rpe || T[o.tyyppi]?.rpe || 5;
     lomake.hidden = false;
     lomake.style.setProperty("--v", T[o.tyyppi]?.vari || "#888");
     lomake.innerHTML = `
-      <div class="tr-l-paa"><i class="ku-pallo" style="background:${T[o.tyyppi]?.vari}"></i><div><h2>${esc(o.nimi)}</h2><span class="pieni">${esc(T[o.tyyppi]?.nimi || "")}${o.rpe ? ` · rasitusarvio ${o.rpe}/10` : ""}</span></div>
+      <div class="tr-l-paa"><i class="ku-pallo" style="background:${T[o.tyyppi]?.vari}"></i><div><h2>${esc(o.nimi)}</h2><span class="pieni">${esc(T[o.tyyppi]?.nimi || "")}</span></div>
         <button type="button" class="tr-sulje" aria-label="Sulje">✕</button></div>
       <div class="tr-kentat">
         ${askel("kesto", o.kesto_min, 15, 5, 600, false, "Kesto, min")}
         ${km ? askel("km", "", 1, 0, 300, true, "Matka, km") : (o.maarat || []).map((m) => askel("m:" + m, "", 10, 0, 5000, false, m)).join("")}
       </div>
+      <div class="tr-rasitus"><span class="ku-ryhma-nimi">Rasitus <b data-rpe-teksti>${oletusRpe}/10 · ${RPE_SANA(oletusRpe)}</b></span>
+        <div class="tr-rpe" role="radiogroup" aria-label="Rasitus 1–10">${Array.from({ length: 10 }, (_, i) => i + 1).map((r) => `<label class="tr-rpe-n${r === oletusRpe ? " oletus" : ""}" style="--r:${r}"><input type="radio" name="rpe" value="${r}"${r === oletusRpe ? " checked" : ""}><span>${r}</span></label>`).join("")}</div>
+        <small class="pieni">Oletus ${oletusRpe} (${esc(o.rpe ? "ohjelman arvio" : "treenityypin arvio")}). Muuta, jos treeni tuntui kevyemmältä tai raskaammalta.</small></div>
       <div class="tr-paivat" role="radiogroup" aria-label="Päivä">${pv.map((d, i) => `<label class="chip"><input type="radio" name="pvm" value="${d}"${i === 0 ? " checked" : ""}>${["Tänään", "Eilen", "Toissapäivänä"][i]}</label>`).join("")}
         <label class="chip tr-muu-pv">Muu päivä <input type="date" name="muupvm" min="${lisaaPv(tanaan(), -14)}" max="${tanaan()}"></label></div>
       ${o.kuvaus ? `<details class="tr-ohjelma"><summary>Näytä ohjelma</summary><ul>${o.kuvaus.split("\n").filter((l) => l.trim()).map((l) => `<li>${linkit(l)}</li>`).join("")}</ul>${o.lahde ? `<p class="pieni">Lähde: ${esc(o.lahde)} · <a href="#/ohjelmat/${o.koodi}">Avaa koko ruudulle →</a></p>` : ""}</details>` : ""}
       <button class="btn ensisij tr-tallenna">Tallenna treeni</button>`;
     $(".tr-sulje", lomake).onclick = () => { valittu = null; lomake.hidden = true; $$("[data-oh]", main).forEach((b) => b.setAttribute("aria-pressed", false)); };
     $$("[data-d]", lomake).forEach((b) => (b.onclick = () => { const i = lomake.elements[b.dataset.k], v = Math.round(((+i.value || 0) + +b.dataset.d) * 10) / 10; i.value = Math.min(+i.max, Math.max(+i.min, v)) || ""; }));
+    [...lomake.elements.rpe].forEach((r) => (r.onchange = () => ($("[data-rpe-teksti]", lomake).textContent = `${r.value}/10 · ${RPE_SANA(+r.value)}`)));
     const muu = lomake.elements.muupvm;
     muu.onchange = () => { if (muu.value) [...lomake.elements.pvm].forEach((r) => (r.checked = false)); };
     [...lomake.elements.pvm].forEach((r) => (r.onchange = () => (muu.value = "")));
@@ -114,9 +121,10 @@ async function piirra(main, pid, vainLuku) {
       const maarat = {};
       (o.maarat || []).forEach((m) => { const v = Math.round(+x["m:" + m]?.value || 0); if (v > 0) maarat[m] = v; });
       const kmv = km ? Math.round((+x.km.value || 0) * 10) / 10 : 0;
+      const rpeV = +([...x.rpe].find((r) => r.checked)?.value || oletusRpe);
       const b = $(".tr-tallenna", lomake); b.disabled = true;
       const { error } = await sb.from("omat_treenit").insert({ pelaaja_id: pid, pvm, tyyppi: o.tyyppi, ohjelma: o.koodi, kesto_min: kesto,
-        maarat: Object.keys(maarat).length ? maarat : null, km: kmv > 0 ? kmv : null, huomio: null });
+        maarat: Object.keys(maarat).length ? maarat : null, km: kmv > 0 ? kmv : null, huomio: null, rpe: rpeV !== oletusRpe ? rpeV : null });
       b.disabled = false;
       if (error) return ilmoita("Tallennus ei onnistunut: " + error.message, true);
       try { localStorage.setItem("ku-laji", o.koodi); } catch (_) {}

@@ -63,7 +63,7 @@ export async function nayta(main) {
           <span class="pieni">viimeksi ${pvLyh(r[0].pvm)}</span></summary>
           <ul class="se-lista">${r.map((o) => { const oh = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T[oh?.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li>
             <span class="num">${pvLyh(o.pvm)}</span>
-            <span><i style="background:${ty.vari}"></i>${esc(oh?.nimi || o.huomio || `Oma ${ty.nimi.toLowerCase()}`)}${lisa ? ` <small>${esc(lisa)}</small>` : ""}${oh && o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>
+            <span><i style="background:${ty.vari}"></i>${esc(oh?.nimi || o.huomio || `Oma ${ty.nimi.toLowerCase()}`)}${lisa ? ` <small>${esc(lisa)}</small>` : ""}${o.rpe ? ` <small>· rasitus ${o.rpe}/10</small>` : ""}${oh && o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>
             <span class="num">${minStr(o.kesto_min || 0)}</span></li>`; }).join("")}</ul>
         </details>`; }).join("")}</div>` : `<p class="tyhja">Ei omatoimisia kirjauksia tältä ajalta.</p>`}
       ${eiKirjauksia.length && kirjanneet.length ? `<p class="pieni se-ei">Ei kirjauksia: ${eiKirjauksia.map(({ p }) => `<a href="#/oma/${p.id}">${esc(nimi(p))}</a>`).join(", ")}</p>` : ""}

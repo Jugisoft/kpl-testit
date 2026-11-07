@@ -4,6 +4,7 @@
 // Rasitus on ARVIO: kuorma (AU) = arvioitu rasitus 0–10 treenityypistä tai ohjelmasta × minuutit (sRPE-menetelmän
 // periaate, Foster ym. 2001). Akuutti:krooninen = viim. 7 pv / edellisten 4 viikon keskiarvo; yli 1,5 on tutkimuksissa
 // liitetty kohonneeseen vammariskiin (Hulin ym. 2016; katsaus Arazi ym. 2020, Front Physiol).
+// 7.11.2026: pelaaja voi säätää omatoimisen treenin rasituksen kirjauksessa (omat_treenit.rpe), muuten oletus.
 
 export const TYYPIT = [ // pinoamisjärjestys = värijärjestys (validoitu tummalle pinnalle)
   { k: "laji", nimi: "Laji", rpe: 5, vari: "#c98500" },
@@ -82,7 +83,7 @@ export function kokoa(d) {
   for (const o of d.omat || []) {
     const ohj = o.ohjelma && d.ohjelmat?.[o.ohjelma];
     const tyyppi = T[o.tyyppi] ? o.tyyppi : ohj?.tyyppi || "laji";
-    rivit.push({ pvm: o.pvm, tyyppi, min: o.kesto_min, rpe: ohj?.rpe || T[tyyppi].rpe, otsikko: ohj?.nimi || o.huomio || `Oma ${T[tyyppi].nimi.toLowerCase()}`,
+    rivit.push({ pvm: o.pvm, tyyppi, min: o.kesto_min, rpe: o.rpe || ohj?.rpe || T[tyyppi].rpe, otsikko: ohj?.nimi || o.huomio || `Oma ${T[tyyppi].nimi.toLowerCase()}`,
       lisa: maaratTeksti(o), lahde: "oma", id: o.id, ohjelma: o.ohjelma || null, maarat: o.maarat || null, km: o.km || null });
   }
   for (const l of d.lyonnit || []) rivit.push({ pvm: l.pvm, tyyppi: "laji", min: Math.max(5, Math.round(l.maara * LYONTI_MIN)), rpe: LYONTI_RPE, otsikko: `Lyönnit (${l.maara})`, lahde: "lyonti", maara: l.maara });

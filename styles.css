@@ -2562,3 +2562,15 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ly-monta-rivi input[type=text] { min-width: 0; }
 .ly-monta-yht { margin: 10px 0 0; color: var(--ink-2); }
 .ly-monta-yht b { font-size: 20px; color: var(--ink); }
+
+/* 7.11.2026: rasituksen säätö treenikirjauksessa */
+.tr-rasitus { display: grid; gap: 8px; margin: 4px 0 14px; }
+.tr-rasitus b { font-weight: 600; color: var(--ink); margin-left: 6px; }
+.tr-rpe { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; max-width: 520px; }
+.tr-rpe-n { position: relative; cursor: pointer; }
+.tr-rpe-n input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.tr-rpe-n span { display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 8px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink-2);
+  background: color-mix(in srgb, var(--v, #888) calc(var(--r) * 4%), transparent); }
+.tr-rpe-n.oletus span { border-style: dashed; border-color: var(--ink-3); }
+.tr-rpe-n input:checked + span { background: var(--v, var(--kpl)); border-color: var(--v, var(--kpl)); color: #fff; }
+.tr-rpe-n input:focus-visible + span { outline: 2px solid var(--kpl); outline-offset: 2px; }

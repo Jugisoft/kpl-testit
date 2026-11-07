@@ -60,6 +60,11 @@ export function osat(e) { // valmentajan korjaus tai automaattinen arvio
 export const lyhytOtsikko = (s) => (s || "").replace(/^[^:]{1,12}:\s+/, "");
 
 // Omien kirjausten määrät tekstiksi, esim. "300 tolppasyöttöä · 50 matalaa · 6,5 km"
+// Ryhmätreenin oletusrasitus = osien treenityyppien rasitus minuuteilla painotettuna (7.11.2026)
+export function oletusRpe(e) {
+  const o = osat(e).osat, min = o.reduce((s, x) => s + x.min, 0);
+  return min ? Math.round(o.reduce((s, x) => s + x.min * T[x.tyyppi].rpe, 0) / min) : 5;
+}
 export function maaratTeksti(o) {
   const osat_ = Object.entries(o.maarat || {}).filter(([, v]) => v > 0).map(([k, v]) => `${k.toLowerCase()} ${v}`);
   if (o.km) osat_.push(`${desi(+o.km)} km`);
@@ -67,18 +72,19 @@ export function maaratTeksti(o) {
 }
 
 // --- kaikki lähteet yhdeksi listaksi ---
-// d = { nh: tapahtumat, poissa: Set(uid), out: Set(uid), omat: omat_treenit, ohjelmat: {koodi: ohjelma}, lyonnit: [{pvm, maara}], testipaivat: [pvm] }
+// d = { nh: tapahtumat, poissa: Set(uid), out: Set(uid), rasitus: Map(uid -> rpe), omat: omat_treenit, ohjelmat: {koodi: ohjelma}, lyonnit: [{pvm, maara}], testipaivat: [pvm] }
 // 6.11.2026: out = Nimenhuudon OUT-ilmoittautumiset (taulu ilmoittautumiset). OUT tai "Olin poissa" = ei mukana;
 // muuten oletus on, että pelaaja oli mukana. rivit.ryhma = ryhmätreenien läsnäolo (viikkokoosteeseen).
 export function kokoa(d) {
   const rivit = [];
   const poissa = d.poissa || new Set(), out = d.out || new Set(), ryhma = [];
+  const rasitus = d.rasitus || new Map(); // 7.11.2026: pelaajan oma arvio ryhmätreenille (uid -> 1–10)
   for (const e of d.nh || []) {
     if (e.peruttu) continue;
     const syy = poissa.has(e.uid) ? "poissa" : out.has(e.uid) ? "OUT" : null;
     ryhma.push({ pvm: e.pvm, uid: e.uid, mukana: !syy, syy });
     if (syy) continue;
-    for (const o of osat(e).osat) rivit.push({ pvm: e.pvm, tyyppi: o.tyyppi, min: o.min, rpe: T[o.tyyppi].rpe, otsikko: lyhytOtsikko(e.otsikko), lahde: "nh", uid: e.uid });
+    for (const o of osat(e).osat) rivit.push({ pvm: e.pvm, tyyppi: o.tyyppi, min: o.min, rpe: rasitus.get(e.uid) || T[o.tyyppi].rpe, otsikko: lyhytOtsikko(e.otsikko), lahde: "nh", uid: e.uid });
   }
   for (const o of d.omat || []) {
     const ohj = o.ohjelma && d.ohjelmat?.[o.ohjelma];

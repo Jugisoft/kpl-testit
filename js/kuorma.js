@@ -28,19 +28,22 @@ export async function haeOhjelmat() {
 // Pelaajien kuormadata yhdellä kertaa (pelaajan sivu ja valmentajan kooste)
 export async function haeKuormaRivit(pelaajat, nh, alku, loppu, testipaivat = {}) {
   const ids = pelaajat.map((p) => p.id);
-  const [ohjelmat, omat, poissa, ly, ilmo] = await Promise.all([
+  const [ohjelmat, omat, poissa, ly, ilmo, ras] = await Promise.all([
     haeOhjelmat(),
     sb.from("omat_treenit").select("*").in("pelaaja_id", ids).gte("pvm", alku).lte("pvm", loppu).order("pvm"),
     sb.from("poissaolot").select("pelaaja_id,uid").in("pelaaja_id", ids),
     sb.rpc("kuorma_lyonnit", { p_alku: alku, p_loppu: loppu }),
     // 6.11.2026: Nimenhuudon OUT = ei mukana (taulu ilmoittautumiset; jos haku epäonnistuu, oletus pysyy)
     sb.from("ilmoittautumiset").select("pelaaja_id,uid").eq("tila", "OUT").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
+    // 7.11.2026: pelaajan oma rasitusarvio ryhmätreeneille
+    sb.from("rasitusarviot").select("pelaaja_id,uid,rpe").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
   ]);
   const virhe = omat.error || poissa.error;
   return { virhe, ohjelmat, omat: omat.data || [], poissa: poissa.data || [], tulos: Object.fromEntries(pelaajat.map((p) => [p.id, kokoa({
     nh, ohjelmat,
     poissa: new Set((poissa.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
     out: new Set((ilmo.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
+    rasitus: new Map((ras.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => [x.uid, x.rpe])),
     omat: (omat.data || []).filter((o) => o.pelaaja_id === p.id),
     lyonnit: (ly.data || []).filter((l) => l.pelaaja_id === p.id),
     testipaivat: testipaivat[p.id] || [],
@@ -184,6 +187,25 @@ export function poissaNappi(e, poissa, voi) {
   if (e.peruttu || !voi) return "";
   const on = poissa.has(e.uid);
   return `<button class="linkkinappi ku-poissa${on ? " on" : ""}" data-poissa="${esc(e.uid)}" aria-pressed="${on}">${on ? "Poissa ✓" : "Olin poissa"}</button>`;
+}
+// 7.11.2026: pelaaja säätää ryhmätreenin rasituksen (oletus = treenityypin arvio); valmentaja näkee arvion
+export function rasitusValinta(e, rasitus, voi, oletus) {
+  if (e.peruttu) return "";
+  const oma = rasitus.get(e.uid);
+  if (!voi) return oma ? `<span class="oma-tag oma-rpe-tag" title="Pelaajan oma rasitusarvio">rasitus ${oma}/10</span>` : "";
+  return `<label class="oma-rpe${oma ? " asetettu" : ""}"><span>Rasitus</span><select data-rasitus="${esc(e.uid)}" aria-label="Rasitus: ${esc(e.otsikko)}">
+    <option value="">oletus ${oletus}</option>${Array.from({ length: 10 }, (_, i) => i + 1).map((r) => `<option value="${r}"${r === oma ? " selected" : ""}>${r}/10</option>`).join("")}</select></label>`;
+}
+export function kytkeRasitus(el, p, paivita) {
+  $$("[data-rasitus]", el).forEach((s) => (s.onchange = async () => {
+    s.disabled = true;
+    const uid = s.dataset.rasitus, v = +s.value;
+    const { error } = v
+      ? await sb.from("rasitusarviot").upsert({ pelaaja_id: p.id, uid, rpe: v }, { onConflict: "pelaaja_id,uid" })
+      : await sb.from("rasitusarviot").delete().eq("pelaaja_id", p.id).eq("uid", uid);
+    if (error) { ilmoita("Tallennus ei onnistunut: " + error.message, true); s.disabled = false; return; }
+    ilmoita(v ? `Rasitus ${v}/10 tallennettu` : "Palautettu oletukseen"); paivita();
+  }));
 }
 export function kytkePoissaolot(el, p, poissa, paivita) {
   $$("[data-poissa]", el).forEach((b) => (b.onclick = async () => {

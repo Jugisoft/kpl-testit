@@ -4,6 +4,7 @@
 // Vertailuvaraston pohja: pelaajan kauden paras tulos (kausi heinäkuu–kesäkuu).
 // Tarkenne "piikit" = piikkiaika (yksittäinen kärkiaika), ei kengät: kaikki juoksut vertaillaan yhdessä.
 import { tila, nimi, lataaTulokset, sallitutRyhmat } from "../db.js";
+import { cooperVauhtiHtml, kytkeCooperVauhti } from "../cooperVauhti.js";
 import { $, $$, esc, pvm, pvmLyhyt, kausi, mediaani, keskiarvo, piirra, vari, kuva } from "../util.js";
 
 const KIERROS = 261; // Cooperin kierros metreinä
@@ -296,7 +297,8 @@ function piirraRunko(fam, tark, val, nykyKausi) {
 
     <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kehitys kausittain</h2><span class="pieni">${esc(M[m].pitka)} · mediaani kauden parhaista</span></div>
       <p class="pieni">Juniorien ikäluokat ja Superpesis-ryhmä. ${M[m].pp ? "Ylempänä on parempi." : ""} Mukana kaudet, joilla ryhmässä vähintään kolme pelaajaa.</p>
-      <div class="paneeli"><div class="kaavio"><canvas id="jtt-kehitys"></canvas></div></div></section>`;
+      <div class="paneeli"><div class="kaavio"><canvas id="jtt-kehitys"></canvas></div></div></section>
+    ${fam === "cooper" && tila.ohjaaja ? `<section class="jtt-osio">${cooperVauhtiHtml()}</section>` : ""}`;
 
   const piirraKaikki = () => {
     piirraTaulu(fam, m, rivit, md);
@@ -305,6 +307,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
     if (fam === "nok") piirraProfiili(rivit);
   };
   piirraKaikki();
+  if (fam === "cooper") kytkeCooperVauhti(el);
   piirraKehitys(fam, m, tark);
   piirtajat.push(() => { piirraJana(fam, m, nykyKausi, tark); if (fam === "30m") piirraHajonta(rivit); });
   el._korostus = piirraKaikki;

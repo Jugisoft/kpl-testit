@@ -2574,3 +2574,27 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .tr-rpe-n.oletus span { border-style: dashed; border-color: var(--ink-3); }
 .tr-rpe-n input:checked + span { background: var(--v, var(--kpl)); border-color: var(--v, var(--kpl)); color: #fff; }
 .tr-rpe-n input:focus-visible + span { outline: 2px solid var(--kpl); outline-offset: 2px; }
+
+/* 7.11.2026: Cooper-vauhtitaulukko */
+.cv > summary { cursor: pointer; }
+.cv-laskuri { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin: 14px 0 6px; }
+.cv-laskuri input { width: 110px; font-size: 18px; font-variant-numeric: tabular-nums; }
+.cv-tulos { display: grid; gap: 2px; padding: 6px 14px; border-left: 3px solid var(--kpl); }
+.cv-tulos b { font-size: 26px; line-height: 1.1; color: var(--ink); }
+.cv-wrap { margin-top: 8px; }
+.cv-taulu { border-collapse: collapse; font-size: 13px; min-width: 680px; width: 100%; }
+.cv-selite { margin-top: 12px; }
+.cv-laskuri .kentta { flex: 0 0 auto; }
+.cv-taulu caption { text-align: left; padding-bottom: 6px; }
+.cv-taulu th, .cv-taulu td { padding: 5px 7px; border-bottom: 1px solid var(--line-2); text-align: right; white-space: nowrap; }
+.cv-taulu thead th { color: var(--ink-3); font-weight: 600; }
+.cv-taulu thead small { display: block; font-weight: 400; font-size: 11px; }
+.cv-taulu tbody th { text-align: left; color: var(--ink); position: sticky; left: 0; background: var(--bg-2, var(--bg)); }
+.cv-taulu .cv-ka { color: var(--ink-2); border-right: 1px solid var(--line); }
+.cv-taulu tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.cv-taulu tr.cv-lahin th, .cv-taulu tr.cv-lahin td { background: color-mix(in srgb, var(--kpl) 22%, transparent); color: var(--ink); font-weight: 600; }
+
+/* 7.11.2026: ryhmätreenin rasitus pelaajan valitsemana */
+.oma-rpe { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.oma-rpe select { font-size: 13px; padding: 3px 6px; min-height: 30px; border-radius: 8px; }
+.oma-rpe.asetettu select { border-color: var(--kpl); color: var(--ink); font-weight: 600; }

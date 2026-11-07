@@ -2,6 +2,7 @@
 import { sb, tila, nimi, lataaTulokset, lataaKerranTulokset } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, paras, parannus, kuva, ilmoita } from "../util.js";
 import { PAKETIT, voiPoistaa, poistaKerta } from "./kerrat.js";
+import { cooperVauhtiHtml, kytkeCooperVauhti } from "../cooperVauhti.js";
 
 const NOPEUS = new Set(["10m", "30m", "nok_30m", "30m_takaperin", "ketteryysrata"]);
 const JONO_AVAIN = "kpl-testit-jono";
@@ -51,9 +52,11 @@ export async function nayta(main, id) {
     <div class="taulu-wrap"><table class="syotto" id="ruudukko"></table></div>
     <div class="rivi" style="margin-top:10px"><button class="btn" id="lisaa-yritys">+ yritys</button></div>
     <p class="vihje">Kirjoita tulos ja paina <kbd>Enter</kbd>. Desimaalin voi jättää pois: <b>412</b> tallentuu 4,12 sekunniksi. Cooperin voi syöttää kierroksina: <b>11+110</b> = 11 kierrosta (261 m) + 110 m = 2981 m. Lisää perään <b>h</b> (esim. <b>148h</b>), jos tulos on hylätty, esimerkiksi haamu tai lyönti alle. Tyhjennä solu poistaaksesi tuloksen. Tulokset tallentuvat heti; ilman verkkoa ne odottavat laitteella ja lähtevät, kun yhteys palaa.</p>
+    ${(k.testit || []).includes("cooper") ? `<div style="margin-top:20px">${cooperVauhtiHtml()}</div>` : ""}
     <details class="paneeli" style="margin-top:20px"><summary><strong>Osallistujat ja järjestys</strong></summary><div id="osallistujat" style="margin-top:12px"></div></details>`;
 
   $("#poista-kerta")?.addEventListener("click", (e) => poistaKerta(e.currentTarget, k.id, () => (location.hash = "#/kerrat")));
+  kytkeCooperVauhti(document);
   $("#suunta").value = suunta;
   $("#suunta").onchange = (e) => { suunta = e.target.value; localStorage.setItem("kpl-suunta", suunta); };
   $$(".testivalitsin .chip").forEach((b) => (b.onclick = () => { aktiivinen = +b.dataset.i; $$(".testivalitsin .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); piirraRuudukko(); }));

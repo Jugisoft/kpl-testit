@@ -6,8 +6,8 @@ import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, para
 import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
-import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, haeOhjelmat } from "../kuorma.js";
-import { osat as tapOsat, lyhytOtsikko } from "../kuormaydin.js";
+import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
+import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
 
 const PAIVA = 864e5;
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
@@ -47,7 +47,7 @@ async function piirra(main) {
   const joukkue = tila.joukkueet.find((j) => j.id === p.joukkue_id);
   const vkLoppu = lisaaPv(viikko, 6);
 
-  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit] = await Promise.all([
+  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit, rasRes] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     sb.from("tavoitteet").select("*").eq("pelaaja_id", pid).order("luotu"),
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
@@ -61,8 +61,10 @@ async function piirra(main) {
     // 6.11.2026: valmennuksen harjoite voi olla treeniohjelma (Voima 1 ...); Treenipäiväkirjan kirjaus samalla viikolla = tehty
     haeOhjelmat(),
     sb.from("omat_treenit").select("ohjelma,pvm").eq("pelaaja_id", pid).gte("pvm", viikko).lte("pvm", vkLoppu),
+    sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
   ]);
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
+  const rasitus = new Map((rasRes.data || []).map((x) => [x.uid, x.rpe]));
   const ilmo = new Map((ilmoRes.data || []).map((x) => [x.uid, x.tila]));
   const eiMukana = new Set([...poissa, ...[...ilmo].filter(([, v]) => v === "OUT").map(([u]) => u)]); // poissa + OUT
   ilmo.haettu = (ilmoRes.data || []).reduce((m, x) => (x.haettu > m ? x.haettu : m), "");
@@ -117,7 +119,7 @@ async function piirra(main) {
           <div class="rivi"><button class="btn oma-nuoli" data-vk="-7" aria-label="Edellinen viikko">‹</button><button class="btn oma-nuoli" data-vk="0" aria-label="Tämä viikko">Nyt</button><button class="btn oma-nuoli" data-vk="7" aria-label="Seuraava viikko">›</button></div>
         </div>
         ${ohjelma.length ? `<div class="oma-edistys">${palkki((100 * valmiit) / ohjelma.length)}<span class="num">${valmiit}/${ohjelma.length} tehty</span></div>` : ""}
-        ${nimenhuuto(nh, poissa, oma || tila.ohjaaja)}
+        ${nimenhuuto(nh, poissa, oma || tila.ohjaaja, rasitus, oma)}
         <ol class="oma-lista">${ohjelma.map((o) => `
           <li class="oma-harjoite${tehdyt.has(o.id) ? " tehty" : ""}">
             ${autoTehty.has(o.id) ? `<span class="oma-kuittaus staattinen auto" title="Kirjattu Treenipäiväkirjaan" aria-label="Tehty: kirjattu Treenipäiväkirjaan"><span aria-hidden="true">✓</span></span>`
@@ -187,6 +189,7 @@ async function piirra(main) {
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));
   kytkePoissaolot(main, p, poissa, () => piirra(main));
+  kytkeRasitus(main, p, () => piirra(main));
 
   // --- tapahtumat ---
   $(".ti", main).onclick = (e) => { const a = e.target.closest("[data-ti]"); if (!a) return; e.preventDefault(); $("#" + a.dataset.ti, main)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
@@ -243,7 +246,7 @@ async function haeNimenhuuto(joukkue, alku, loppu) {
   } catch (e) { return { virhe: String(e.message || e) }; }
 }
 const VKP = ["su", "ma", "ti", "ke", "to", "pe", "la"];
-function nimenhuuto(nh, poissa, voiMerkita) {
+function nimenhuuto(nh, poissa, voiMerkita, rasitus = new Map(), omaPelaaja = false) {
   if (!nh || nh.kalenteri === false) return "";
   if (nh.virhe) return `<p class="pieni oma-nh-virhe">Nimenhuudon tapahtumia ei saatu haettua: ${esc(nh.virhe)}</p>`;
   const t = nh.tapahtumat || [];
@@ -263,7 +266,7 @@ function nimenhuuto(nh, poissa, voiMerkita) {
     ${t.length ? `<ul class="oma-nh-lista">${t.map((e) => { const d = new Date(e.pvm + "T12:00:00Z"); return `<li class="${e.peruttu ? "peruttu" : ""}${poissa.has(e.uid) || ilmo.get(e.uid) === "OUT" ? " poissa" : ""}">
       <span class="oma-nh-pv"><b>${VKP[d.getUTCDay()]}</b>${d.getUTCDate()}.${d.getUTCMonth() + 1}.</span>
       <span class="oma-nh-teksti"><b>${esc(e.otsikko)}</b>${e.peruttu ? ' <span class="oma-tag">peruttu</span>' : ""}<small>${e.alku ? `klo ${e.alku}${e.loppu ? `–${e.loppu}` : ""}` : (ohj ? "aika tarkentuu" : "koko päivä")}${e.paikka ? ` · ${esc(e.paikka)}` : ""}</small></span>
-      <span class="oma-nh-luokka">${ilmoMerkki(e)}${luokitteluTagi(e, tila.ohjaaja)}${ilmo.get(e.uid) === "OUT" ? "" : poissaNappi(e, poissa, voiMerkita)}</span>
+      <span class="oma-nh-luokka">${ilmoMerkki(e)}${luokitteluTagi(e, tila.ohjaaja)}${ilmo.get(e.uid) === "OUT" ? "" : poissaNappi(e, poissa, voiMerkita)}${ilmo.get(e.uid) === "OUT" || poissa.has(e.uid) || e.pvm > tanaan() ? "" : rasitusValinta(e, rasitus, omaPelaaja, oletusRpe(e))}</span>
     </li>`; }).join("")}</ul>` : ""}
     ${t.length && haettuTxt && !ohj ? `<p class="pieni oma-ilmo-aika">${haettuTxt} · lähde Nimenhuuto</p>` : ""}
   </div>`;

@@ -100,7 +100,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261112-2", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261112-3", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -148,7 +148,7 @@ function valikko() {
   if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
   const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
   const koosteL = ["Viikkokooste", "#/kooste", "kooste", (p) => /^\/kooste/.test(p)];
-  const seurantaL = ["Pelaajaseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026: tavoitteet + omatoimiset
+  const seurantaL = ["Tavoiteseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026; 12.11.2026 nimi Tavoiteseuranta (omatoimiset Viikkokoosteessa)
   if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, TREENIT, OHJELMAT]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)

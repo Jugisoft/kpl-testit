@@ -2602,3 +2602,8 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 /* 12.11.2026: Viikkokooste – kovat kuormavaroitukset ylimpänä */
 .ko-kiire { border: 1px solid var(--red); border-left-width: 5px; background: var(--red-bg); }
 .ko-kiire .ko-h2 { color: var(--red); }
+/* 12.11.2026: Viikkokooste – pelaajan omatoimiset kirjaukset avattavina */
+.ko-avaa { font: inherit; font-size: 13px; padding: 1px 7px; margin-right: 4px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.ko-avaa:hover, .ko-avaa[aria-expanded="true"] { border-color: var(--kpl); color: var(--ink); }
+.ko-omat { padding: 0 4px 6px 16px; }
+.ko-omat .se-lista { border-bottom: 0; }

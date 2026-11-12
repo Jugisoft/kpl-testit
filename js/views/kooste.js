@@ -4,7 +4,7 @@
 import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, testiParhaat } from "../util.js";
 import { haeKuormaRivit, haeKalenteri, tooltip } from "../kuorma.js";
-import { TYYPIT, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, ika, kooste as laskeKooste } from "../kuormaydin.js";
+import { TYYPIT, T, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, ika, maaratTeksti, kooste as laskeKooste } from "../kuormaydin.js";
 
 let viikko = maanantai(tanaanHki());
 let joukkue = null;
@@ -32,6 +32,15 @@ export async function nayta(main) {
   const data = await haeKuormaRivit(pelaajat, nh.tapahtumat || [], alku, loppu, Object.fromEntries(Object.entries(testipaivat).map(([k, v]) => [k, [...v]])));
   const k = laskeKooste(pelaajat.map((p) => ({ id: p.id, nimi: nimi(p), profiili: p.treeniprofiili, rivit: data.tulos[p.id] })), viikko);
   const ikaP = Object.fromEntries(pelaajat.map((p) => [p.id, ika(p.syntymavuosi)]));
+  // 12.11.2026 (Jugi): omatoimiset kirjaukset avattavina rivin alla (siirretty Pelaajaseurannasta, nyk. Tavoiteseuranta)
+  const vkLoppu = lisaaPv(viikko, 6);
+  const omatVk = {};
+  for (const o of data.omat || []) if (o.pvm >= viikko && o.pvm <= vkLoppu) (omatVk[o.pelaaja_id] ||= []).push(o);
+  for (const l of Object.values(omatVk)) l.sort((a, b) => b.pvm.localeCompare(a.pvm));
+  const omaLista = (lista) => `<ul class="se-lista">${lista.map((o) => { const oh = data.ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T[oh?.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li>
+    <span class="num">${pvLyh(o.pvm)}</span>
+    <span><i style="background:${ty.vari}"></i>${esc(oh?.nimi || o.huomio || `Oma ${ty.nimi.toLowerCase()}`)}${lisa ? ` <small>${esc(lisa)}</small>` : ""}${o.rpe ? ` <small>· rasitus ${o.rpe}/10</small>` : ""}${oh && o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>
+    <span class="num">${minStr(o.kesto_min || 0)}</span></li>`; }).join("")}</ul>`;
   const maxMin = Math.max(60, ...k.rivit.map((r) => r.min));
   // 12.11.2026 (Jugi): kovat kuormavaroitukset ylimmäksi, sitten treenimäärät, sitten muut havainnot
   const kiireet = k.havainnot.filter((h) => h.taso === "varoitus"), muutHav = k.havainnot.filter((h) => h.taso !== "varoitus");
@@ -65,7 +74,7 @@ export async function nayta(main) {
 
     <section class="paneeli">
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
-      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmätreenit = mukana / ryhmän treenit viikolla: mukana vain IN Nimenhuudossa (ei merkintää = OUT). Haastajaryhmällä ja muualla asuvilla omatoiminen treeni korvaa saman viikon ryhmätreenin (merkintä ”+ omat”).</p>
+      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. ▸ avaa pelaajan viikon omatoimiset kirjaukset. Ryhmätreenit = mukana / ryhmän treenit viikolla: mukana vain IN Nimenhuudossa (ei merkintää = OUT). Haastajaryhmällä ja muualla asuvilla omatoiminen treeni korvaa saman viikon ryhmätreenin (merkintä ”+ omat”).</p>
       <div class="ko-taulu" role="table" aria-label="Treenimäärät pelaajittain">
         <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit tällä viikolla ja osallistumis-% 4 viikossa (vain IN Nimenhuudossa = mukana)">Osallis&shy;tuminen</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
         ${k.rivit.map((r) => `<div class="ko-rivi" role="row">
@@ -76,8 +85,8 @@ export async function nayta(main) {
           <span role="cell" class="num">${r.omaMin ? minStr(r.omaMin) : "–"}</span>
           <span role="cell" class="num ko-acwr ${r.acwr == null ? "" : r.acwr > 1.5 ? "korkea" : r.acwr < 0.6 ? "matala" : "ok"}">${r.acwr == null ? "–" : `${r.acwr > 1.5 ? "▲ " : ""}${desi(r.acwr, 2)}`}</span>
           <span role="cell" class="num${r.lepoViim7 === 0 ? " ko-ei" : ""}">${r.lepoViim7}</span>
-          <span role="cell" class="ko-maarat">${[...Object.entries(r.maarat).map(([a, b]) => `${esc(a.toLowerCase())} ${b}`), r.km ? `${desi(r.km)} km` : "", r.lyonnit ? `${r.lyonnit} lyöntiä` : "", ...r.ohjelmat.map(esc)].filter(Boolean).join(" · ") || '<span class="tyhja">–</span>'}</span>
-        </div>`).join("")}
+          <span role="cell" class="ko-maarat">${omatVk[r.id] ? `<button class="ko-avaa" data-avaa="${r.id}" aria-expanded="false" aria-controls="ko-omat-${r.id}" title="Näytä omatoimiset kirjaukset">▸ ${omatVk[r.id].length}</button> ` : ""}${[...Object.entries(r.maarat).map(([a, b]) => `${esc(a.toLowerCase())} ${b}`), r.km ? `${desi(r.km)} km` : "", r.lyonnit ? `${r.lyonnit} lyöntiä` : "", ...r.ohjelmat.map(esc)].filter(Boolean).join(" · ") || '<span class="tyhja">–</span>'}</span>
+        </div>${omatVk[r.id] ? `<div class="ko-omat" id="ko-omat-${r.id}" hidden>${omaLista(omatVk[r.id])}</div>` : ""}`).join("")}
       </div>
       <ul class="ku-selite pieni-selite">${TYYPIT.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}</li>`).join("")}</ul>
     </section>
@@ -103,6 +112,10 @@ export async function nayta(main) {
     </section>`;
 
   tooltip(main);
+  $$("[data-avaa]", main).forEach((b) => (b.onclick = () => {
+    const el = $(`#ko-omat-${b.dataset.avaa}`, main), auki = el.hidden;
+    el.hidden = !auki; b.setAttribute("aria-expanded", String(auki)); b.textContent = `${auki ? "▾" : "▸"} ${b.textContent.slice(2)}`;
+  }));
   $$("[data-vk]", main).forEach((b) => (b.onclick = () => { const n = +b.dataset.vk; viikko = n ? lisaaPv(viikko, n) : maanantai(tanaanHki()); nayta(main); }));
   const sel = $("#ko-ryhma", main);
   if (sel) sel.onchange = () => { joukkue = +sel.value; nayta(main); };

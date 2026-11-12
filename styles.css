@@ -2598,3 +2598,7 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .oma-rpe { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
 .oma-rpe select { font-size: 13px; padding: 3px 6px; min-height: 30px; border-radius: 8px; }
 .oma-rpe.asetettu select { border-color: var(--kpl); color: var(--ink); font-weight: 600; }
+
+/* 12.11.2026: Viikkokooste – kovat kuormavaroitukset ylimpänä */
+.ko-kiire { border: 1px solid var(--red); border-left-width: 5px; background: var(--red-bg); }
+.ko-kiire .ko-h2 { color: var(--red); }

@@ -33,6 +33,8 @@ export async function nayta(main) {
   const k = laskeKooste(pelaajat.map((p) => ({ id: p.id, nimi: nimi(p), profiili: p.treeniprofiili, rivit: data.tulos[p.id] })), viikko);
   const ikaP = Object.fromEntries(pelaajat.map((p) => [p.id, ika(p.syntymavuosi)]));
   const maxMin = Math.max(60, ...k.rivit.map((r) => r.min));
+  // 12.11.2026 (Jugi): kovat kuormavaroitukset ylimmäksi, sitten treenimäärät, sitten muut havainnot
+  const kiireet = k.havainnot.filter((h) => h.taso === "varoitus"), muutHav = k.havainnot.filter((h) => h.taso !== "varoitus");
   const nyt = viikko === maanantai(tanaanHki());
 
   main.innerHTML = `
@@ -56,10 +58,10 @@ export async function nayta(main) {
       ${poisJatetyt ? `<span title="Treeniprofiili Ei B:n treeneissä (Hallinta → Pelaajat)">Ei koosteessa<b>${poisJatetyt} pelaajaa</b></span>` : ""}
     </div>
 
-    <section class="paneeli">
-      <h2 class="ko-h2">Havainnot</h2>
-      ${k.havainnot.length ? `<ul class="ku-huomiot">${k.havainnot.map((h) => `<li class="${h.taso === "varoitus" ? "varoitus" : h.taso === "huomio" ? "tuleva" : ""}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "huomio" ? "◆" : "i"}</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>` : `<p class="tyhja">Ei erityisiä havaintoja tältä viikolta.</p>`}
-    </section>
+    ${kiireet.length ? `<section class="paneeli ko-kiire" aria-label="Huomio heti">
+      <h2 class="ko-h2">Huomio heti</h2>
+      <ul class="ku-huomiot">${kiireet.map((h) => `<li class="varoitus"><span aria-hidden="true">▲</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>
+    </section>` : ""}
 
     <section class="paneeli">
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
@@ -78,6 +80,11 @@ export async function nayta(main) {
         </div>`).join("")}
       </div>
       <ul class="ku-selite pieni-selite">${TYYPIT.map((t) => `<li><i style="background:${t.vari}"></i>${t.nimi}</li>`).join("")}</ul>
+    </section>
+
+    <section class="paneeli">
+      <h2 class="ko-h2">Havainnot</h2>
+      ${muutHav.length ? `<ul class="ku-huomiot">${muutHav.map((h) => `<li class="${h.taso === "huomio" ? "tuleva" : ""}"><span aria-hidden="true">${h.taso === "huomio" ? "◆" : "i"}</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>` : `<p class="tyhja">${kiireet.length ? "Ei muita havaintoja." : "Ei erityisiä havaintoja tältä viikolta."}</p>`}
     </section>
 
     <section class="paneeli ku-perusta ko-perusta">

@@ -24,7 +24,7 @@ export const LYONTI_RPE = 4;
 export const RAJA_NOUSU = 1.5, RAJA_KEVYT = 0.6;
 // pelaajan treeniprofiili (pelaajat.treeniprofiili, Hallinta → Pelaajat)
 export const PROFIILIT = { b: "B-ryhmä", haastaja: "Haastajaryhmä", reissu: "Asuu muualla", ei_b: "Ei B:n treeneissä" };
-export const PROFIILI_LYHYT = { haastaja: "haastajaryhmä", reissu: "asuu muualla" };
+export const PROFIILI_LYHYT = { haastaja: "haastajaryhmä" }; // 12.11.2026 (Jugi): muualla asuville ei merkintää nimen perään
 export const korvaaOmat = (profiili) => profiili === "haastaja" || profiili === "reissu";
 // ikä = vuosi – syntymävuosi (täyttää kuluvana vuonna), kuten juniorisarjoissa
 export const ika = (syntymavuosi, vuosi = +tanaanHki().slice(0, 4)) => (syntymavuosi ? vuosi - syntymavuosi : null);

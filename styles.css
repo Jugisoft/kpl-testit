@@ -2607,3 +2607,19 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ko-avaa:hover, .ko-avaa[aria-expanded="true"] { border-color: var(--kpl); color: var(--ink); }
 .ko-omat { padding: 0 4px 6px 16px; }
 .ko-omat .se-lista { border-bottom: 0; }
+/* 12.11.2026: Tavoiteseuranta – pelaajavalinta, odottavat ja saavutetut erikseen */
+.se-nimi { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.se-nimi:hover { color: var(--kpl); text-decoration: underline; }
+.se-pelaaja-ots .se-nimi { font-weight: 400; color: var(--ink-2); }
+.se-pelaaja-ots { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.se-ryhma-ots { margin: 22px 0 0; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); }
+.se-ryhma-ots .num { color: var(--ink); margin-left: 6px; }
+.ko-tav-rivi.ilman-nimea { grid-template-columns: minmax(130px, 1.6fr) 110px 150px minmax(110px, 1.4fr) 110px; }
+@media (max-width: 760px) {
+  .ko-tav-rivi.ilman-nimea { grid-template-columns: 1fr auto; }
+  .ko-tav-rivi.ilman-nimea > :nth-child(1) { grid-column: 1; grid-row: 1; color: var(--ink); font-weight: 600; }
+  .ko-tav-rivi.ilman-nimea > :nth-child(2) { grid-column: 2; grid-row: 1; text-align: right; color: inherit; }
+  .ko-tav-rivi.ilman-nimea > :nth-child(3) { grid-column: 2; grid-row: 2; text-align: right; }
+  .ko-tav-rivi.ilman-nimea > :nth-child(4) { grid-column: 1 / -1; grid-row: auto; }
+  .ko-tav-rivi.ilman-nimea > :nth-child(5) { grid-column: 1 / -1; }
+}

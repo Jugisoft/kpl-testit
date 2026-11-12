@@ -5,6 +5,9 @@
 // periaate, Foster ym. 2001). Akuutti:krooninen = viim. 7 pv / edellisten 4 viikon keskiarvo; yli 1,5 on tutkimuksissa
 // liitetty kohonneeseen vammariskiin (Hulin ym. 2016; katsaus Arazi ym. 2020, Front Physiol).
 // 7.11.2026: pelaaja voi säätää omatoimisen treenin rasituksen kirjauksessa (omat_treenit.rpe), muuten oletus.
+// 12.11.2026 (Jugi): Nimenhuudossa ei IN = OUT, kun tapahtuman IN/OUT on haettu (tapahtumat.ilmo_haettu). Pelaajan
+// treeniprofiili (pelaajat.treeniprofiili): haastaja (treenaa Superpesiksen mukana) ja reissu (asuu muualla) – omatoiminen
+// treeni korvaa saman viikon poissaolon ryhmätreenistä, eli mittari on Nimenhuuto + omatoimiset; ei_b = ei koosteessa.
 
 export const TYYPIT = [ // pinoamisjärjestys = värijärjestys (validoitu tummalle pinnalle)
   { k: "laji", nimi: "Laji", rpe: 5, vari: "#c98500" },
@@ -19,6 +22,12 @@ export const RASKAS = 450; // AU/päivä, esim. 90 min lajia tai 75 min fysiikka
 export const LYONTI_MIN = 0.3; // lyöntipäiväkirja: 100 lyöntiä ≈ 30 min lajia
 export const LYONTI_RPE = 4;
 export const RAJA_NOUSU = 1.5, RAJA_KEVYT = 0.6;
+// pelaajan treeniprofiili (pelaajat.treeniprofiili, Hallinta → Pelaajat)
+export const PROFIILIT = { b: "B-ryhmä", haastaja: "Haastajaryhmä", reissu: "Asuu muualla", ei_b: "Ei B:n treeneissä" };
+export const PROFIILI_LYHYT = { haastaja: "haastajaryhmä", reissu: "asuu muualla" };
+export const korvaaOmat = (profiili) => profiili === "haastaja" || profiili === "reissu";
+// ikä = vuosi – syntymävuosi (täyttää kuluvana vuonna), kuten juniorisarjoissa
+export const ika = (syntymavuosi, vuosi = +tanaanHki().slice(0, 4)) => (syntymavuosi ? vuosi - syntymavuosi : null);
 export const OS_RAJA = 60, OS_SEURAA = 75; // ryhmätreenien osallistuminen 4 vk: alle 60 % = paljon poissa, alle 75 % = seuraa
 
 const PAIVA = 864e5;
@@ -72,16 +81,17 @@ export function maaratTeksti(o) {
 }
 
 // --- kaikki lähteet yhdeksi listaksi ---
-// d = { nh: tapahtumat, poissa: Set(uid), out: Set(uid), rasitus: Map(uid -> rpe), omat: omat_treenit, ohjelmat: {koodi: ohjelma}, lyonnit: [{pvm, maara}], testipaivat: [pvm] }
+// d = { nh: tapahtumat, poissa: Set(uid), out: Set(uid), inn: Set(uid), profiili, rasitus: Map(uid -> rpe), omat: omat_treenit, ohjelmat: {koodi: ohjelma}, lyonnit: [{pvm, maara}], testipaivat: [pvm] }
+// 12.11.2026: tapahtuma, jonka e.ilmo_haettu on asetettu ja jossa pelaaja ei ole IN (d.inn) = OUT.
 // 6.11.2026: out = Nimenhuudon OUT-ilmoittautumiset (taulu ilmoittautumiset). OUT tai "Olin poissa" = ei mukana;
 // muuten oletus on, että pelaaja oli mukana. rivit.ryhma = ryhmätreenien läsnäolo (viikkokoosteeseen).
 export function kokoa(d) {
   const rivit = [];
-  const poissa = d.poissa || new Set(), out = d.out || new Set(), ryhma = [];
+  const poissa = d.poissa || new Set(), out = d.out || new Set(), inn = d.inn || null, ryhma = [];
   const rasitus = d.rasitus || new Map(); // 7.11.2026: pelaajan oma arvio ryhmätreenille (uid -> 1–10)
   for (const e of d.nh || []) {
     if (e.peruttu) continue;
-    const syy = poissa.has(e.uid) ? "poissa" : out.has(e.uid) ? "OUT" : null;
+    const syy = poissa.has(e.uid) ? "poissa" : out.has(e.uid) || (inn && e.ilmo_haettu && !inn.has(e.uid)) ? "OUT" : null;
     ryhma.push({ pvm: e.pvm, uid: e.uid, mukana: !syy, syy });
     if (syy) continue;
     for (const o of osat(e).osat) rivit.push({ pvm: e.pvm, tyyppi: o.tyyppi, min: o.min, rpe: rasitus.get(e.uid) || T[o.tyyppi].rpe, otsikko: lyhytOtsikko(e.otsikko), lahde: "nh", uid: e.uid });
@@ -96,8 +106,23 @@ export function kokoa(d) {
   const testiPv = new Set(rivit.filter((r) => r.tyyppi === "testi").map((r) => r.pvm));
   for (const p of d.testipaivat || []) if (!testiPv.has(p)) rivit.push({ pvm: p, tyyppi: "testi", min: 60, rpe: T.testi.rpe, otsikko: "Testipäivä (tulokset)", lahde: "testi" });
   for (const r of rivit) r.au = r.min * r.rpe;
+  if (korvaaOmat(d.profiili)) korvaaOmilla(ryhma, d.omat || []);
   rivit.ryhma = ryhma;
   return rivit;
+}
+// haastaja / reissu: jokainen omatoiminen treeni korvaa yhden poissaolon (OUT, ei merkintää tai Olin poissa)
+// saman viikon (ma–su) lähimmästä ryhmätreenistä. Vain osallistumiseen – kuorma tulee toteutuneista treeneistä.
+export function korvaaOmilla(ryhma, omat) {
+  const vapaat = ryhma.filter((x) => !x.mukana);
+  for (const o of [...omat].sort((a, b) => a.pvm.localeCompare(b.pvm))) {
+    const vk = maanantai(o.pvm);
+    let paras = -1, ero = 99;
+    vapaat.forEach((x, i) => { const d = Math.abs(new Date(x.pvm) - new Date(o.pvm)) / PAIVA; if (maanantai(x.pvm) === vk && d < ero) { ero = d; paras = i; } });
+    if (paras < 0) continue;
+    const x = vapaat.splice(paras, 1)[0];
+    x.mukana = true; x.korvattu = x.syy; x.syy = null;
+  }
+  return ryhma;
 }
 export const summa = (rivit, f = () => true) => rivit.filter(f).reduce((s, r) => s + r.au, 0);
 const minuutit = (rivit, f = () => true) => rivit.filter(f).reduce((s, r) => s + r.min, 0);
@@ -156,7 +181,7 @@ export function analysoi(rivit, viikko, nyt = tanaanHki()) {
 }
 
 // --- valmentajan viikkokooste: yksi rivi per pelaaja + havainnot ---
-// pelaajat = [{ id, nimi, rivit }], viikko = maanantai, nyt = päivä jolloin kooste tehdään
+// pelaajat = [{ id, nimi, rivit, profiili? }], viikko = maanantai, nyt = päivä jolloin kooste tehdään
 export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
   const loppu = lisaaPv(viikko, 6), viite = loppu < nyt ? loppu : nyt;
   const vk = (r) => r.pvm >= viikko && r.pvm <= viite; // toteutunut osa viikosta
@@ -172,7 +197,7 @@ export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
     const ry4 = (p.rivit.ryhma || []).filter((x) => x.pvm > lisaaPv(viite, -28) && x.pvm <= viite);
     const pros = (a) => (a.length ? Math.round((100 * a.filter((x) => x.mukana).length) / a.length) : null);
     return { ryhmaYht: ry.length, ryhmaMukana: ry.filter((x) => x.mukana).length, ryhmaOut: ry.filter((x) => x.syy === "OUT").length, os: pros(ry),
-      ry4Yht: ry4.length, ry4Mukana: ry4.filter((x) => x.mukana).length, ry4Out: ry4.filter((x) => x.syy === "OUT").length, os4: pros(ry4), id: p.id, nimi: p.nimi, min: minuutit(tot), au: summa(tot), omaMin: minuutit(tot, (r) => r.lahde === "oma" || r.lahde === "lyonti"), omaKpl: omat.length,
+      ry4Yht: ry4.length, ry4Mukana: ry4.filter((x) => x.mukana).length, ry4Out: ry4.filter((x) => x.syy === "OUT").length, os4: pros(ry4), id: p.id, nimi: p.nimi + (PROFIILI_LYHYT[p.profiili] ? ` (${PROFIILI_LYHYT[p.profiili]})` : ""), profiili: p.profiili || "b", korvattu: ry4.filter((x) => x.korvattu).length, min: minuutit(tot), au: summa(tot), omaMin: minuutit(tot, (r) => r.lahde === "oma" || r.lahde === "lyonti"), omaKpl: omat.length,
       tyypit: Object.fromEntries(TYYPIT.map((t) => [t.k, minuutit(tot, (r) => r.tyyppi === t.k)])), acwr: a.acwr, lepoViim7: a.lepoViim7, pisin: a.pisin,
       maarat: Object.fromEntries(Object.entries(syotot).filter(([, v]) => v > 0)), km, lyonnit,
       ohjelmat: [...new Set(omat.map((r) => r.otsikko))] };
@@ -211,6 +236,7 @@ export const KOOSTE_URL = "https://jugisoft.github.io/kpl-testit/#/kooste";
 // sähköpostissa poissaolot näkyvät osallistumiskaaviossa, joten ne eivät toistu poikkeamalistassa
 const poikkeamat = (k) => k.havainnot.filter((h) => h.koodi !== "eiomia" && h.koodi !== "poissa");
 const matalat = (k) => k.rivit.filter((r) => (r.ry4Yht >= 2 && r.os4 < OS_SEURAA) || (r.ryhmaYht >= 2 && r.ryhmaMukana * 2 <= r.ryhmaYht)).sort((a, b) => a.os4 - b.os4 || a.os - b.os || a.nimi.localeCompare(b.nimi, "fi"));
+export const SELITE = "Ryhmätreeni lasketaan mukaan vain, jos pelaaja on IN Nimenhuudossa – ei merkintää = OUT (myös Olin poissa = pois). Haastajaryhmällä ja muualla asuvilla omatoiminen treeni korvaa saman viikon ryhmätreenin (mittari = Nimenhuuto + omatoimiset). C-pojat ja muut, jotka eivät treenaa B:n mukana, eivät ole koosteessa.";
 const osTxt = (x) => (x == null ? "–" : `${x} %`);
 export function koosteTeksti(k, ryhma) {
   const h = poikkeamat(k), m = matalat(k);
@@ -224,7 +250,7 @@ export function koosteTeksti(k, ryhma) {
     ...(h.length ? h.map((x) => `${x.taso === "varoitus" ? "⚠ " : "• "}${x.teksti}`) : ["Ei kuormaan liittyviä poikkeamia."]),
     ...(m.length ? ["", `MATALA OSALLISTUMINEN (4 viikkoa alle ${OS_SEURAA} % tai tällä viikolla puolet tai alle)`, ...m.map((r) => `• ${r.nimi}: ${r.os4} % (${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}) · tällä viikolla ${r.ryhmaMukana}/${r.ryhmaYht}`)] : []),
     "",
-    "Ryhmätreeni lasketaan pois, jos pelaaja on OUT Nimenhuudossa tai merkinnyt Olin poissa. Kuormat, omatoimiset ja kaikki pelaajat koko koosteessa.",
+    SELITE + " Kuormat, omatoimiset ja kaikki pelaajat koko koosteessa.",
   ].join("\n");
 }
 
@@ -260,6 +286,6 @@ ${m.length ? `<tr><td style="padding:22px 0 6px;font-size:13px;letter-spacing:.0
   <td width="128" align="right" style="padding:5px 0 5px 10px;font-size:13px;white-space:nowrap"><b style="color:${vari(r.os4)}">${r.os4} %</b> <span style="color:#6f685d">${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? ` · OUT ${r.ry4Out}` : ""}</span></td>
 </tr>`).join("")}</table>
 <div style="font-size:12px;color:#6f685d;padding-top:6px">Palkki = osallistuminen 4 viikossa · punainen alle ${OS_RAJA} % (paljon poissa – selvitä syy) · keltainen alle ${OS_SEURAA} %${muut > 0 ? ` · muut ${muut} pelaajaa ${OS_SEURAA} % tai yli` : ""}.</div></td></tr>` : ""}
-<tr><td style="padding:22px 0 0;font-size:12px;color:#6f685d;border-top:1px solid #ece7df">Ryhmätreeni lasketaan pois, jos pelaaja on OUT Nimenhuudossa tai merkinnyt Olin poissa; muuten oletus on, että hän oli mukana. Kuormat, omatoimiset treenit ja kaikki pelaajat: <a href="${KOOSTE_URL}" style="color:#a37000">koko kooste</a>.</td></tr>
+<tr><td style="padding:22px 0 0;font-size:12px;color:#6f685d;border-top:1px solid #ece7df">${SELITE} Kuormat, omatoimiset treenit ja kaikki pelaajat: <a href="${KOOSTE_URL}" style="color:#a37000">koko kooste</a>.</td></tr>
 </table></td></tr></table></body></html>`;
 }

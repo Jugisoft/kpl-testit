@@ -2,6 +2,7 @@
 import { sb, tila, nimi, lataaPelaajat, lataaPerus, SUPABASE_URL } from "../db.js";
 import { LUOKAT } from "./testit.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
+import { ika, PROFIILIT } from "../kuormaydin.js";
 
 const ROOLIT = { admin: "Master (ylläpitäjä)", valmentaja: "Master-valmennus", pelaaja: "Miesten SP -pelaaja", psu: "PSU-valmennus", juniori: "Juniori-pelaaja", sp_juniori: "Miesten SP -pelaaja + juniori" };
 // Pelaajaliitos (1.11.2026): tunnus ↔ pelaaja, pelaajan oma Keskus
@@ -40,13 +41,14 @@ export async function nayta(main) {
     </tbody></table></div>
 
     <h2>Pelaajat</h2>
-    <p class="pieni">Muutokset tallentuvat, kun poistut kentästä. Ei-aktiiviset pelaajat eivät näy osallistujalistoissa, mutta heidän tuloksensa säilyvät.</p>
-    <div class="taulu-wrap"><table><thead><tr><th>Etunimi</th><th>Sukunimi</th><th>Synt.</th><th>Ryhmä</th><th>Aktiivinen</th><th>Kuvan osoite</th><th></th></tr></thead>
+    <p class="pieni">Muutokset tallentuvat, kun poistut kentästä. Ei-aktiiviset pelaajat eivät näy osallistujalistoissa, mutta heidän tuloksensa säilyvät. Ikä = kuluva vuosi – syntymävuosi. <b>Treeniprofiili</b> ohjaa viikkokoostetta: B-ryhmä = Nimenhuuto (ei IN = OUT); Haastajaryhmä ja Asuu muualla = Nimenhuuto + omatoimiset; Ei B:n treeneissä = ei koosteessa (esim. C-pojat).</p>
+    <div class="taulu-wrap"><table><thead><tr><th>Etunimi</th><th>Sukunimi</th><th>Synt.</th><th>Ryhmä</th><th title="Viikkokoosteen osallistumislaskenta">Treeniprofiili</th><th>Aktiivinen</th><th>Kuvan osoite</th><th></th></tr></thead>
       <tbody>${tila.pelaajat.map((p) => `<tr data-p="${p.id}">
         <td><input type="text" data-k="etunimi" value="${esc(p.etunimi)}" style="width:110px"></td>
         <td><input type="text" data-k="sukunimi" value="${esc(p.sukunimi || "")}" style="width:130px"></td>
-        <td><input type="number" data-k="syntymavuosi" value="${p.syntymavuosi || ""}" style="width:84px"></td>
+        <td><input type="number" data-k="syntymavuosi" value="${p.syntymavuosi || ""}" style="width:84px">${p.syntymavuosi ? ` <span class="pieni">${ika(p.syntymavuosi)} v</span>` : ""}</td>
         <td>${jSel(p.joukkue_id)}</td>
+        <td><select data-k="treeniprofiili" aria-label="Treeniprofiili: ${esc(nimi(p))}">${Object.entries(PROFIILIT).map(([k, n]) => `<option value="${k}"${k === (p.treeniprofiili || "b") ? " selected" : ""}>${n}</option>`).join("")}</select></td>
         <td><input type="checkbox" data-k="aktiivinen" ${p.aktiivinen ? "checked" : ""}></td>
         <td><input type="text" data-k="kuva_url" value="${esc(p.kuva_url || "")}" placeholder="https://…" style="width:200px"></td>
         <td><button class="btn vaara" data-piilota="${p.id}">Poista</button></td></tr>`).join("")}</tbody></table></div>

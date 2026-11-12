@@ -4,7 +4,7 @@
 import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, testiParhaat } from "../util.js";
 import { haeKuormaRivit, haeKalenteri, tooltip } from "../kuorma.js";
-import { TYYPIT, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, kooste as laskeKooste } from "../kuormaydin.js";
+import { TYYPIT, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, ika, kooste as laskeKooste } from "../kuormaydin.js";
 
 let viikko = maanantai(tanaanHki());
 let joukkue = null;
@@ -16,7 +16,9 @@ export async function nayta(main) {
   main.innerHTML = `<h1>Viikkokooste</h1><p class="lataa">Lasketaan…</p>`;
   if (!joukkue) { main.innerHTML = `<h1>Viikkokooste</h1><p class="tyhja">Ei ryhmiä.</p>`; return; }
   const j = tila.joukkueet.find((x) => x.id === joukkue);
-  const pelaajat = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen);
+  // 12.11.2026: ei B:n treeneissä (esim. C-pojat) ei kuulu koosteeseen
+  const pelaajat = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen && p.treeniprofiili !== "ei_b");
+  const poisJatetyt = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen && p.treeniprofiili === "ei_b").length;
   const alku = lisaaPv(viikko, -35), loppu = lisaaPv(viikko, 6);
 
   const [nh, tulokset, arkisto, tavRes] = await Promise.all([
@@ -28,7 +30,8 @@ export async function nayta(main) {
   const testipaivat = {};
   for (const t of tulokset) if (t.pvm >= alku && t.pvm <= loppu) (testipaivat[t.pelaaja] ||= new Set()).add(t.pvm);
   const data = await haeKuormaRivit(pelaajat, nh.tapahtumat || [], alku, loppu, Object.fromEntries(Object.entries(testipaivat).map(([k, v]) => [k, [...v]])));
-  const k = laskeKooste(pelaajat.map((p) => ({ id: p.id, nimi: nimi(p), rivit: data.tulos[p.id] })), viikko);
+  const k = laskeKooste(pelaajat.map((p) => ({ id: p.id, nimi: nimi(p), profiili: p.treeniprofiili, rivit: data.tulos[p.id] })), viikko);
+  const ikaP = Object.fromEntries(pelaajat.map((p) => [p.id, ika(p.syntymavuosi)]));
   const maxMin = Math.max(60, ...k.rivit.map((r) => r.min));
   const nyt = viikko === maanantai(tanaanHki());
 
@@ -50,6 +53,7 @@ export async function nayta(main) {
       <a class="ko-tag-linkki" href="#/seuranta">Tavoitteita<b>${(tavRes.data || []).length}${(tavRes.data || []).filter((g) => g.luotu.slice(0, 10) >= viikko).length ? ` (${(tavRes.data || []).filter((g) => g.luotu.slice(0, 10) >= viikko).length} uutta)` : ""} →</b></a>
       <span>Omatoimisia kirjanneet<b>${k.kirjanneet}/${k.rivit.length}</b></span>
       <span>Omatoimisten mediaani<b>${minStr(k.mediaaniOma)}</b></span>
+      ${poisJatetyt ? `<span title="Treeniprofiili Ei B:n treeneissä (Hallinta → Pelaajat)">Ei koosteessa<b>${poisJatetyt} pelaajaa</b></span>` : ""}
     </div>
 
     <section class="paneeli">
@@ -59,14 +63,14 @@ export async function nayta(main) {
 
     <section class="paneeli">
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
-      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmätreenit = mukana / ryhmän treenit viikolla (OUT Nimenhuudossa tai Olin poissa = ei mukana, muuten oletus: mukana).</p>
+      <p class="pieni">Järjestys suurimmasta kuorma-arviosta. Palkki = minuutit tyypeittäin. Ryhmätreenit = mukana / ryhmän treenit viikolla: mukana vain IN Nimenhuudossa (ei merkintää = OUT). Haastajaryhmällä ja muualla asuvilla omatoiminen treeni korvaa saman viikon ryhmätreenin (merkintä ”+ omat”).</p>
       <div class="ko-taulu" role="table" aria-label="Treenimäärät pelaajittain">
-        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit tällä viikolla ja osallistumis-% 4 viikossa (OUT Nimenhuudossa tai Olin poissa = ei mukana)">Osallis&shy;tuminen</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
+        <div class="ko-rivi ko-otsikko" role="row"><span role="columnheader">Pelaaja</span><span role="columnheader">Minuutit tyypeittäin</span><span role="columnheader">Yht.</span><span role="columnheader" title="Mukana / ryhmän treenit tällä viikolla ja osallistumis-% 4 viikossa (vain IN Nimenhuudossa = mukana)">Osallis&shy;tuminen</span><span role="columnheader">Omat</span><span role="columnheader" title="Viimeiset 7 pv / edellisten 4 viikon keskiarvo">Kuorma × taso</span><span role="columnheader">Lepo 7 pv</span><span role="columnheader">Määrät ja ohjelmat</span></div>
         ${k.rivit.map((r) => `<div class="ko-rivi" role="row">
-          <a role="cell" href="#/oma/${r.id}" class="ko-nimi">${esc(r.nimi)}</a>
+          <a role="cell" href="#/oma/${r.id}" class="ko-nimi">${esc(r.nimi)}${ikaP[r.id] ? ` <small class="pieni">${ikaP[r.id]} v</small>` : ""}</a>
           <span role="cell" class="ko-palkki"><span class="ku-jakauma" style="width:${Math.max(2, (100 * r.min) / maxMin)}%">${TYYPIT.filter((t) => r.tyypit[t.k]).map((t) => `<i style="flex:${r.tyypit[t.k]};background:${t.vari}" data-tip="${t.nimi}: ${minStr(r.tyypit[t.k])}"></i>`).join("")}</span></span>
           <span role="cell" class="num">${r.min ? minStr(r.min) : "–"}</span>
-          <span role="cell" class="num ko-ryhma" title="4 viikkoa: ${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}">${r.ryhmaYht ? `${r.ryhmaMukana}/${r.ryhmaYht}` : "–"}${r.os4 == null ? "" : `<small class="${r.os4 < OS_RAJA ? "ala" : r.os4 < OS_SEURAA ? "seuraa" : ""}">${r.os4} % 4 vk</small>`}</span>
+          <span role="cell" class="num ko-ryhma" title="4 viikkoa: ${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}${r.korvattu ? `, josta omatoimisilla ${r.korvattu}` : ""}">${r.ryhmaYht ? `${r.ryhmaMukana}/${r.ryhmaYht}` : "–"}${r.korvattu ? `<small>+ omat</small>` : ""}${r.os4 == null ? "" : `<small class="${r.os4 < OS_RAJA ? "ala" : r.os4 < OS_SEURAA ? "seuraa" : ""}">${r.os4} % 4 vk</small>`}</span>
           <span role="cell" class="num">${r.omaMin ? minStr(r.omaMin) : "–"}</span>
           <span role="cell" class="num ko-acwr ${r.acwr == null ? "" : r.acwr > 1.5 ? "korkea" : r.acwr < 0.6 ? "matala" : "ok"}">${r.acwr == null ? "–" : `${r.acwr > 1.5 ? "▲ " : ""}${desi(r.acwr, 2)}`}</span>
           <span role="cell" class="num${r.lepoViim7 === 0 ? " ko-ei" : ""}">${r.lepoViim7}</span>
@@ -79,7 +83,7 @@ export async function nayta(main) {
     <section class="paneeli ku-perusta ko-perusta">
       <b>Mihin arvio perustuu</b>
       <ul>
-        <li><span>1</span><span>Ryhmän treenit Nimenhuudosta (valmentaja voi korjata tyypin ja keston). Nimenhuudon OUT tai pelaajan Olin poissa = ei mukana, muuten oletus: mukana.</span></li>
+        <li><span>1</span><span>Ryhmän treenit Nimenhuudosta (valmentaja voi korjata tyypin ja keston). Mukana vain, jos pelaaja on IN – ei merkintää tai OUT = ei mukana, samoin pelaajan Olin poissa. Haastajaryhmä ja muualla asuvat: omatoiminen treeni korvaa saman viikon ryhmätreenin. Ei B:n treeneissä -pelaajat (esim. C-pojat) eivät ole koosteessa.</span></li>
         <li><span>2</span><span>Pelaajan omat kirjaukset ohjelmakirjastosta (Voima 1–3, Piiri 1–2, juoksut, syötöt määrinä, lenkit km) ja lyöntipäiväkirja.</span></li>
         <li><span>3</span><span>Rasitus = treenityypin tai ohjelman <b>arvio</b> 0–10 × minuutit. Ei sykettä eikä pelaajan omaa tuntemusta.</span></li>
         <li><span>4</span><span>Kuorma × taso = viim. 7 pv / edellisten 4 vk keskiarvo. Yli 1,5 on tutkimuksissa liitetty kohonneeseen vammariskiin (Hulin ym. 2016). <b>Liian kova</b> = vähintään kaksi merkkiä (nousu > 1,5, ei lepopäivää 7 pv:ään, 4+ raskasta päivää putkeen) tai nousu > 1,8.</span></li>
@@ -87,7 +91,7 @@ export async function nayta(main) {
     </section>
 
     <section class="paneeli">
-      <h2 class="ko-h2">Perjantain koosteet</h2>
+      <h2 class="ko-h2">Sunnuntain koosteet</h2>
       ${(arkisto.data || []).length ? `<ul class="ko-arkisto">${arkisto.data.map((a) => `<li><details><summary><b>Viikko ${pvLyh(a.viikko)}</b> <span class="pieni">tehty ${new Date(a.luotu).toLocaleString("fi-FI", { timeZone: "Europe/Helsinki", dateStyle: "short", timeStyle: "short" })}${a.lahetetty ? " · lähetetty sähköpostilla" : ""}</span></summary><pre>${esc(a.teksti)}</pre></details></li>`).join("")}</ul>` : `<p class="tyhja">Ensimmäinen kooste tallentuu sunnuntaina klo 11.30.</p>`}
     </section>`;
 

@@ -33,8 +33,8 @@ export async function haeKuormaRivit(pelaajat, nh, alku, loppu, testipaivat = {}
     sb.from("omat_treenit").select("*").in("pelaaja_id", ids).gte("pvm", alku).lte("pvm", loppu).order("pvm"),
     sb.from("poissaolot").select("pelaaja_id,uid").in("pelaaja_id", ids),
     sb.rpc("kuorma_lyonnit", { p_alku: alku, p_loppu: loppu }),
-    // 6.11.2026: Nimenhuudon OUT = ei mukana (taulu ilmoittautumiset; jos haku epäonnistuu, oletus pysyy)
-    sb.from("ilmoittautumiset").select("pelaaja_id,uid").eq("tila", "OUT").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
+    // 6.11.2026: Nimenhuudon IN/OUT (taulu ilmoittautumiset). 12.11.2026: haetussa tapahtumassa (ilmo_haettu) ei IN = OUT
+    sb.from("ilmoittautumiset").select("pelaaja_id,uid,tila").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
     // 7.11.2026: pelaajan oma rasitusarvio ryhmätreeneille
     sb.from("rasitusarviot").select("pelaaja_id,uid,rpe").in("pelaaja_id", ids).then((r) => r, () => ({ data: [] })),
   ]);
@@ -42,7 +42,9 @@ export async function haeKuormaRivit(pelaajat, nh, alku, loppu, testipaivat = {}
   return { virhe, ohjelmat, omat: omat.data || [], poissa: poissa.data || [], tulos: Object.fromEntries(pelaajat.map((p) => [p.id, kokoa({
     nh, ohjelmat,
     poissa: new Set((poissa.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
-    out: new Set((ilmo.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => x.uid)),
+    out: new Set((ilmo.data || []).filter((x) => x.pelaaja_id === p.id && x.tila === "OUT").map((x) => x.uid)),
+    inn: ilmo.error ? null : new Set((ilmo.data || []).filter((x) => x.pelaaja_id === p.id && x.tila === "IN").map((x) => x.uid)),
+    profiili: p.treeniprofiili,
     rasitus: new Map((ras.data || []).filter((x) => x.pelaaja_id === p.id).map((x) => [x.uid, x.rpe])),
     omat: (omat.data || []).filter((o) => o.pelaaja_id === p.id),
     lyonnit: (ly.data || []).filter((l) => l.pelaaja_id === p.id),

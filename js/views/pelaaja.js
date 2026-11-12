@@ -1,6 +1,7 @@
 // Pelaajakortti: ennätykset, profiili ikätovereihin verrattuna ja kehitys testeittäin.
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { LUOKAT } from "./testit.js";
+import { ika, PROFIILIT } from "../kuormaydin.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, parhaatTulokset, juoksutYhteen, testiParhaat, kuva, mediaani, keskiarvo, hajonta, piirra, vari, mittari, miniPylvaat, liukuvari } from "../util.js";
 
 const PROFIILI = ["30m", "10m", "lentava20", "nok_30m", "cooper", "heitto_paikalta", "heitto_vauhti", "lyonti"];
@@ -39,7 +40,8 @@ export async function nayta(main, id) {
     <div class="kortti-paa">${kuva(p, true)}<div style="flex:1">
       <h1>${esc(nimi(p))}</h1>
       <div class="tagit">
-        ${p.syntymavuosi ? `<span>Syntynyt<b>${p.syntymavuosi}</b></span>` : ""}
+        ${p.syntymavuosi ? `<span>Syntynyt<b>${p.syntymavuosi}</b></span><span title="Täyttää tänä vuonna (vuosi – syntymävuosi)">Ikä<b>${ika(p.syntymavuosi)} v</b></span>` : ""}
+        ${p.treeniprofiili && p.treeniprofiili !== "b" && tila.ohjaaja ? `<span>Treeniprofiili<b>${esc(PROFIILIT[p.treeniprofiili] || p.treeniprofiili)}</b></span>` : ""}
         ${joukkue ? `<span>Ryhmä<b>${esc(joukkue)}</b></span>` : ""}
         <span>Testikertoja<b>${kerrat}</b></span>
         ${omat.length ? `<span>Ensimmäinen testi<b>${pvm(omat[0].pvm)}</b></span>` : ""}

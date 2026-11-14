@@ -4,12 +4,14 @@ import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita, palkki } from "../util.js";
 import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 
-// 6.11.2026: erittelemättömät = pelkkä kokonaismäärä (esim. 10 kumuraa + 10 pystäriä + 20 vaakamailaa = 40)
-const ERIT = "Erittelemättömät";
+// 14.11.2026: pääluokat Pienet ja Kovat korvaavat erittelemättömät
 const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
-const LAJIT = [ERIT, "Pomppu", "Näpy", "Vaakamaila", "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
-// 14.11.2026: pienet vs. kovat -luokittelu viikkopylväisiin
-const PIENET = new Set(["näpy", "ohitus", "pieni 1-raja", "pieni 2-raja"]);
+const PIENET_LAJI = "Pienet";
+const KOVAT_LAJI = "Kovat";
+const PIENET_TARKEMMAT = ["Näpy", "Ohitus", "Pieni 1-raja", "Pieni 2-raja"];
+const KOVAT_TARKEMMAT = ["Pomppu", "Vaakamaila", "Keskipieni", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
+const LAJIT = [PIENET_LAJI, KOVAT_LAJI, ...PIENET_TARKEMMAT, ...KOVAT_TARKEMMAT];
+const PIENET = new Set([PIENET_LAJI.toLowerCase(), ...PIENET_TARKEMMAT.map((l) => l.toLowerCase())]);
 const onPieni = (laji) => PIENET.has(laji.trim().toLowerCase());
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
@@ -95,16 +97,15 @@ function viikkoPylvaat(kirjaukset) {
   return `<div class="ly-viikot" role="img" aria-label="Lyönnit viikoittain, 12 viikkoa">${sum.map((a, i) => {
     const n = a.reduce((s, k) => s + k.maara, 0);
     const pienet = a.filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0);
-    const kovat = a.filter((k) => !onPieni(k.laji) && !sama(k.laji, ERIT)).reduce((s, k) => s + k.maara, 0);
-    const muut = n - pienet - kovat;
+    const kovat = n - pienet;
     const lajeittain = Object.entries(a.reduce((o, k) => ((o[k.laji] = (o[k.laji] || 0) + k.maara), o), {})).map(([l, x]) => `${l} ${x}`).join(", ");
     const h = n ? Math.max(4, (100 * n) / max) : 0;
     const pPct = n ? (100 * pienet) / n : 0;
     const kPct = n ? (100 * kovat) / n : 0;
-    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä (pienet ${pienet}, kovat ${kovat}${muut ? `, muut ${muut}` : ""})${lajeittain ? "\n" + lajeittain : ""}">
-      <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"></span>` : ""}${muut ? `<span class="ly-vk-muut" style="height:${(100 * muut) / n}%"></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
+    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä (pienet ${pienet}, kovat ${kovat})${lajeittain ? "\n" + lajeittain : ""}">
+      <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
   }).join("")}</div>
-  <div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <span class="ly-sel-pieni"></span>Pienet${sum.some((a) => a.some((k) => sama(k.laji, ERIT))) ? ` <span class="ly-sel-muu"></span>Muut` : ""}</div>`;
+  <div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <span class="ly-sel-pieni"></span>Pienet</div>`;
 }
 
 function historia(kirjaukset, muokattava) {
@@ -140,7 +141,7 @@ async function paivakirja(main, email, muokattava) {
   const aktiiviset = missiot.filter((m) => !m.arkistoitu);
   const arkisto = missiot.filter((m) => m.arkistoitu);
   const kaytetyt = [...new Set([...aktiiviset.map((m) => m.laji), ...kirjaukset.map((k) => k.laji)])];
-  const lajit = [ERIT, ...kaytetyt.filter((l) => !sama(l, ERIT)), ...LAJIT.slice(1).filter((l) => !kaytetyt.some((x) => sama(x, l)))];
+  const lajit = [...LAJIT, ...kaytetyt.filter((l) => !LAJIT.some((x) => sama(x, l)))];
   if (!valittuLaji || !lajit.some((l) => sama(l, valittuLaji))) valittuLaji = aktiiviset[0]?.laji || null;
   const t = tanaan(), vk = maanantai(t);
   const tamaVk = kirjaukset.filter((k) => k.pvm >= vk).reduce((s, k) => s + k.maara, 0);
@@ -199,9 +200,9 @@ async function paivakirja(main, email, muokattava) {
         <label class="ly-kentta">Päättyy <input name="loppu" type="date" value="${kaudenLoppu()}" required></label>
         <label class="ly-kentta ly-kasvaa">Nimi (vapaaehtoinen) <input type="text" name="nimi" maxlength="80" placeholder="esim. Talven 2-rajat"></label>
       </div>
-      <datalist id="ly-lajilista"><option value="${KAIKKI}">${lajit.filter((l) => !sama(l, ERIT)).map((l) => `<option value="${esc(l)}">`).join("")}</datalist>
+      <datalist id="ly-lajilista"><option value="${KAIKKI}">${lajit.map((l) => `<option value="${esc(l)}">`).join("")}</datalist>
       <div class="rivi"><button class="btn ensisij">Luo missio</button><button type="button" class="btn" id="ly-peru-m">Peru</button></div>
-      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. Laji <b>Kaikki lyönnit</b> laskee mukaan kaikki kirjaukset, myös erittelemättömät.</p>
+      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. Laji <b>Kaikki lyönnit</b> laskee mukaan kaikki kirjaukset.</p>
     </form>` : ""}
     <details class="ly-selite"><summary>Mitä missiokortti näyttää?</summary>
       <dl>

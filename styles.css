@@ -1098,12 +1098,10 @@ td.n.kt-ei { font-style: normal; }
 .ly-vk.nyt .ly-vk-p { opacity: 1; box-shadow: 0 0 10px rgba(245,168,0,.5); }
 .ly-vk-kovat { background: var(--kpl); flex: none; }
 .ly-vk-pienet { background: rgba(56,214,255,.7); flex: none; }
-.ly-vk-muut { background: rgba(245,168,0,.35); flex: none; }
 .ly-selite { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--ink-3); margin-top: 6px; }
-.ly-sel-kova, .ly-sel-pieni, .ly-sel-muu { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 3px; vertical-align: -2px; }
+.ly-sel-kova, .ly-sel-pieni { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 3px; vertical-align: -2px; }
 .ly-sel-kova { background: var(--kpl); }
 .ly-sel-pieni { background: rgba(56,214,255,.7); }
-.ly-sel-muu { background: rgba(245,168,0,.35); }
 .ly-vk-n { font: 600 13px var(--num); color: var(--ink-2); }
 .ly-vk-l { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
 .ly-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 420px; overflow: auto; }

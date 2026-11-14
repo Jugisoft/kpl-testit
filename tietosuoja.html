@@ -10,32 +10,44 @@
 <header class="topbar"><a class="brand" href="./#/"><span>KPL Keskus</span></a></header>
 <main style="max-width:720px">
 <h1>Tietosuojaseloste</h1>
-<p class="ingressi">KPL Keskus on Kouvolan Pallonlyöjien valmennuksen työkalu: pesäpallojunioreiden ja -pelaajien testitulosten seuranta, valmennuksen muistiinpanot, pelikirja sekä julkisista lähteistä koottu siirtomarkkinaseuranta.</p>
+<p class="ingressi">KPL Keskus on Kouvolan Pallonlyöjien valmennuksen ja pelaajien työkalu: testitulosten ja harjoittelun seuranta, pelaajan oma Keskus, valmennuksen muistiinpanot, pelikirja ja vastustajatiedot sekä julkisista lähteistä koottu tilasto- ja siirtomarkkinatieto. Keskus on tehty KPL:lle yhdessä seuran kanssa.</p>
 
 <h2>Rekisterinpitäjä ja yhteyshenkilö</h2>
-<p>Palvelun ylläpitäjä: Jukka Rasimus, jukkarasimus81@gmail.com.</p>
+<p>Rekisterinpitäjä: Jugisoft. Yhteyshenkilö: Jukka Rasimus, jukkarasimus81@gmail.com.</p>
 
 <h2>Mitä tietoja käsitellään</h2>
-<p><strong>Pelaajista:</strong> nimi, syntymävuosi, ryhmä, testitulokset ja testipäivät sekä mahdollinen pesistulokset.fi-pelaajatunnus ja sieltä julkisesti saatavilla oleva pelaajakuva.</p>
-<p><strong>Valmentajista:</strong> sähköpostiosoite ja nimi. Google-kirjautumisessa palvelu saa Googlelta vain sähköpostiosoitteen ja nimen; muihin Google-tilin tietoihin ei ole pääsyä.</p>
-
-<p><strong>Valmennuksen muistiinpanoista:</strong> valmentajien kirjoittamat muistiinpanot ja kommentit sekä kirjoittajan sähköpostiosoite. Muistiinpanot voivat koskea pelaajien pelaamista; niihin ei kirjata terveys- tai muita arkaluonteisia tietoja.</p>
-
-<h2>Analyysi</h2>
-<p>Ylläpitäjä voi analysoida muistiinpanoja Claude-tekoälyn avulla ja tallentaa niistä koosteita palveluun. Testituloksia ei käytetä tähän.</p>
+<p><strong>Pelaajista:</strong> nimi, syntymävuosi ja siitä laskettu ikä, joukkue tai ryhmä, harjoitteluryhmä (esim. haastajaryhmä), testitulokset ja testipäivät, pesistulokset.fi-pelaajatunnus sekä sieltä julkisesti saatavilla olevat pelitilastot ja pelaajakuva.</p>
+<p><strong>Pelaajan omat kirjaukset</strong> (pelaajalla on oma tunnus): omatoimiset treenit (laji, kesto, määrät, matka ja vapaaehtoinen oma rasitusarvio 1–10), lyöntipäiväkirja ja lyöntimissiot, tavoitteet sekä Olin poissa -merkinnät.</p>
+<p><strong>Ryhmän harjoitukset:</strong> Nimenhuudon tai valmennuksen kalenterin tapahtumat sekä pelaajan IN/OUT-ilmoittautumiset. Näistä ja omista kirjauksista lasketaan harjoitusmäärät, osallistumisprosentti ja kuorma-arvio (treenityypin tyypillinen rasitus × minuutit).</p>
+<p><strong>Valmentajista ja muista käyttäjistä:</strong> sähköpostiosoite, nimi ja käyttöoikeusryhmä. Google-kirjautumisessa palvelu saa Googlelta vain sähköpostiosoitteen ja nimen.</p>
+<p><strong>Valmennuksen muistiinpanoista:</strong> muistiinpanot, kommentit ja liitteet sekä kirjoittajan sähköpostiosoite. Muistiinpanot voivat koskea pelaamista. Keskukseen ei kirjata terveystietoja (esim. sairauksia tai vammoja) eikä muita arkaluonteisia tietoja.</p>
 
 <h2>Käyttötarkoitus</h2>
-<p>Tietoja käytetään pelaajien kehityksen seurantaan ja harjoittelun suunnitteluun. Tietoja ei luovuteta eteenpäin eikä käytetä markkinointiin.</p>
+<p>Tietoja käytetään pelaajien kehityksen ja harjoittelun seurantaan, harjoittelun suunnitteluun sekä valmennuksen ottelu- ja vastustajavalmisteluun. Tietoja ei luovuteta eteenpäin eikä käytetä markkinointiin.</p>
 
 <h2>Kuka näkee tiedot</h2>
-<p>Pelaajakohtaiset tiedot näkyvät vain kirjautuneille valmentajille, jotka ylläpitäjä on erikseen lisännyt. Julkisella sivulla näytetään ainoastaan ikäluokittaisia yhteenvetoja ilman nimiä, ja vain jos ryhmässä on vähintään kolme pelaajaa.</p>
+<ul>
+<li>Pelaaja näkee omat kirjauksensa, tavoitteensa ja testinsä. Muut pelaajat eivät näe niitä.</li>
+<li>Oman alueen valmennus näkee alueensa pelaajien tiedot: miesten Superpesis-joukkueen valmennus miesten pelaajat, PSU-valmennus junioreiden tiedot. PSU-valmennus ja juniorit eivät näe miesten joukkueen tietoja.</li>
+<li>Juniorit näkevät junioreiden testitulokset ja vertailut.</li>
+<li>Valmennukselle lähetetään sunnuntaisin sähköpostilla viikkokooste ryhmän harjoittelusta ja osallistumisesta.</li>
+</ul>
+<p>Rajaukset on toteutettu tietokannassa, ei pelkästään käyttöliittymässä. Ilman kirjautumista Keskuksessa näkyy vain kirjautumissivu.</p>
 
-<h2>Säilytys</h2>
-<p>Tiedot säilytetään Supabase-palvelussa EU:ssa (Tukholma). Varmuuskopiot säilytetään yksityisessä GitHub-repositoriossa. Pelaajan tiedot poistetaan pyynnöstä.</p>
+<h2>Palvelut, joita käytetään</h2>
+<ul>
+<li>Supabase: tietokanta ja kirjautuminen, EU (Tukholma).</li>
+<li>GitHub Pages: sivuston jakelu (sivuston koodi, ei pelaajatietoja).</li>
+<li>Google: kirjautuminen ja varmuuskopiot Google Driveen.</li>
+<li>Anthropic Claude: ylläpitäjä voi analysoida muistiinpanoja ja tilastoja Clauden avulla ja tallentaa niistä koosteita Keskukseen.</li>
+</ul>
+
+<h2>Säilytys ja varmuuskopiot</h2>
+<p>Tiedot säilytetään Supabasessa EU:ssa. Tietokannasta otetaan varmuuskopio joka yö (säilytys 30 päivää) ja viikoittain Google Driveen (säilytys 12 viikkoa). Pelaajan tiedot poistetaan pyynnöstä. Varmuuskopioista ne poistuvat viimeistään säilytysajan päättyessä.</p>
 
 <h2>Oikeutesi</h2>
-<p>Pelaajalla tai huoltajalla on oikeus tarkastaa, korjata ja pyytää poistamaan pelaajan tiedot ottamalla yhteyttä ylläpitäjään.</p>
-<p class="pieni">Päivitetty 8.10.2026</p>
+<p>Pelaajalla tai alaikäisen pelaajan huoltajalla on oikeus tarkastaa, korjata ja pyytää poistamaan pelaajan tiedot ottamalla yhteyttä yhteyshenkilöön.</p>
+<p class="pieni">Päivitetty 14.11.2026</p>
 </main>
 </body>
 </html>

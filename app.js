@@ -58,7 +58,7 @@ const reitit = [
   { polku: /^\/korjaamo$/, nakyma: korjaamo },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
   { polku: /^\/oma(?:\/([\w-]+))?$/, nakyma: oma, osio: "oma" },
-  { polku: /^\/minunpeli$/, nakyma: minunpelisivu, osio: "oma" },
+  { polku: /^\/minunpeli(?:\/([\w-]+))?$/, nakyma: minunpelisivu, osio: "oma" },
   { polku: /^\/kooste$/, nakyma: kooste, osio: "kooste" },
   { polku: /^\/seuranta$/, nakyma: seuranta, osio: "kooste" },
 ];
@@ -102,7 +102,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261114-14", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261114-15", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],

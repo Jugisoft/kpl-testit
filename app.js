@@ -100,7 +100,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261114-6", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261114-7", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -185,6 +185,7 @@ function piirraNav(polku, r) {
   }
   $("#mp-sivu").textContent = aktiivinenNimi;
   avaaValikko(false);
+  if (tila.jasen && tila.omaPelaaja) naytaUudetHuomioinnit();
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;
@@ -193,6 +194,16 @@ function piirraNav(polku, r) {
   } else {
     k.innerHTML = `<a class="btn" style="padding:4px 12px" href="#/kirjaudu">Kirjaudu</a>`;
   }
+}
+// 14.11.2026: uudet valmentajan huomioinnit (reaktiot ja kommentit) merkkinä Oma Keskus -linkeissä heti kirjautuessa;
+// kuitataan nähdyiksi, kun pelaaja avaa oman Keskuksensa.
+async function naytaUudetHuomioinnit() {
+  const { count, error } = await sb.from("huomioinnit").select("id", { count: "exact", head: true }).eq("pelaaja_id", tila.omaPelaaja).is("nahty", null);
+  if (error || !count) return;
+  document.querySelectorAll('#nav a[href="#/oma"], #alapalkki a[href="#/oma"]').forEach((a) => {
+    if (a.querySelector(".nav-uusi")) return;
+    a.insertAdjacentHTML("beforeend", `<b class="nav-uusi" aria-label="${count} uutta valmentajalta">${count}</b>`);
+  });
 }
 // Uloskirjautuminen (1.11.2026, korjaamo): näkyvä palaute heti, istunto poistetaan paikallisesti
 // (ei jää odottamaan verkkoa) ja sivu ladataan kirjautumissivulle ylhäältä alkaen.

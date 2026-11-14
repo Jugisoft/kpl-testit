@@ -337,7 +337,7 @@ function treeniKortti(a, tamaViikko) {
   const top = [...a.tyypit].sort((x, y) => y.min - x.min).slice(0, 3);
   return kortti_({ id: "ti-treeni", kohde: "viikkoni", otsikko: tamaViikko ? "Treenit tällä viikolla" : "Treenit valitulla viikolla",
     rengasHtml: rengas(a.tyypit.map((t) => ({ v: t.min, vari: t.vari })), keski, a.yht ? "yhteensä" : ""),
-    ala: a.yht ? `<span class="ti-selite">${top.map((t) => `<span><i style="background:${t.vari}"></i><span>${esc(t.nimi)}</span><b>${minStrLyh(t.min)}</b></span>`).join("")}</span>` : "Ei vielä merkittyjä treenejä",
+    ala: a.yht ? `<span class="ti-selite">${top.map((t) => `<span><i style="background:${t.vari}"></i><span>${esc(t.nimi)}</span><b>${minStrLyh(t.min)}</b></span>`).join("")}</span>` : (tamaViikko ? "Ei vielä treenejä tällä viikolla – kirjaa Treenipäiväkirjaan" : "Ei treenejä valitulla viikolla"),
     iso: "", tila: tl });
 }
 const minStrLyh = (m) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ""}` : `${m} min`);

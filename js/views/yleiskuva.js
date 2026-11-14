@@ -41,7 +41,7 @@ export async function piirraYleiskuva(el, T, pelaajat) {
 
   el.innerHTML = `
     <section class="yk-band">
-      <div class="yk-nimi">${logo ? `<img src="${esc(logo)}" alt="">` : `<span class="ph">${esc(T)}</span>`}
+      <div class="yk-nimi">${logo ? `<img src="${esc(logo)}" alt="" data-t="${esc(T)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',textContent:this.dataset.t}))">` : `<span class="ph">${esc(T)}</span>`}
         <div><div class="yk-ylä">Superpesis 2027${nyt.sija ? "" : " · nousija"}</div><h2>${esc(nimi)}</h2><p>${pjTeksti}</p></div></div>
       <div class="yk-kpit">${kpi.map(([b, s, m]) => `<div class="yk-kpi"><b class="num${m ? " mitali" : ""}${String(b).length > 5 ? " teksti" : ""}">${esc(b)}</b><span>${esc(s)}</span></div>`).join("")}</div>
     </section>

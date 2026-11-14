@@ -92,7 +92,7 @@ export async function piirraMinunPeli(el, pelaaja) {
         <div class="paneeli mp-paa">
           <p class="mp-kysymys">Miten olen onnistunut ${S.kansio === "kaikki" ? "kaikissa tilanteissa" : `${kansioNimi.toLowerCase().replace("takatilanne", "takatilanteessa").replace(/-tilanne$/, "-tilanteessa")}`}?</p>
           ${n ? `${n < PIENI ? `<p class="mp-varoitus">Pieni otos: vain ${n} lyöntiä tässä tilanteessa.</p>` : ""}
-          <div class="mp-iso"><span class="num">${pr(pros(onn(m), n))}</span><span>lyönneistä onnistui<br><small>${onn(m)} / ${n} lyöntiä · onnistui = kärkietenijä eteni, juoksu tai kunnari</small></span></div>
+          <div class="mp-iso"><span class="num">${pr(pros(onn(m), n))}</span><span>lyönneistä onnistui<br><small>${onn(m)} / ${n} lyöntiä · onnistui = kärkilyönti, juoksu tai kunnari</small></span></div>
           <div class="mp-vertailu">
             ${vertailuRivi("Minä", pros(onn(m), n), true)}
             ${vertailuRivi(`${esc(oma.j)} yhteensä`, pros(onn(mJ), summa(mJ)))}

@@ -1380,7 +1380,7 @@ a.sp-lc[href]:hover { border-color: var(--kpl); }
 .yk-band > * { min-width: 0; }
 .yk-nimi { display: flex; align-items: center; gap: 14px; }
 .yk-nimi img, .yk-nimi .ph { width: 68px; height: 68px; object-fit: contain; background: #fff; border-radius: 14px; padding: 6px; flex: none; }
-.yk-nimi .ph { display: grid; place-items: center; font: 700 20px var(--num); color: #111; }
+.yk-nimi .ph { display: grid; place-items: center; font: italic 800 19px var(--num); color: var(--ink, #F6F2EA); background: #23201D; border: 1.5px solid #3D3833; letter-spacing: .02em; } /* 14.11.2026: lyhennetiili puuttuvalle tai rikkinäiselle logolle */
 .yk-nimi h2 { font: 700 38px/.95 var(--num); margin: 2px 0 0; }
 .yk-nimi p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; }
 .yk-ylä { font: 600 12px var(--num); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }

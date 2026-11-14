@@ -17,6 +17,10 @@ Kouvolan Pallonlyöjien valmennuksen keskus: muistio, siirtomarkkinat, analyysi,
 - **Pelikirja (valmentajille, testivaihe):** `pelikirja.html` – ulkopelin fläppitaulu ja yhteinen kuviokirjasto. Kirjautuminen jaettu tämän sivun kanssa; data taulussa `pelikirja` (vain `valmentajat`), vikalista taulussa `pelikirja_vikalista` (valmentajat lukevat ja lisäävät, admin muuttaa tilaa).
 - **Tekniikka:** staattinen sivu (HTML + ES-moduulit, ei build-vaihetta), Supabase (Postgres + RLS + Auth), Chart.js.
 
+## Julkaisu
+
+Ennen jokaista committia, joka muuttaa HTML-, CSS- tai JS-tiedostoja: `python3 versio.py` (nostaa kaikki `?v=`-tunnisteet kerralla). `python3 versio.py --tarkista` kertoo, onko jokin jäänyt vanhaksi; sama tarkistus ajetaan GitHubissa jokaisen pushin jälkeen (Actions → Versiotunniste). Uusi js-tiedosto lisätään `index.html`:n import mapiin.
+
 ## Rakenne
 
 | Tiedosto | Sisältö |

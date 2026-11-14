@@ -11,6 +11,7 @@ const pelaajaSel = (v) => `<select data-pelaaja-v="${esc(v.email)}" aria-label="
 export async function nayta(main) {
   const { data: valmentajat } = await sb.from("valmentajat").select("*").order("email");
   const { data: kalenterit } = await sb.from("kalenterit").select("joukkue_id,ics_url,haettu");
+  const { data: poistetut } = await sb.from("pelaajat").select("id,etunimi,sukunimi,syntymavuosi").eq("poistettu", true).order("sukunimi");
   const kal = Object.fromEntries((kalenterit || []).map((k) => [k.joukkue_id, k]));
   const jSel = (v) => `<select data-k="joukkue_id">${tila.joukkueet.map((j) => `<option value="${j.id}" ${j.id === v ? "selected" : ""}>${esc(j.nimi)}</option>`).join("")}</select>`;
   main.innerHTML = `
@@ -52,6 +53,12 @@ export async function nayta(main) {
         <td><input type="checkbox" data-k="aktiivinen" ${p.aktiivinen ? "checked" : ""}></td>
         <td><input type="text" data-k="kuva_url" value="${esc(p.kuva_url || "")}" placeholder="https://…" style="width:200px"></td>
         <td><button class="btn vaara" data-piilota="${p.id}">Poista</button></td></tr>`).join("")}</tbody></table></div>
+    ${(poistetut || []).length ? `<details style="margin-top:12px"><summary>Poistetut pelaajat (${poistetut.length}) – tietojen pysyvä poisto</summary>
+      <p class="pieni">Poista-painike yllä vain piilottaa pelaajan, ja hänen tietonsa säilyvät. Jos pelaaja tai huoltaja pyytää tietojen poistoa (tietosuojaseloste), poista ne täältä pysyvästi: testitulokset, omat kirjaukset, tavoitteet, poissaolot, IN/OUT, lyöntipäiväkirja, pelaajatunnus ja kirjautumistili. <b>Poistoa ei voi perua.</b> Varmuuskopioista tiedot poistuvat säilytysajan päättyessä (30 pv / 12 vk).</p>
+      <div class="taulu-wrap"><table><tbody>${poistetut.map((p) => `<tr><td>${esc(nimi(p))}${p.syntymavuosi ? ` <span class="pieni">(${p.syntymavuosi})</span>` : ""}</td>
+        <td><input type="text" data-pysyva-vahvistus="${p.id}" placeholder="kirjoita POISTA" aria-label="Vahvista kirjoittamalla POISTA: ${esc(nimi(p))}" style="width:140px"></td>
+        <td><button class="btn vaara" data-pysyva="${p.id}" data-nimi="${esc(nimi(p))}">Poista tiedot pysyvästi</button></td></tr>`).join("")}</tbody></table></div>
+    </details>` : ""}
     <form id="uusi-p" class="rivi" style="margin-top:10px">
       <input type="text" name="etunimi" placeholder="etunimi" required><input type="text" name="sukunimi" placeholder="sukunimi">
       <input type="number" name="syntymavuosi" placeholder="synt." style="width:90px">
@@ -94,6 +101,16 @@ export async function nayta(main) {
     const { error } = await sb.from("pelaajat").update({ poistettu: true, aktiivinen: false }).eq("id", p.id);
     if (error) return ilmoita(error.message, true);
     ilmoita(`${nimi(p)} poistettu`); await lataaPelaajat(); nayta(main);
+  }));
+  // 14.11.2026: pysyvä poisto pyynnöstä (rpc poista_pelaaja_pysyvasti, vain ylläpitäjä, vain poistetuksi merkitty pelaaja)
+  $$("[data-pysyva]").forEach((b) => (b.onclick = async () => {
+    const kentta = $(`[data-pysyva-vahvistus="${b.dataset.pysyva}"]`, main);
+    if ((kentta?.value || "").trim().toUpperCase() !== "POISTA") { ilmoita("Vahvista kirjoittamalla kenttään POISTA", true); kentta?.focus(); return; }
+    b.disabled = true;
+    const { data, error } = await sb.rpc("poista_pelaaja_pysyvasti", { p_pelaaja: b.dataset.pysyva });
+    if (error) { b.disabled = false; return ilmoita("Poisto epäonnistui: " + error.message, true); }
+    ilmoita(`${b.dataset.nimi}: tiedot poistettu pysyvästi (testituloksia ${data?.tulokset ?? 0}, omia treenejä ${data?.omat_treenit ?? 0}, tunnuksia ${data?.tunnukset ?? 0})`);
+    nayta(main);
   }));
   $$("[data-rooli-v]").forEach((s) => {
     const alku = s.value;

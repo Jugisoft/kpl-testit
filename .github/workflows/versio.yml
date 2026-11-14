@@ -1,0 +1,9 @@
+# Tarkistaa, että kaikissa tiedostoissa on sama versiotunniste (?v=…). Ks. versio.py.
+name: Versiotunniste
+on: [push]
+jobs:
+  tarkista:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 versio.py --tarkista

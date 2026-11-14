@@ -2161,6 +2161,10 @@ a.jtt-yla:hover { text-decoration: underline; }
   .ko-rivi > :nth-child(8) { grid-area: m; }
 }
 .ko-tagit ~ .paneeli { margin-top: 16px; }
+.ko-puuttuvat { margin: 6px 0 12px; font-size: 14px; color: var(--ink-2); }
+.ko-puuttuvat summary { cursor: pointer; font-weight: 600; color: var(--vaara, #e67700); }
+.ko-puuttuvat ul { margin: 6px 0 0 18px; padding: 0; columns: 2; column-gap: 24px; }
+.ko-puuttuvat li { margin: 2px 0; }
 /* Viikkoni: tämä ja ensi viikko (1.11.2026) */
 .ku-vko-paa { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 18px 0 8px; }
 .ku-vko-paa h3 { margin: 0; }

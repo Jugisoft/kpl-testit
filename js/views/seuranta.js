@@ -59,6 +59,7 @@ export async function nayta(main) {
       <span>Tavoitteita<b>${tav.length}${uudet ? ` (${uudet} uutta tällä viikolla)` : ""}</b></span>
       <span>Tavoite asetettu<b>${new Set(tav.map((g) => g.pelaaja_id)).size}/${pelaajat.length} pelaajalla</b></span>
     </div>
+    ${(() => { const asettaneet = new Set(tav.map((g) => g.pelaaja_id)); const puuttuvat = pelaajat.filter((p) => !asettaneet.has(p.id)); return puuttuvat.length ? `<details class="ko-puuttuvat"><summary>Tavoite puuttuu ${puuttuvat.length} pelaajalta</summary><ul>${puuttuvat.map((p) => `<li>${esc(nimi(p))}</li>`).join("")}</ul></details>` : ""; })()}
 
     ${valittu ? pelaajanTavoitteet(tila.pelaaja[valittu], tila_.filter((x) => x.g.pelaaja_id === valittu)) : tavoiteOsio(tila_)}
     ${missioOsio(valittu ? missiot.filter((x) => x.p.id === valittu) : missiot)}`;

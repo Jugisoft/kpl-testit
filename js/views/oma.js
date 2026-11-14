@@ -95,6 +95,10 @@ async function piirra(main) {
 
   const valmiit = ohjelma.filter((o) => tehdyt.has(o.id)).length;
   const otsikko = oma ? `Hei, ${esc(p.etunimi)}` : esc(nimi(p));
+  // 14.11.2026: miesten Superpesis-pelaajalle oma pelidata (Minun pelini, Lyöntianalyysi) heti tilannekorttien alle
+  const peliEnsin = joukkue?.alue === "sp";
+  const peliOsiot = `<section id="minun-peli" aria-labelledby="mp-otsikko"></section>
+    <section id="lyontianalyysi" aria-labelledby="la-otsikko"></section>`;
 
   main.innerHTML = `
     <div class="oma-paa">
@@ -111,6 +115,8 @@ async function piirra(main) {
     </div>
 
     ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa: eiMukana, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+
+    ${peliEnsin ? peliOsiot : ""}
 
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
@@ -182,8 +188,7 @@ async function piirra(main) {
     ${oma ? `<section id="oma-missiot" aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
       ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
 
-    <section id="minun-peli" aria-labelledby="mp-otsikko"></section>
-    <section id="lyontianalyysi" aria-labelledby="la-otsikko"></section>`;
+    ${peliEnsin ? "" : peliOsiot}`;
 
   piirraMinunPeli($("#minun-peli", main), p);
   piirraLyontianalyysi($("#lyontianalyysi", main), p);

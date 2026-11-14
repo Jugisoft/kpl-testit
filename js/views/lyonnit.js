@@ -102,10 +102,10 @@ function viikkoPylvaat(kirjaukset) {
     const h = n ? Math.max(4, (100 * n) / max) : 0;
     const pPct = n ? (100 * pienet) / n : 0;
     const kPct = n ? (100 * kovat) / n : 0;
-    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä (pienet ${pienet}, kovat ${kovat})${lajeittain ? "\n" + lajeittain : ""}">
-      <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
+    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä\nKovat ${kovat} (${n ? Math.round(kPct) : 0} %)\nPienet ${pienet} (${n ? Math.round(pPct) : 0} %)${lajeittain ? "\n" + lajeittain : ""}">
+      <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"><i>${kovat}</i></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"><i>${pienet}</i></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
   }).join("")}</div>
-  <div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <span class="ly-sel-pieni"></span>Pienet</div>`;
+  ${(() => { const yht = sum.flat().reduce((s, k) => s + k.maara, 0); const pn = sum.flat().filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0); const kv = yht - pn; const kP = yht ? Math.round(100 * kv / yht) : 0; const pP = yht ? Math.round(100 * pn / yht) : 0; return `<div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <b>${kv}</b> (${kP} %) <span class="ly-sel-pieni"></span>Pienet <b>${pn}</b> (${pP} %)<span class="ly-sel-yht">Yhteensä <b>${yht}</b></span></div>`; })()}`;
 }
 
 function historia(kirjaukset, muokattava) {

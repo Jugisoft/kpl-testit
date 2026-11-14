@@ -243,12 +243,19 @@ async function piirra(main) {
     piirra(main);
   };
   const ft = $("#tav-uusi", main);
-  const yks = () => { const T = tila.testi[ft.elements.testi.value]; $("#tav-yks", main).textContent = T ? `${T.yksikko} · ${T.pienempi_parempi ? "pienempi on parempi" : "suurempi on parempi"}` : ""; };
+  // 14.11.2026: järkevyysraja seuran omista tuloksista (pienin ÷ 1,5 … suurin × 1,5), kun tuloksia on vähintään 5
+  const raja = (t) => { const a = kaikki.filter((x) => x.testi === t).map((x) => x.arvo).filter(Number.isFinite);
+    return a.length >= 5 ? { lo: Math.min(...a) / 1.5, hi: Math.max(...a) * 1.5 } : null; };
+  const fmt = (v) => String(Math.round(v * 100) / 100).replace(".", ",");
+  const yks = () => { const T = tila.testi[ft.elements.testi.value], r = raja(ft.elements.testi.value);
+    $("#tav-yks", main).textContent = T ? `${T.yksikko} · ${T.pienempi_parempi ? "pienempi on parempi" : "suurempi on parempi"}${r ? ` · sallittu ${fmt(r.lo)}–${fmt(r.hi)}` : ""}` : ""; };
   ft.elements.testi.onchange = yks; yks();
   ft.onsubmit = async (e) => {
     e.preventDefault();
     const f = ft.elements, arvo = luku(f.arvo.value);
     if (arvo == null) { ilmoita("Kirjoita tavoite numerona, esim. 4,20", true); return; }
+    const r = raja(f.testi.value), T = tila.testi[f.testi.value];
+    if (r && (arvo < r.lo || arvo > r.hi)) { ilmoita(`Tavoite ${fmt(arvo)} ${T?.yksikko || ""} ei näytä oikealta tälle testille. Sallittu ${fmt(r.lo)}–${fmt(r.hi)}. Tarkista testi ja yksikkö.`, true); return; }
     const { error } = await sb.from("tavoitteet").insert({ pelaaja_id: pid, testi: f.testi.value, arvo, takaraja: f.takaraja.value || null });
     if (error) { ilmoita("Tallennus ei onnistunut: " + error.message, true); return; }
     ilmoita("Tavoite lisätty"); piirra(main);

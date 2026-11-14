@@ -91,12 +91,6 @@ export async function piirraMinunPeliTilastot(el, pelaaja) {
     SUMMA_K.forEach((k) => { jyhd[k] = (d?.[k] || 0) + kaveriData.reduce((a, x) => a + (x.d[k] || 0), 0); });
     const jN = 1 + kaveriData.length;
 
-    // ranking joukkueen sisällä KL%:n mukaan
-    const kaikkiKl = [{ nimi: nimi(pelaaja), kl: klPros(d, "KL", "KLY"), kly: d?.KLY || 0, oma: true },
-      ...kaveriData.map((x) => ({ nimi: nimi(x.p), kl: klPros(x.d, "KL", "KLY"), kly: x.d.KLY, oma: false }))
-    ].filter((x) => x.kly >= PIENI).sort((a, b) => (b.kl || 0) - (a.kl || 0));
-    const omaSija = kaikkiKl.findIndex((x) => x.oma) + 1;
-
     // sarjavalinnan HTML
     const svHtml = dRaaka?.sarjat?.length > 1 ? `<div class="mpt-sv">
       <button class="chip${!S.valitut ? " on" : ""}" data-mpt-sarja="" aria-pressed="${!S.valitut}">Kaikki sarjat</button>
@@ -158,13 +152,6 @@ export async function piirraMinunPeliTilastot(el, pelaaja) {
         </div>
         ` : `<div class="paneeli"><p class="tyhja">Ei pelitilastoja kaudelta ${S.kausi}${S.valitut ? " valituissa sarjoissa" : ""}.</p></div>`}
       </div>
-
-      ${kaikkiKl.length > 1 ? `<div class="paneeli mpt-ranking">
-        <h3>KPL-joukkueen sisällä</h3>
-        <p class="pieni">KL% joukkuekavereihisi verrattuna (vähintään ${PIENI} kärkilyöntiyritystä)</p>
-        <ol class="mpt-top">${kaikkiKl.map((x, i) => `<li class="${x.oma ? "oma" : ""}"><span class="num">${i + 1}.</span><span>${esc(x.nimi)}</span><b class="num">${pr(x.kl)}</b><small>${x.kly} yrit.</small></li>`).join("")}</ol>
-        ${omaSija ? `<p class="mpt-sija-teksti">${omaSija === 1 ? "Joukkueen paras KL%!" : `${omaSija}. / ${kaikkiKl.length} pelaajasta`}</p>` : ""}
-      </div>` : ""}
 
       ${uraRivit.length > 1 ? `<div class="paneeli mpt-ura">
         <h3>Urahistoria</h3>

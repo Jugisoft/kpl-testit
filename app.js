@@ -23,6 +23,7 @@ import * as ohjelmat from "./js/views/ohjelmat.js";
 import * as ohje from "./js/views/ohje.js";
 import * as korjaamo from "./js/views/korjaamo.js";
 import * as oma from "./js/views/oma.js";
+import * as minunpelisivu from "./js/views/minunpelisivu.js";
 import * as kooste from "./js/views/kooste.js";
 import * as seuranta from "./js/views/seuranta.js";
 
@@ -57,6 +58,7 @@ const reitit = [
   { polku: /^\/korjaamo$/, nakyma: korjaamo },
   { polku: /^\/hallinta$/, nakyma: hallinta, admin: true },
   { polku: /^\/oma(?:\/([\w-]+))?$/, nakyma: oma, osio: "oma" },
+  { polku: /^\/minunpeli$/, nakyma: minunpelisivu, osio: "oma" },
   { polku: /^\/kooste$/, nakyma: kooste, osio: "kooste" },
   { polku: /^\/seuranta$/, nakyma: seuranta, osio: "kooste" },
 ];
@@ -100,7 +102,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261114-13", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261114-14", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -128,8 +130,9 @@ const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|seura
 const OMA = ["Oma Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
 const TREENIT = ["Treenipäiväkirja", "#/treenit", "treeni", (p) => /^\/treenit/.test(p)];
 const OHJELMAT = ["Treeniohjelmat", "#/ohjelmat", "ohjelma", (p) => /^\/ohjelmat/.test(p)];   // 6.11.2026: Anssin ohjelmat muistilappuna
+const MINUNPELI = ["Minun pelini", "#/minunpeli", "analyysi", (p) => /^\/minunpeli/.test(p)];
 const RYHMAT_JUNIORI = [
-  [null, [OMA]],
+  [null, [OMA, MINUNPELI]],
   ["Harjoittelu", [
     TREENIT,
     OHJELMAT,
@@ -142,7 +145,7 @@ const RYHMAT_JUNIORI = [
   ]],
 ];
 const ALAPALKKI_JUNIORI = [["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit/juniorit", "testit"]];
-const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|lyonnit|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
+const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|minunpeli|lyonnit|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
 // Valikko roolin mukaan: pelaajalla Oma Keskus ylimpänä, valmentajilla Pelaajien Keskus Valmennus-ryhmässä
 function valikko() {
   if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];

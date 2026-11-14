@@ -202,10 +202,9 @@ async function piirra(main) {
     ${oma ? `<section id="oma-missiot" aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
       ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => `<div class="oma-testi-w">${missio(m, kirjaukset.data || [])}${hmLohko(HM, pid, "missio", m.id)}</div>`).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
 
-    ${peliEnsin ? "" : peliOsiot}`;
+    `;
 
   if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); }
-  else piirraMinunPeliTilastot($("#minun-peli", main), p);
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));

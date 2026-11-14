@@ -2652,3 +2652,7 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ku-omat li .hm span { flex: 0 0 auto; }
 .ku-omat li .hm > .hm-kommentti { flex: 1 1 100%; }
 .se-lista li > .hm { grid-column: 1 / -1; margin-top: 0; }
+.ko-tav-rivi > .hm { grid-column: 1 / -1; }
+.se-missiot { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.se-missiot li { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.se-missiot li:first-child { border-top: 0; padding-top: 0; }

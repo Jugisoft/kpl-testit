@@ -5,6 +5,10 @@ import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, esc, testiParhaat, muotoile, palkki, pvm } from "../util.js";
 import { tavoiteTila } from "./oma.js";
 import { tanaanHki, maanantai, pvLyh } from "../kuormaydin.js";
+import { laske as laskeMissio } from "./lyonnit.js";
+import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke } from "../huomiointi.js";
+// 14.11.2026: valmentajan huomiointi tavoitteisiin ja lyöntimissioihin (js/huomiointi.js)
+let HM = [];
 
 let joukkue = null;
 let valittu = ""; // 12.11.2026 (Jugi): yksittäisen pelaajan tavoitteet ("" = kaikki)
@@ -19,10 +23,22 @@ export async function nayta(main) {
   const ids = pelaajat.map((p) => p.id);
   const viikko = maanantai(tanaanHki());
 
-  const [tulokset, tavRes] = await Promise.all([
+  const [tulokset, tavRes, lyojat, hm] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     ids.length ? sb.from("tavoitteet").select("*").in("pelaaja_id", ids) : Promise.resolve({ data: [] }),
+    sb.rpc("lyojat_pelaajat"),
+    lataaNimet().then(() => haeHm(ids)),
   ]);
+  HM = hm;
+  // lyöntimissiot: omistaja (sähköposti) → ryhmän pelaaja
+  const emailP = Object.fromEntries((lyojat.data || []).filter((x) => ids.includes(x.pelaaja_id)).map((x) => [x.email, x.pelaaja_id]));
+  const emailit = Object.keys(emailP);
+  const [msRes, kirjRes] = emailit.length ? await Promise.all([
+    sb.from("lyonti_missiot").select("*").in("omistaja", emailit).eq("arkistoitu", false),
+    sb.from("lyonti_kirjaukset").select("omistaja,laji,pvm,maara").in("omistaja", emailit),
+  ]) : [{ data: [] }, { data: [] }];
+  const missiot = (msRes.data || []).map((m) => ({ m, p: tila.pelaaja[emailP[String(m.omistaja).toLowerCase()]], s: laskeMissio(m, kirjRes.data || []) })).filter((x) => x.p)
+    .sort((a, b) => nimi(a.p).localeCompare(nimi(b.p), "fi"));
   const tav = tavRes.data || [];
   const uudet = tav.filter((g) => g.luotu.slice(0, 10) >= viikko).length;
   const tila_ = tavoiteRivit(tav, tulokset, viikko);
@@ -44,7 +60,9 @@ export async function nayta(main) {
       <span>Tavoite asetettu<b>${new Set(tav.map((g) => g.pelaaja_id)).size}/${pelaajat.length} pelaajalla</b></span>
     </div>
 
-    ${valittu ? pelaajanTavoitteet(tila.pelaaja[valittu], tila_.filter((x) => x.g.pelaaja_id === valittu)) : tavoiteOsio(tila_)}`;
+    ${valittu ? pelaajanTavoitteet(tila.pelaaja[valittu], tila_.filter((x) => x.g.pelaaja_id === valittu)) : tavoiteOsio(tila_)}
+    ${missioOsio(valittu ? missiot.filter((x) => x.p.id === valittu) : missiot)}`;
+  hmKytke(main);
 
   const sel = $("#se-ryhma", main);
   if (sel) sel.onchange = () => { joukkue = +sel.value; valittu = ""; nayta(main); };
@@ -70,6 +88,7 @@ function tavRivi({ g, uusi, lahto, nyt, saavutettu, pct }, nimiSarake = true) {
         <span role="cell" class="num">${lahto != null ? `${muotoile(lahto, g.testi)} → ${muotoile(nyt, g.testi)}` : "ei tuloksia"}</span>
         <span role="cell">${palkki(pct)}</span>
         <span role="cell" class="pieni">${g.takaraja ? pvm(g.takaraja) : "–"}<br>asetettu ${pvLyh(g.luotu.slice(0, 10))}</span>
+        ${hmLohko(HM, g.pelaaja_id, "tavoite", g.id)}
       </div>`;
 }
 // Yksittäisen pelaajan tavoitteet (12.11.2026): odottavat ja saavutetut erikseen
@@ -92,5 +111,20 @@ function tavoiteOsio(lista) {
       ${OTSIKOT()}
       ${lista.map((x) => tavRivi(x)).join("")}
     </div>` : `<p class="tyhja">Ryhmän pelaajilla ei ole vielä tavoitteita. Pelaaja asettaa tavoitteen omassa Keskuksessaan (Tavoitteet → + Uusi tavoite).</p>`}
+  </section>`;
+}
+
+// Lyöntimissiot (14.11.2026): ryhmän pelaajien käynnissä olevat missiot + valmentajan huomiointi
+const luku = (x) => Math.round(x).toLocaleString("fi-FI");
+function missioOsio(lista) {
+  return `<section class="paneeli">
+    <h2 class="ko-h2">Lyöntimissiot</h2>
+    <p class="pieni">Pelaajien käynnissä olevat lyöntimissiot Lyöntipäiväkirjasta. Aikataulu = tehdyt lyönnit verrattuna tasaiseen tahtiin. Reaktio tai kommentti näkyy pelaajan omassa Keskuksessa.</p>
+    ${lista.length ? `<ul class="se-missiot">${lista.map(({ m, p, s }) => `<li>
+      <div class="rivi vali"><span><b>${esc(nimi(p))}</b> · ${esc(m.nimi || `${luku(m.tavoite)} × ${m.laji}`)} <small class="pieni">${esc(m.laji)} · päättyy ${pvm(m.loppu)}</small></span>
+        <span class="num">${luku(s.tehty)} / ${luku(m.tavoite)} <small class="pieni">${s.valmis ? "valmis" : s.ero >= 0 ? `+${luku(s.ero)} tahdista` : `−${luku(-s.ero)} tahdista`}</small></span></div>
+      ${palkki(s.pct)}
+      ${hmLohko(HM, p.id, "missio", m.id)}
+    </li>`).join("")}</ul>` : `<p class="tyhja">Ryhmän pelaajilla ei ole käynnissä olevia lyöntimissioita.</p>`}
   </section>`;
 }

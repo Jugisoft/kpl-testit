@@ -102,7 +102,7 @@ async function piirra(main) {
   // 14.11.2026: valmentajan huomioinnit – mihin kukin liittyy
   const tavNimi = Object.fromEntries((tav.data || []).map((g) => [g.id, tila.testi[g.testi]?.nimi || "tavoite"]));
   const kuvausHm = (h) => h.kohde === "viikko" ? `viikko ${viikkoNro(h.kohde_id)}` : h.kohde === "tavoite" ? `tavoite: ${tavNimi[h.kohde_id] || "poistettu tavoite"}`
-    : h.kohde === "testi" ? `testi: ${tila.testi[h.kohde_id.split(":")[0]]?.nimi || "testi"}` : "omatoiminen treeni";
+    : h.kohde === "testi" ? `testi: ${tila.testi[h.kohde_id.split(":")[0]]?.nimi || "testi"}` : h.kohde === "missio" ? "lyöntimissio" : "omatoiminen treeni";
   const hmOsio = `${valmentajaltaKortti(HM, kuvausHm, oma)}${tila.ohjaaja && !oma ? `<section class="paneeli hm-kortti" aria-label="Huomioi pelaajan viikko">
       <div class="oma-osa-paa"><h2>Huomioi viikko ${viikkoNro(viikko)}</h2><span class="pieni">Reaktio tai lyhyt kommentti näkyy vain pelaajalle ja valmennukselle. Treenit, tavoitteet ja testit huomioit niiden kohdalta.</span></div>
       ${hmLohko(HM, pid, "viikko", viikko)}</section>` : ""}`;
@@ -199,7 +199,7 @@ async function piirra(main) {
     ${reaktiot.length ? `<section aria-labelledby="rk-otsikko"><div class="oma-osa-paa"><h2 id="rk-otsikko">Reaktio ja lähtö</h2><span class="pieni">päivän mediaani, ms</span></div><div class="kpi-rivi">${reaktiot.map(testiKortti).join("")}</div></section>` : ""}
 
     ${oma ? `<section id="oma-missiot" aria-labelledby="ly-otsikko"><div class="oma-osa-paa"><h2 id="ly-otsikko">Lyöntimissiot</h2><a class="pieni" href="#/lyonnit">Lyöntipäiväkirjaan</a></div>
-      ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => missio(m, kirjaukset.data || [])).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
+      ${(missiot.data || []).length ? `<div class="oma-missiot">${(missiot.data || []).map((m) => `<div class="oma-testi-w">${missio(m, kirjaukset.data || [])}${hmLohko(HM, pid, "missio", m.id)}</div>`).join("")}</div>` : `<p class="tyhja">Ei käynnissä olevia missioita. <a href="#/lyonnit">Aloita missio</a></p>`}</section>` : ""}
 
     ${peliEnsin ? "" : peliOsiot}`;
 

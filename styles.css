@@ -1937,6 +1937,60 @@ a.jtt-yla:hover { text-decoration: underline; }
 .mp-varoitus { margin: 0 0 8px; font-size: 13px; color: var(--amber); }
 .mp-su-solu small { display: block; line-height: 1.25; }
 
+/* Minun pelini – tilastot-versio (14.11.2026) */
+.mpt-sv { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.mpt-sv .chip small { font: 600 12px var(--num); color: var(--ink-3); margin-left: 2px; }
+.mpt-sv .chip.on small { color: inherit; }
+.mpt-paa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+.mpt-kl-osio, .mpt-rooli-osio { min-width: 0; }
+.mpt-iso { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.mpt-iso .num { font: 700 56px/1 var(--num); color: var(--ink); }
+.mpt-iso span:last-child { color: var(--ink-2); font-weight: 600; }
+.mpt-iso small { font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.mpt-vertailu-teksti { margin: -8px 0 14px; }
+.mpt-vertailu-teksti .plus { color: var(--cyan); }
+.mpt-vertailu-teksti .miinus { color: #F87171; }
+.mpt-tilanteet { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mpt-tilanne { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.mpt-til-palkki { width: 100%; height: 80px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 4px; }
+.mpt-til-palkki i { display: block; width: 60%; border-radius: 4px 4px 0 0; min-height: 2px; font-style: normal; }
+.mpt-tilanne b { font: 700 20px/1 var(--num); color: var(--ink); }
+.mpt-tilanne span { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.mpt-tilanne small { font-size: 11px; color: var(--ink-3); }
+.mpt-tilanne.pieni-otos b { color: var(--ink-3); }
+.mpt-rooli-nimi { font: 700 28px/1.1 var(--num); color: var(--kpl); margin-bottom: 4px; }
+.mpt-jakauma { display: flex; height: 28px; border-radius: 6px; overflow: hidden; background: var(--line-2); margin: 12px 0 6px; }
+.mpt-jakauma i { display: grid; place-items: center; font: 700 12px var(--num); font-style: normal; color: #111; min-width: 0; }
+.mpt-selite { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: var(--ink-3); }
+.mpt-selite i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; font-style: normal; margin-right: 3px; vertical-align: -1px; }
+.mpt-tuotto { margin-top: 14px; font: 600 15px var(--num); color: var(--ink-2); display: flex; gap: 12px; flex-wrap: wrap; }
+.mpt-tuotto b { color: var(--ink); font-size: 20px; }
+.mpt-ranking { margin-bottom: 16px; }
+.mpt-ranking h3 { margin-top: 0; }
+.mpt-top { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.mpt-top li { display: grid; grid-template-columns: 28px minmax(0,1fr) 64px 60px; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-2); }
+.mpt-top li.oma { background: rgba(245,168,0,.08); border: 1px solid var(--kpl); color: var(--ink); font-weight: 700; }
+.mpt-top li b { text-align: right; }
+.mpt-top li small { text-align: right; font-size: 12px; color: var(--ink-3); }
+.mpt-sija-teksti { margin-top: 8px; font: 600 15px var(--num); color: var(--kpl); }
+.mpt-ura { margin-bottom: 16px; }
+.mpt-ura h3 { margin-top: 0; }
+.mpt-ura table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mpt-ura th { font-size: 12px; color: var(--ink-3); font-weight: 600; padding: 6px 8px; border-bottom: 2px solid var(--line); text-align: right; }
+.mpt-ura th.l { text-align: left; }
+.mpt-ura td { padding: 6px 8px; border-bottom: 1px solid var(--line-2); text-align: right; color: var(--ink-2); font-family: var(--num); font-variant-numeric: tabular-nums; }
+.mpt-ura td.l { text-align: left; font-family: var(--text); }
+.mpt-ura tr.valittu td { background: rgba(245,168,0,.06); color: var(--ink); font-weight: 600; }
+.mpt-ura tr[data-mpt-ura] { cursor: pointer; }
+.mpt-ura tr[data-mpt-ura]:hover td { background: rgba(245,168,0,.04); }
+.pieni-chipit .chip { font-size: 13px; padding: 4px 10px; }
+@media (max-width: 800px) { .mpt-paa { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .mpt-iso .num { font-size: 44px; }
+  .mpt-tilanteet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mpt-top li { grid-template-columns: 24px minmax(0,1fr) 56px 48px; font-size: 13px; }
+}
+
 /* Nimenhuudon tapahtumat viikon ohjelmassa (1.11.2026) */
 .oma-nh { margin-bottom: 12px; padding: 10px 12px; border: 1px solid rgba(125,211,252,.25); border-radius: 10px; background: rgba(125,211,252,.05); }
 .oma-nh-paa { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }

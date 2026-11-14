@@ -5,6 +5,7 @@ import { sb, tila, nimi, lataaTulokset, SUPABASE_URL } from "../db.js";
 import { $, $$, esc, muotoile, muotoileMuutos, pvm, pvmLyhyt, kausi, paras, parannus, testiParhaat, kuva, ilmoita, palkki } from "../util.js";
 import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
+import { piirraMinunPeliTilastot } from "../minunpeli_tilastot.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
@@ -203,8 +204,8 @@ async function piirra(main) {
 
     ${peliEnsin ? "" : peliOsiot}`;
 
-  piirraMinunPeli($("#minun-peli", main), p);
-  piirraLyontianalyysi($("#lyontianalyysi", main), p);
+  if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); }
+  else piirraMinunPeliTilastot($("#minun-peli", main), p);
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));

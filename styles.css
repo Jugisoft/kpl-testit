@@ -2623,3 +2623,32 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
   .ko-tav-rivi.ilman-nimea > :nth-child(4) { grid-column: 1 / -1; grid-row: auto; }
   .ko-tav-rivi.ilman-nimea > :nth-child(5) { grid-column: 1 / -1; }
 }
+
+/* 14.11.2026: valmentajan huomiointi (js/huomiointi.js) */
+.hm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.hm-merkki { font-size: 13px; padding: 2px 9px; border-radius: 999px; background: rgba(245,168,0,.12); color: var(--ink); white-space: nowrap; }
+.hm-kommentti { flex-basis: 100%; font-size: 13px; color: var(--ink-2); padding: 6px 10px; border-left: 2px solid var(--kpl); background: var(--surface-2); border-radius: 0; }
+.hm-kommentti b { color: var(--ink); font-weight: 600; }
+.hm-napit { display: inline-flex; gap: 4px; margin-left: auto; }
+.hm-nappi { min-width: 32px; height: 32px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 15px; line-height: 1; cursor: pointer; filter: grayscale(.7); opacity: .75; }
+.hm-nappi:hover { opacity: 1; filter: none; border-color: var(--ink-3); }
+.hm-nappi[aria-pressed="true"] { filter: none; opacity: 1; border-color: var(--kpl); background: rgba(245,168,0,.14); }
+.hm-lomake { flex-basis: 100%; display: flex; gap: 6px; }
+.hm-lomake[hidden] { display: none; }
+.hm-lomake input { flex: 1; min-width: 0; }
+.hm-kortti .hm-uusia { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--kpl); color: var(--musta); }
+.hm-lista { list-style: none; margin: 0; padding: 0; display: grid; }
+.hm-lista li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line-2); font-size: 14px; line-height: 1.5; }
+.hm-lista li:first-child { border-top: 0; }
+.hm-lista li.uusi { background: linear-gradient(90deg, rgba(245,168,0,.08), transparent 70%); }
+.hm-lista small { color: var(--ink-3); }
+.hm-kuka { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--num); background: var(--surface-2); border: 1px solid var(--line); color: var(--kpl); }
+.oma-testi-w { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.oma-testi-w > .oma-testi { flex: 1; }
+.hm-huomioimatta { border: 1px solid rgba(255,176,32,.45); }
+@media (max-width: 900px) { .hm-nappi { min-width: 36px; height: 36px; } }
+.ku-omat li { flex-wrap: wrap; }
+.ku-omat li > .hm { flex-basis: 100%; margin-left: 18px; }
+.ku-omat li .hm span { flex: 0 0 auto; }
+.ku-omat li .hm > .hm-kommentti { flex: 1 1 100%; }
+.se-lista li > .hm { grid-column: 1 / -1; margin-top: 0; }

@@ -8,8 +8,10 @@ import { piirraMinunPeli } from "../minunpeli.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
+import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, valmentajaltaKortti, merkitseNahdyiksi } from "../huomiointi.js";
 
 const PAIVA = 864e5;
+let HM = []; // 14.11.2026: valmentajan huomioinnit tälle pelaajalle (js/huomiointi.js)
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
 const lisaaPv = (s, n) => new Date(new Date(s + "T12:00:00Z").getTime() + n * PAIVA).toISOString().slice(0, 10);
 const maanantai = (s) => { const d = new Date(s + "T12:00:00Z"); return lisaaPv(s, -((d.getUTCDay() + 6) % 7)); };
@@ -47,7 +49,7 @@ async function piirra(main) {
   const joukkue = tila.joukkueet.find((j) => j.id === p.joukkue_id);
   const vkLoppu = lisaaPv(viikko, 6);
 
-  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit, rasRes] = await Promise.all([
+  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit, rasRes, hmLista] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     sb.from("tavoitteet").select("*").eq("pelaaja_id", pid).order("luotu"),
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
@@ -62,7 +64,9 @@ async function piirra(main) {
     haeOhjelmat(),
     sb.from("omat_treenit").select("ohjelma,pvm").eq("pelaaja_id", pid).gte("pvm", viikko).lte("pvm", vkLoppu),
     sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
+    lataaNimet().then(() => haeHm([pid])),
   ]);
+  HM = hmLista || [];
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
   const rasitus = new Map((rasRes.data || []).map((x) => [x.uid, x.rpe]));
   const ilmo = new Map((ilmoRes.data || []).map((x) => [x.uid, x.tila]));
@@ -95,6 +99,13 @@ async function piirra(main) {
 
   const valmiit = ohjelma.filter((o) => tehdyt.has(o.id)).length;
   const otsikko = oma ? `Hei, ${esc(p.etunimi)}` : esc(nimi(p));
+  // 14.11.2026: valmentajan huomioinnit – mihin kukin liittyy
+  const tavNimi = Object.fromEntries((tav.data || []).map((g) => [g.id, tila.testi[g.testi]?.nimi || "tavoite"]));
+  const kuvausHm = (h) => h.kohde === "viikko" ? `viikko ${viikkoNro(h.kohde_id)}` : h.kohde === "tavoite" ? `tavoite: ${tavNimi[h.kohde_id] || "poistettu tavoite"}`
+    : h.kohde === "testi" ? `testi: ${tila.testi[h.kohde_id.split(":")[0]]?.nimi || "testi"}` : "omatoiminen treeni";
+  const hmOsio = `${valmentajaltaKortti(HM, kuvausHm, oma)}${tila.ohjaaja && !oma ? `<section class="paneeli hm-kortti" aria-label="Huomioi pelaajan viikko">
+      <div class="oma-osa-paa"><h2>Huomioi viikko ${viikkoNro(viikko)}</h2><span class="pieni">Reaktio tai lyhyt kommentti näkyy vain pelaajalle ja valmennukselle. Treenit, tavoitteet ja testit huomioit niiden kohdalta.</span></div>
+      ${hmLohko(HM, pid, "viikko", viikko)}</section>` : ""}`;
   // 14.11.2026: miesten Superpesis-pelaajalle oma pelidata (Minun pelini, Lyöntianalyysi) heti tilannekorttien alle
   const peliEnsin = joukkue?.alue === "sp";
   const peliOsiot = `<section id="minun-peli" aria-labelledby="mp-otsikko"></section>
@@ -115,6 +126,8 @@ async function piirra(main) {
     </div>
 
     ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa: eiMukana, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
+
+    ${hmOsio}
 
     ${peliEnsin ? peliOsiot : ""}
 
@@ -180,7 +193,7 @@ async function piirra(main) {
     <section id="oma-testit" aria-labelledby="testit-otsikko">
       <div class="oma-osa-paa"><h2 id="testit-otsikko">${oma ? "Minun testini" : "Testit"}</h2><a class="pieni" href="#/pelaaja/${pid}">Kaikki tulokset pelaajakortilla</a></div>
       ${tulevatLista(tulevat)}
-      ${normaalit.length ? `<div class="kpi-rivi">${normaalit.slice(0, 12).map(testiKortti).join("")}</div>` : `<p class="tyhja">Ei vielä testituloksia.</p>`}
+      ${normaalit.length ? `<div class="kpi-rivi">${normaalit.slice(0, 12).map((x) => `<div class="oma-testi-w">${testiKortti(x)}${hmLohko(HM, pid, "testi", `${x.t}:${x.viim.pvm}`)}</div>`).join("")}</div>` : `<p class="tyhja">Ei vielä testituloksia.</p>`}
     </section>
 
     ${reaktiot.length ? `<section aria-labelledby="rk-otsikko"><div class="oma-osa-paa"><h2 id="rk-otsikko">Reaktio ja lähtö</h2><span class="pieni">päivän mediaani, ms</span></div><div class="kpi-rivi">${reaktiot.map(testiKortti).join("")}</div></section>` : ""}
@@ -192,11 +205,13 @@ async function piirra(main) {
 
   piirraMinunPeli($("#minun-peli", main), p);
   piirraLyontianalyysi($("#lyontianalyysi", main), p);
-  piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, paivita: () => piirra(main) })
+  piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));
   kytkePoissaolot(main, p, poissa, () => piirra(main));
   kytkeRasitus(main, p, () => piirra(main));
+  hmKytke(main);
+  if (oma && HM.some((h) => !h.nahty)) merkitseNahdyiksi(); // kuitataan nähdyiksi; "uutta"-merkki näkyy tämän käynnin ajan
 
   // --- tapahtumat ---
   $(".ti", main).onclick = (e) => { const a = e.target.closest("[data-ti]"); if (!a) return; e.preventDefault(); $("#" + a.dataset.ti, main)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
@@ -412,7 +427,7 @@ function tavoitteet(rivit, omat) {
       <div class="rivi vali pieni">
         <span>${lahto != null ? `Lähtötaso ${muotoile(lahto, g.testi)} · nyt ${muotoile(nyt, g.testi)}` : "Ei vielä tuloksia"}${puuttuu != null ? ` · puuttuu ${muotoile(puuttuu, g.testi)}` : ""}${saavutettu ? " · saavutettu" : ""}</span>
         <span>${g.takaraja ? `${pvm(g.takaraja)} mennessä · ` : ""}${voi ? `<button class="linkkinappi" data-poista-tav="${g.id}" aria-label="Poista tavoite ${esc(T.nimi)}">Poista</button>` : ""}</span>
-      </div></li>`;
+      </div>${hmLohko(HM, g.pelaaja_id, "tavoite", g.id)}</li>`;
   }).join("")}</ul>`;
 }
 

@@ -3,6 +3,7 @@
 // omatoimiset kirjaukset ohjelmakirjastosta (omat_treenit + treeniohjelmat), lyöntipäiväkirja (rpc kuorma_lyonnit) ja testipäivät.
 import { sb, tila, SUPABASE_URL } from "./db.js";
 import { $, $$, esc, ilmoita } from "./util.js";
+import { lohko as hmLohko } from "./huomiointi.js";
 import { TYYPIT, T, lisaaPv, maanantai, tanaanHki as tanaan, minStr, pvLyh, kokoa, analysoi, osat, kestoMin, maaratTeksti } from "./kuormaydin.js";
 export { TYYPIT };
 
@@ -82,7 +83,7 @@ export async function piirraKuorma(el, p, opt) {
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>` : ""}
 
     ${opt.oma ? `<a class="ku-kirjaa" href="#/treenit"><span><b>Kirjaa omatoiminen treeni</b><small>Treenipäiväkirjassa: valitse treeni, kesto ja päivä</small></span><i aria-hidden="true">→</i></a>` : ""}
-    ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.rpe ? ` · rasitus ${o.rpe}/10` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}</li>`; }).join("")}</ul>` : ""}
+    ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.rpe ? ` · rasitus ${o.rpe}/10` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}${opt.hm ? hmLohko(opt.hm, p.id, "treeni", o.id) : ""}</li>`; }).join("")}</ul>` : ""}
     <details class="ku-lisaa"><summary>Ensi viikko, kuusi viikkoa ja kuukausi</summary>
     ${[[a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko]) => `
     <div class="ku-vko-paa"><h3>${otsikko}</h3><span class="pieni">${pvLyh(w.paivat[0].pvm)}–${pvLyh(w.paivat[6].pvm)}</span>

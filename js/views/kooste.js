@@ -1,9 +1,11 @@
 // Valmentajan viikkokooste (1.11.2026): #/kooste. Kuka on treenannut minkäkin verran, omatoimiset kirjaukset ja
 // havainnot (esim. liian kova kuormitus). Sama laskenta kuin pelaajan Viikkoni-osiossa (js/kuormaydin.js).
-// Perjantaisin klo 13 palvelin tallentaa koosteen arkistoon ja se lähetetään valmentajille sähköpostilla.
+// Sunnuntaisin palvelin tallentaa koosteen arkistoon ja se lähetetään valmentajille sähköpostilla klo 12.
+// 14.11.2026: valmentajan huomiointi omatoimisiin treeneihin (▸) ja "huomioimatta 14 päivään" -lista.
 import { sb, tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, testiParhaat } from "../util.js";
 import { haeKuormaRivit, haeKalenteri, tooltip } from "../kuorma.js";
+import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, huomioimatta } from "../huomiointi.js";
 import { TYYPIT, T, lisaaPv, maanantai, tanaanHki, minStr, pvLyh, desi, OS_RAJA, OS_SEURAA, ika, maaratTeksti, kooste as laskeKooste } from "../kuormaydin.js";
 
 let viikko = maanantai(tanaanHki());
@@ -21,11 +23,13 @@ export async function nayta(main) {
   const poisJatetyt = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen && p.treeniprofiili === "ei_b").length;
   const alku = lisaaPv(viikko, -35), loppu = lisaaPv(viikko, 6);
 
-  const [nh, tulokset, arkisto, tavRes] = await Promise.all([
+  const hmAlku = lisaaPv(tanaanHki(), -14) < lisaaPv(viikko, -14) ? lisaaPv(tanaanHki(), -14) : lisaaPv(viikko, -14);
+  const [nh, tulokset, arkisto, tavRes, hm] = await Promise.all([
     haeKalenteri(joukkue, alku, loppu),
     lataaTulokset().then(testiParhaat),
     sb.from("viikkokoosteet").select("id,viikko,luotu,teksti,lahetetty").eq("joukkue_id", joukkue).order("viikko", { ascending: false }).limit(12),
     pelaajat.length ? sb.from("tavoitteet").select("luotu").in("pelaaja_id", pelaajat.map((p) => p.id)) : Promise.resolve({ data: [] }),
+    lataaNimet().then(() => haeHm(pelaajat.map((p) => p.id), hmAlku)),
   ]);
   const testipaivat = {};
   for (const t of tulokset) if (t.pvm >= alku && t.pvm <= loppu) (testipaivat[t.pelaaja] ||= new Set()).add(t.pvm);
@@ -40,7 +44,7 @@ export async function nayta(main) {
   const omaLista = (lista) => `<ul class="se-lista">${lista.map((o) => { const oh = data.ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T[oh?.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li>
     <span class="num">${pvLyh(o.pvm)}</span>
     <span><i style="background:${ty.vari}"></i>${esc(oh?.nimi || o.huomio || `Oma ${ty.nimi.toLowerCase()}`)}${lisa ? ` <small>${esc(lisa)}</small>` : ""}${o.rpe ? ` <small>· rasitus ${o.rpe}/10</small>` : ""}${oh && o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>
-    <span class="num">${minStr(o.kesto_min || 0)}</span></li>`; }).join("")}</ul>`;
+    <span class="num">${minStr(o.kesto_min || 0)}</span>${hmLohko(hm, o.pelaaja_id, "treeni", o.id)}</li>`; }).join("")}</ul>`;
   const maxMin = Math.max(60, ...k.rivit.map((r) => r.min));
   // 12.11.2026 (Jugi): kovat kuormavaroitukset ylimmäksi, sitten treenimäärät, sitten muut havainnot
   const kiireet = k.havainnot.filter((h) => h.taso === "varoitus"), muutHav = k.havainnot.filter((h) => h.taso !== "varoitus");
@@ -71,6 +75,12 @@ export async function nayta(main) {
       <h2 class="ko-h2">Huomio heti</h2>
       <ul class="ku-huomiot">${kiireet.map((h) => `<li class="varoitus"><span aria-hidden="true">▲</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>
     </section>` : ""}
+
+    ${nyt ? (() => { const eiH = huomioimatta(pelaajat, hm, lisaaPv(tanaanHki(), -14)); return eiH.length ? `<section class="paneeli hm-huomioimatta" aria-label="Huomioimatta">
+      <h2 class="ko-h2">Huomioimatta 14 päivään: ${eiH.length} pelaajaa</h2>
+      <p class="pieni">Kukaan valmennuksesta ei ole reagoinut näiden pelaajien treeneihin, tavoitteisiin tai viikkoon kahteen viikkoon. Avaa pelaajan rivi (▸) tai hänen oma Keskuksensa.</p>
+      <p>${eiH.map((p) => `<a href="#/oma/${p.id}">${esc(nimi(p))}</a>`).join(" · ")}</p>
+    </section>` : ""; })() : ""}
 
     <section class="paneeli">
       <h2 class="ko-h2">Treenimäärät pelaajittain</h2>
@@ -112,6 +122,7 @@ export async function nayta(main) {
     </section>`;
 
   tooltip(main);
+  hmKytke(main);
   $$("[data-avaa]", main).forEach((b) => (b.onclick = () => {
     const el = $(`#ko-omat-${b.dataset.avaa}`, main), auki = el.hidden;
     el.hidden = !auki; b.setAttribute("aria-expanded", String(auki)); b.textContent = `${auki ? "▾" : "▸"} ${b.textContent.slice(2)}`;

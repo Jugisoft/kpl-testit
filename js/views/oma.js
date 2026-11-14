@@ -123,6 +123,7 @@ async function piirra(main) {
       <div class="oma-linkit">
         ${!oma && tila.ohjaaja ? `<a class="btn" href="#/oma">Vaihda pelaajaa</a>` : ""}
         ${!peliEnsin && p.pesistulokset_id ? `<a class="btn" href="#/minunpeli/${pid}">Minun pelini</a>` : ""}
+        ${!peliEnsin ? `<a class="btn" href="#/minunkehitys/${pid}">Minun kehitykseni</a>` : ""}
         <a class="btn" href="#/pelaaja/${pid}">Pelaajakortti</a>
       </div>
     </div>

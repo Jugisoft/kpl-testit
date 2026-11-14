@@ -2715,3 +2715,40 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 #alapalkki a { position: relative; }
 #alapalkki a .nav-uusi { position: absolute; top: 3px; left: calc(50% + 6px); margin: 0; }
 [aria-current="page"] > .nav-uusi { background: var(--musta); color: var(--kpl); }
+
+/* Minun kehitykseni (14.11.2026) */
+#mk-otsikko { margin: 0; }
+.mk-osio { margin-top: 28px; }
+.mk-osio h3 { font-size: 16px; font-weight: 700; margin: 0 0 10px; color: var(--kpl); text-transform: uppercase; letter-spacing: .05em; }
+.mk-tavoitteet { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.mk-tav { display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--line); }
+.mk-tav.saavutettu { border-color: rgba(56,214,0,.4); }
+.mk-tav svg { flex: none; }
+.mk-tav b { font-size: 15px; }
+.mk-vk-rivi { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.mk-vk { padding: 14px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--line); }
+.mk-vk-ots { font-size: 14px; margin: 0 0 10px; }
+.mk-vk-ots.vahv { color: #38d600; }
+.mk-vk-ots.keh { color: #ff6e3a; }
+.mk-vk-rivi2 { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line-2); font-size: 14px; }
+.mk-vk-rivi2:first-of-type { border-top: 0; }
+.mk-vk-nimi { flex: 1; min-width: 0; }
+.mk-vk-sija { flex: none; font: 700 13px var(--num); color: var(--kpl); width: 40px; text-align: center; }
+.mk-vk .palkki { flex: none; width: 60px; }
+.mk-luokkavalitsin { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.mk-luokkavalitsin .chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; font-size: 13px; font-weight: 600; }
+.mk-luokkavalitsin .chip.valittu { background: var(--kpl); color: var(--musta); border-color: var(--kpl); }
+.mk-kaavio-wrap { margin-bottom: 24px; padding: 16px; background: var(--surface-2); border-radius: 10px; border: 1px solid var(--line); }
+.mk-kaavio-wrap h4 { margin: 0 0 8px; font-size: 15px; }
+.mk-kaavio-wrap h4 small { color: var(--ink-3); }
+.mk-kaavio-wrap canvas { max-height: 220px; }
+.mk-kaavio-kpi { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; }
+.mk-kaavio-kpi .kpi { display: flex; flex-direction: column; gap: 2px; }
+.mk-kaavio-kpi .otsikko { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+.mk-kaavio-kpi .arvo { font: 700 16px var(--num); color: var(--ink); }
+.mk-kaavio-kpi .arvo.pb { color: #38d600; }
+.mk-kaavio-kpi .arvo.huono { color: #ff6e3a; }
+@media (max-width: 700px) {
+  .mk-vk-rivi { grid-template-columns: 1fr; }
+  .mk-tavoitteet { grid-template-columns: 1fr; }
+}

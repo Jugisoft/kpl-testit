@@ -8,6 +8,9 @@ import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
 const ERIT = "Erittelemättömät";
 const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
 const LAJIT = [ERIT, "Pomppu", "Näpy", "Vaakamaila", "Pieni 1-raja", "Pieni 2-raja", "Keskipieni", "Ohitus", "Rajakova 1-raja", "Rajakova 2-raja", "Kumura", "Saumaveto", "Ilmasauma", "Viistari/pystäri", "Koppi"];
+// 14.11.2026: pienet vs. kovat -luokittelu viikkopylväisiin
+const PIENET = new Set(["näpy", "ohitus", "pieni 1-raja", "pieni 2-raja"]);
+const onPieni = (laji) => PIENET.has(laji.trim().toLowerCase());
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 
@@ -91,10 +94,17 @@ function viikkoPylvaat(kirjaukset) {
   const max = Math.max(1, ...sum.map((a) => a.reduce((s, k) => s + k.maara, 0)));
   return `<div class="ly-viikot" role="img" aria-label="Lyönnit viikoittain, 12 viikkoa">${sum.map((a, i) => {
     const n = a.reduce((s, k) => s + k.maara, 0);
+    const pienet = a.filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0);
+    const kovat = a.filter((k) => !onPieni(k.laji) && !sama(k.laji, ERIT)).reduce((s, k) => s + k.maara, 0);
+    const muut = n - pienet - kovat;
     const lajeittain = Object.entries(a.reduce((o, k) => ((o[k.laji] = (o[k.laji] || 0) + k.maara), o), {})).map(([l, x]) => `${l} ${x}`).join(", ");
-    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä${lajeittain ? " (" + lajeittain + ")" : ""}">
-      <span class="ly-vk-n num">${n || ""}</span><span class="ly-vk-p" style="height:${n ? Math.max(4, (100 * n) / max) : 0}%"></span><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
-  }).join("")}</div>`;
+    const h = n ? Math.max(4, (100 * n) / max) : 0;
+    const pPct = n ? (100 * pienet) / n : 0;
+    const kPct = n ? (100 * kovat) / n : 0;
+    return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä (pienet ${pienet}, kovat ${kovat}${muut ? `, muut ${muut}` : ""})${lajeittain ? "\n" + lajeittain : ""}">
+      <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"></span>` : ""}${muut ? `<span class="ly-vk-muut" style="height:${(100 * muut) / n}%"></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
+  }).join("")}</div>
+  <div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <span class="ly-sel-pieni"></span>Pienet${sum.some((a) => a.some((k) => sama(k.laji, ERIT))) ? ` <span class="ly-sel-muu"></span>Muut` : ""}</div>`;
 }
 
 function historia(kirjaukset, muokattava) {

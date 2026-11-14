@@ -12,6 +12,7 @@ let HM = [];
 
 let joukkue = null;
 let valittu = ""; // 12.11.2026 (Jugi): yksittäisen pelaajan tavoitteet ("" = kaikki)
+let ikaluokka = null; // 14.11.2026 (Jugi): suodatus syntymävuoden mukaan (null = kaikki)
 
 export async function nayta(main) {
   if (!tila.ohjaaja) { location.replace("#/oma"); return; }
@@ -19,7 +20,11 @@ export async function nayta(main) {
   if (!joukkue || !ryhmat.some((j) => j.id === joukkue)) joukkue = (ryhmat.find((j) => j.alue === "psu") || ryhmat[0])?.id;
   main.innerHTML = `<h1>Tavoiteseuranta</h1><p class="lataa">Ladataan…</p>`;
   if (!joukkue) { main.innerHTML = `<h1>Tavoiteseuranta</h1><p class="tyhja">Ei ryhmiä.</p>`; return; }
-  const pelaajat = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen).sort((a, b) => nimi(a).localeCompare(nimi(b), "fi"));
+  const kaikkiPelaajat = tila.pelaajat.filter((p) => p.joukkue_id === joukkue && p.aktiivinen).sort((a, b) => nimi(a).localeCompare(nimi(b), "fi"));
+  // Ikäluokat: ryhmän pelaajien syntymävuodet
+  const ikaluokat = [...new Set(kaikkiPelaajat.map((p) => p.syntymavuosi).filter(Boolean))].sort((a, b) => b - a);
+  if (ikaluokka && !ikaluokat.includes(ikaluokka)) ikaluokka = null;
+  const pelaajat = ikaluokka ? kaikkiPelaajat.filter((p) => p.syntymavuosi === ikaluokka) : kaikkiPelaajat;
   const ids = pelaajat.map((p) => p.id);
   const viikko = maanantai(tanaanHki());
 
@@ -51,6 +56,7 @@ export async function nayta(main) {
         <p class="ingressi">Pelaajien itse tai valmentajan asettamat testitavoitteet ja niiden eteneminen. Omatoimiset treenit näkyvät <a href="#/kooste">Viikkokoosteessa</a>.</p></div>
       <div class="rivi">
         ${ryhmat.length > 1 ? `<label class="kentta">Ryhmä<select id="se-ryhma">${ryhmat.map((r) => `<option value="${r.id}"${r.id === joukkue ? " selected" : ""}>${esc(r.nimi)}</option>`).join("")}</select></label>` : ""}
+        ${ikaluokat.length > 1 ? `<label class="kentta">Ikäluokka<select id="se-ikaluokka"><option value="">Kaikki (${kaikkiPelaajat.length})</option>${ikaluokat.map((v) => `<option value="${v}"${v === ikaluokka ? " selected" : ""}>${v} syntyneet (${kaikkiPelaajat.filter((p) => p.syntymavuosi === v).length})</option>`).join("")}</select></label>` : ""}
         ${tavPelaajat.length ? `<label class="kentta">Pelaaja<select id="se-pelaaja"><option value="">Kaikki pelaajat (${tila_.length})</option>${tavPelaajat.map(({ p, r }) => { const ok = r.filter((x) => x.saavutettu).length; return `<option value="${p.id}"${p.id === valittu ? " selected" : ""}>${esc(nimi(p))} – ${r.length} ${r.length === 1 ? "tavoite" : "tavoitetta"}${ok ? `, ✓ ${ok}` : ""}</option>`; }).join("")}</select></label>` : ""}
       </div>
     </div>
@@ -66,7 +72,9 @@ export async function nayta(main) {
   hmKytke(main);
 
   const sel = $("#se-ryhma", main);
-  if (sel) sel.onchange = () => { joukkue = +sel.value; valittu = ""; nayta(main); };
+  if (sel) sel.onchange = () => { joukkue = +sel.value; valittu = ""; ikaluokka = null; nayta(main); };
+  const ik = $("#se-ikaluokka", main);
+  if (ik) ik.onchange = () => { ikaluokka = ik.value ? +ik.value : null; valittu = ""; nayta(main); };
   const pel = $("#se-pelaaja", main);
   if (pel) pel.onchange = () => { valittu = pel.value; nayta(main); };
   main.querySelectorAll("[data-valitse]").forEach((b) => (b.onclick = () => { valittu = b.dataset.valitse; nayta(main); }));

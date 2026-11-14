@@ -105,7 +105,24 @@ function viikkoPylvaat(kirjaukset) {
     return `<div class="ly-vk${i === 11 ? " nyt" : ""}" title="Viikko alkaen ${pvm(vkt[i])}: ${n} lyöntiä\nKovat ${kovat} (${n ? Math.round(kPct) : 0} %)\nPienet ${pienet} (${n ? Math.round(pPct) : 0} %)${lajeittain ? "\n" + lajeittain : ""}">
       <span class="ly-vk-n num">${n || ""}</span><div class="ly-vk-p" style="height:${h}%">${kovat ? `<span class="ly-vk-kovat" style="height:${kPct}%"><i>${kovat}</i></span>` : ""}${pienet ? `<span class="ly-vk-pienet" style="height:${pPct}%"><i>${pienet}</i></span>` : ""}</div><span class="ly-vk-l">${+vkt[i].slice(8, 10)}.${+vkt[i].slice(5, 7)}.</span></div>`;
   }).join("")}</div>
-  ${(() => { const yht = sum.flat().reduce((s, k) => s + k.maara, 0); const pn = sum.flat().filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0); const kv = yht - pn; const kP = yht ? Math.round(100 * kv / yht) : 0; const pP = yht ? Math.round(100 * pn / yht) : 0; return `<div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <b>${kv}</b> (${kP} %) <span class="ly-sel-pieni"></span>Pienet <b>${pn}</b> (${pP} %)<span class="ly-sel-yht">Yhteensä <b>${yht}</b></span></div>`; })()}`;
+  ${(() => {
+    const yht = sum.flat().reduce((s, k) => s + k.maara, 0);
+    const pn = sum.flat().filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0);
+    const kv = yht - pn;
+    const kP = yht ? Math.round(100 * kv / yht) : 0;
+    const pP = yht ? Math.round(100 * pn / yht) : 0;
+    // Viikkotaulukko: vain viikot joilla dataa, uusin ensin
+    const rivit = sum.map((a, i) => {
+      const n = a.reduce((s, k) => s + k.maara, 0);
+      if (!n) return "";
+      const p = a.filter((k) => onPieni(k.laji)).reduce((s, k) => s + k.maara, 0);
+      const ko = n - p;
+      const d = vkt[i];
+      return `<tr${i === 11 ? ' class="ly-jt-nyt"' : ""}><td>${+d.slice(8, 10)}.${+d.slice(5, 7)}.</td><td class="num">${ko}</td><td class="num pieni">${n ? Math.round(100 * ko / n) : 0} %</td><td class="num">${p}</td><td class="num pieni">${n ? Math.round(100 * p / n) : 0} %</td><td class="num"><b>${n}</b></td></tr>`;
+    }).reverse().filter(Boolean);
+    return `<div class="ly-selite"><span class="ly-sel-kova"></span>Kovat <b>${kv}</b> (${kP} %) <span class="ly-sel-pieni"></span>Pienet <b>${pn}</b> (${pP} %)<span class="ly-sel-yht">Yhteensä <b>${yht}</b></span></div>
+    ${rivit.length ? `<details class="ly-jakauma"><summary>Viikkojakauma</summary><table class="ly-jt"><thead><tr><th>Vko</th><th colspan="2">Kovat</th><th colspan="2">Pienet</th><th>Yht</th></tr></thead><tbody>${rivit.join("")}<tr class="ly-jt-yht"><td>12 vk</td><td class="num">${kv}</td><td class="num pieni">${kP} %</td><td class="num">${pn}</td><td class="num pieni">${pP} %</td><td class="num"><b>${yht}</b></td></tr></tbody></table></details>` : ""}`;
+  })()}`;
 }
 
 function historia(kirjaukset, muokattava) {

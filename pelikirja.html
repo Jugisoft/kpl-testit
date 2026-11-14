@@ -796,7 +796,7 @@ function renderList(){
       h+=`<div class="kansio"><button class="kansio-h" data-kansio="${k}" aria-expanded="${auki}"><span class="nuoli" aria-hidden="true">▸</span>${esc(k)}<span class="lkm">${arr.length}</span></button>`;
       if(auki){
         h+=`<div class="kansio-sis">`;
-        arr.forEach(p=>{ h+=`<button class="vitem ${p.id===sel?"on":""}" data-id="${p.id}" draggable="true"><b>${esc(p.variaatio||"Nimetön variaatio")}${merkit(p)}</b><small>${esc(rivinTiedot(p))}</small></button>`; });
+        arr.forEach(p=>{ h+=`<button class="vitem ${p.id===sel?"on":""}" data-id="${esc(p.id)}" draggable="true"><b>${esc(p.variaatio||"Nimetön variaatio")}${merkit(p)}</b><small>${esc(rivinTiedot(p))}</small></button>`; });
         if(!arr.length) h+=`<span class="kansio-tyhja">Ei vielä variaatioita.</span>`;
         h+=`<button class="kansio-uusi" data-uusi="${k}">+ Uusi variaatio</button></div>`;
       }
@@ -807,7 +807,7 @@ function renderList(){
     Object.keys(groups).sort((a,b)=>a.localeCompare(b,"fi")).forEach(g=>{
       const arr=groups[g].sort((a,b)=>TILANTEET.indexOf(kansioOf(a.tilanne))-TILANTEET.indexOf(kansioOf(b.tilanne))||lajittele(a,b));
       h+=`<div class="group"><div class="group-h">${esc(g)}<span>${arr.length} kuviota</span></div>`;
-      arr.forEach(p=>{h+=`<button class="item ${p.id===sel?"on":""}" data-id="${p.id}"><span class="var" title="${esc(kansioOf(p.tilanne))}">${KANSIO_LYH[kansioOf(p.tilanne)]}</span><b>${esc(p.variaatio||"Nimetön variaatio")}${merkit(p)}</b><small>${esc(kansioOf(p.tilanne))}${patName(p.kuvio)?" · "+esc(patName(p.kuvio)):""} · ”${esc(p.koodi||"ei koodia")}”</small></button>`;});
+      arr.forEach(p=>{h+=`<button class="item ${p.id===sel?"on":""}" data-id="${esc(p.id)}"><span class="var" title="${esc(kansioOf(p.tilanne))}">${KANSIO_LYH[kansioOf(p.tilanne)]}</span><b>${esc(p.variaatio||"Nimetön variaatio")}${merkit(p)}</b><small>${esc(kansioOf(p.tilanne))}${patName(p.kuvio)?" · "+esc(patName(p.kuvio)):""} · ”${esc(p.koodi||"ei koodia")}”</small></button>`;});
       h+="</div>";
     });
   }
@@ -887,7 +887,7 @@ $("dup").onclick=()=>{
 };
 $("del").onclick=()=>{ if(plays.length<2){toast("Kirjastoon jää vähintään yksi kuvio");return;} $("delconfirm").hidden=false; };
 $("delno").onclick=()=>{$("delconfirm").hidden=true;};
-$("delyes").onclick=()=>{ plays=plays.filter(p=>p.id!==sel); sel=plays[0].id; $("delconfirm").hidden=true; save(); loadForm(); renderList(); drawDyn(); toast("Kuvio poistettu"); };
+$("delyes").onclick=()=>{ POISTETUT.add(sel); plays=plays.filter(p=>p.id!==sel); sel=plays[0].id; $("delconfirm").hidden=true; save(); loadForm(); renderList(); drawDyn(); toast("Kuvio poistettu"); };
 $("exp").onclick=async()=>{ const t=JSON.stringify({kuviot:pats,pelikirja:plays},null,1); $("io").value=t; try{await navigator.clipboard.writeText(t);toast("Kuviot kopioitu leikepöydälle");}catch(e){$("io").select();toast("Valitse teksti ja kopioi");} };
 $("imp").onclick=()=>{ try{ const d=JSON.parse($("io").value); const a=Array.isArray(d)?d:d.pelikirja; if(!Array.isArray(a)||!a[0]?.ulko) throw 0; if(Array.isArray(d.kuviot)){ for(const t of d.kuviot){ const i=pats.findIndex(x=>x.id===t.id); if(i>=0) pats[i]=t; else pats.push(t); } renderPats(); fillKuvio(); }
   migrPlays(a); for(const p of a){ const i=plays.findIndex(x=>x.id===p.id); if(i>=0) plays[i]=p; else plays.push(p); } sel=a[0].id; save(); loadForm(); renderList(); drawDyn(); toast(`Tuotu ${a.length} kuviota`);}catch(e){toast("Teksti ei ole pelikirjan JSON-vientiä");} };
@@ -954,7 +954,7 @@ renderPats(); setView(view); loadForm(); renderList();
 /* ===== Pilvi: Supabase (kirjautuminen jaettu KPL testit -sivun kanssa) ===== */
 const SB_URL="https://xytpwmzcghixulnzdakv.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5dHB3bXpjZ2hpeHVsbnpkYWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0NjMyNTgsImV4cCI6MjEwNzAzOTI1OH0.d3eiBFma8eT3nq-NhPmH2lurROo7XC0MXMkqDXVm3rs"; // julkinen anon-avain, oikeudet hoitaa RLS (vain valmentajat)
-var sb=null, CLOUD=false, ADMIN=false, ME="", qT=null, flushing=false, again=false;  // var: save() voi kutsua ennen tätä riviä
+var sb=null, CLOUD=false, ADMIN=false, VOI_MUOKATA=true, POISTETUT=new Set(), ME="", qT=null, flushing=false, again=false;  // var: save() voi kutsua ennen tätä riviä
 var synced={};            // id -> JSON viimeksi pilveen tallennetusta / pilvestä tulleesta
 /* Toisen tekemät kuviot: muutokset ovat luonnoksia, kunnes käyttäjä tallentaa ne ja vahvistaa.
    Omat ja uudet kuviot tallentuvat automaattisesti kuten ennenkin. (10.10.2026) */
@@ -989,6 +989,8 @@ function syncMsg(t){ $("sync").textContent=t; }
 function cloudQueue(){ if(!CLOUD) return; syncMsg("Tallentamattomia muutoksia…"); clearTimeout(qT); qT=setTimeout(cloudFlush,700); }
 async function cloudFlush(){
   if(!CLOUD) return;
+  // 14.11.2026: pelaajalla vain lukuoikeus (RLS: on_valmennus) – muutokset jäävät vain tähän selaimeen
+  if(!VOI_MUOKATA){ qT=null; syncMsg("Vain luku – kuvioita muokkaa valmennus. Muutoksesi eivät tallennu."); return; }
   if(flushing){ again=true; return; }
   flushing=true;
   try{
@@ -996,11 +998,11 @@ async function cloudFlush(){
     for(const p of plays){ const j=JSON.stringify(p); if(synced[p.id]!==j&&(onOma(p)||synced[p.id]===undefined||hyvaksytyt.has(p.id))) rows.push({id:p.id,tyyppi:"kuvio",data:p,muokattu:now}); }
     const pj=JSON.stringify(pats); if(synced[NIMET_ID]!==pj) rows.push({id:NIMET_ID,tyyppi:"nimet",data:pats,muokattu:now});
     const ids=new Set(plays.map(p=>p.id)); ids.add(NIMET_ID);
-    const gone=Object.keys(synced).filter(id=>!ids.has(id));
+    const gone=Object.keys(synced).filter(id=>!ids.has(id)&&POISTETUT.has(id));
     if(rows.length){ const {error}=await sb.from("pelikirja").upsert(rows); if(error) throw error;
       for(const r of rows){ synced[r.id]=JSON.stringify(r.data); hyvaksytyt.delete(r.id); } }
     if(gone.length){ const {error}=await sb.from("pelikirja").delete().in("id",gone); if(error) throw error;
-      for(const id of gone) delete synced[id]; }
+      for(const id of gone){ delete synced[id]; POISTETUT.delete(id); } }
     qT=null; syncMsg("Tallennettu yhteiseen kirjastoon"); renderList(); paivitaLuonnos();
   }catch(e){ console.error(e); syncMsg("Tallennus epäonnistui – yritetään uudelleen"); clearTimeout(qT); qT=setTimeout(cloudFlush,5000); }
   flushing=false;
@@ -1128,9 +1130,9 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
     catch(e){ gate("Kirjautumisen tarkistus ei vastannut. Sulje muut KPL Keskus -välilehdet ja lataa tämä sivu uudelleen.",false); return; }
     if(!session){ gate("Pelikirja on KPL:n valmentajien käytössä. Kirjaudu ensin KPL Keskukseen, ja palaa sitten tälle sivulle.",true); return; }
     ME=session.user.email||"";
-    const [v,a]=await Promise.all([sb.rpc("on_valmentaja"),sb.rpc("on_admin")]);
+    const [v,a,vm]=await Promise.all([sb.rpc("on_valmentaja"),sb.rpc("on_admin"),sb.rpc("on_valmennus")]);
     if(!v.data){ gate("Olet kirjautunut osoitteella "+ME+", mutta sillä ei ole valmentajan oikeuksia. Pyydä ylläpitäjää lisäämään osoite valmentajiin.",false); return; }
-    ADMIN=!!a.data;
+    ADMIN=!!a.data; VOI_MUOKATA=!!vm.data;
     sb.from("pelikirja_kuvat").select("mime,data").eq("id","pelaajafiguuri").maybeSingle()
       .then(({data})=>{ if(data){ FIG=`data:${data.mime};base64,${data.data}`; drawDyn(); } else { $("figs").closest("label").hidden=true; $("figkokolbl").hidden=true; } });
     const {data:rows,error}=await sb.from("pelikirja").select("id,tyyppi,data,muokkaaja");
@@ -1149,8 +1151,8 @@ function gate(msg, login){ $("gatemsg").textContent=msg; $("gatelink").hidden=!l
     CLOUD=true;
     if(cur()) kAuki.add(kansioOf(cur().tilanne));
     renderPats(); setView(view); loadForm(); renderList(); paivitaLuonnos();
-    syncMsg("Yhteinen kirjasto · "+plays.length+" kuviota");
-    if(!kuviot.length||!nimet) cloudQueue();      // ensimmäinen käyttökerta: tallennetaan perusasetelma ja nimilista
+    syncMsg((VOI_MUOKATA?"Yhteinen kirjasto · ":"Vain luku · ")+plays.length+" kuviota");
+    if(VOI_MUOKATA&&(!kuviot.length||!nimet)) cloudQueue();      // ensimmäinen käyttökerta: tallennetaan perusasetelma ja nimilista
     sb.channel("pelikirja").on("postgres_changes",{event:"*",schema:"public",table:"pelikirja"},
       ev=>{ if(ev.eventType==="DELETE") applyRemote(ev.old,true); else applyRemote(ev.new,false); }).subscribe();
     loadVika();

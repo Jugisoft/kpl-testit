@@ -77,7 +77,7 @@ function tekstiLohko(avain, otsikko, ohje) {
   return `<section class="jaettu-teksti" data-avain="${esc(avain)}">
     <div class="jt-paa"><h2>${esc(otsikko)}</h2>
       ${t?.teksti ? `<span class="pieni">${esc(kirjoittajanNimi(t.muokkaaja))}, ${aikaSitten(t.muokattu)}</span>` : ""}
-      <button class="linkkinappi" data-jt="muokkaa">${t?.teksti ? "Muokkaa" : "Kirjoita"}</button></div>
+      ${tila.valmennus ? `<button class="linkkinappi" data-jt="muokkaa">${t?.teksti ? "Muokkaa" : "Kirjoita"}</button>` : ""}</div>
     <div class="jt-sisalto">${t?.teksti ? `<div class="md">${md(t.teksti)}</div>` : `<p class="jt-tyhja">${esc(ohje)}</p>`}</div>
   </section>`;
 }
@@ -85,7 +85,9 @@ function tekstiLohko(avain, otsikko, ohje) {
 function kytkeTekstit(el, piirra) {
   $$(".jaettu-teksti", el).forEach((lohko) => {
     const avain = lohko.dataset.avain;
-    lohko.querySelector("[data-jt=muokkaa]").onclick = () => {
+    const muokkaa = lohko.querySelector("[data-jt=muokkaa]");
+    if (!muokkaa) return; // 14.11.2026: vain valmennus muokkaa yhteisiä vastustajatekstejä (RLS)
+    muokkaa.onclick = () => {
       const alku = V.tekstit.get(avain);
       const sis = lohko.querySelector(".jt-sisalto");
       sis.innerHTML = `<textarea class="m-muokkaus" rows="${Math.min(16, Math.max(5, (alku?.teksti || "").split("\n").length + 2))}" placeholder="${esc(lohko.querySelector(".jt-tyhja")?.textContent || "")}">${esc(alku?.teksti || "")}</textarea>

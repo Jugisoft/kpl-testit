@@ -18,6 +18,9 @@ export async function nayta(main) {
   const huomiot = kaikki.filter((h) => h.tyyppi !== "lyonti" && h.tyyppi !== "ulkopeli");
   const spJoukkue = tila.joukkueet.find((j) => /superpesis/i.test(j.nimi));
   const spKerrat = tila.kerrat.filter((k) => spJoukkue && k.joukkue_id === spJoukkue.id);
+  // 14.11.2026: tulevat (suunnitellut) testikerrat erikseen – "viimeisin" vain pidetyistä
+  const tanaanPv = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
+  const spPidetyt = spKerrat.filter((k) => k.pvm <= tanaanPv), spTulevat = spKerrat.filter((k) => k.pvm > tanaanPv).sort((a, b) => a.pvm.localeCompare(b.pvm));
   const kpl = sm?.vaikutus?.find((v) => v.Joukkue === "KPL");
   const uutiset = (sm?.tarkeimmat || "").split("\n").filter((l) => l.trim().startsWith("-")).slice(0, 4).join("\n");
   const [{ count: kuvioita }, { count: pelaajia }] = await Promise.all([
@@ -54,10 +57,10 @@ export async function nayta(main) {
 
     <nav class="pikalinkit" aria-label="Pääosiot">
       <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
-      <a href="pelikirja.html?v=20261112-4"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="pelikirja.html?v=20261114-1"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
       <a href="#/muistio/vastustajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
       <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
-      <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spKerrat.length}</span><span class="pl-ala">${spKerrat.length ? `edustuksen testikertaa, viimeisin ${pvm(spKerrat[0].pvm)}` : "edustuksen testikertaa"}</span></a>
+      <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spPidetyt.length}</span><span class="pl-ala">${spPidetyt.length ? `edustuksen testikertaa, viimeisin ${pvm(spPidetyt[0].pvm)}` : "edustuksen testikertaa"}${spTulevat.length ? `, seuraava ${pvm(spTulevat[0].pvm)}` : ""}</span></a>
     </nav>
 
     <div class="keskus-ruudukko">

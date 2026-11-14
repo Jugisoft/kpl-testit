@@ -100,7 +100,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261112-4", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261114-1", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -156,7 +156,7 @@ function valikko() {
   if (pelaajaRooli) ryhmat[0][1].push(OMA);
   else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat, koosteL, seurantaL);
   // pelaajalla puhelimen alapalkissa Oma, Treeni ja Lyönnit (1.11.2026); Testit ja Oma peli Valikossa
-  const ala = pelaajaRooli ? [ALAPALKKI[0], ["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ALAPALKKI[1]] : ALAPALKKI;
+  const ala = pelaajaRooli ? [["Oma", "#/oma", "oma"], ALAPALKKI[0], ["Treeni", "#/treenit", "treeni"], ALAPALKKI[1]] : ALAPALKKI;
   return [ryhmat, ala];
 }
 
@@ -232,6 +232,8 @@ async function reititä() {
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
   if (tila.psu && !PSU_SALLITTU(polku, r)) { location.replace("#/testit/juniorit"); return; }
   if (tila.juniori && !JUNIORI_SALLITTU(polku, r)) { location.replace("#/oma"); return; }
+  // 14.11.2026: miesten pelaajan etusivu = oma Keskus (valmennuksen etusivu Keskus-linkistä alapalkissa ja valikossa)
+  if (tila.spPelaaja && !tila.valmennus && r.nakyma === etusivu && !sessionStorage.getItem("kpl-etusivu-ohitettu")) { sessionStorage.setItem("kpl-etusivu-ohitettu", "1"); location.replace("#/oma"); return; }
   // toisen pelaajan oma Keskus vain valmentajille
   if (r.osio === "kooste" && !tila.ohjaaja) { location.replace("#/oma"); return; }
   if (r.osio === "oma" && parametrit[0] && !tila.ohjaaja && parametrit[0] !== tila.omaPelaaja) { location.replace("#/oma"); return; }

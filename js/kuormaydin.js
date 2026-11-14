@@ -2,8 +2,10 @@
 // käytetään selaimessa (Viikkoni, Viikkokooste) ja Supabase-funktiossa viikkokooste, joka tuo tämän tiedoston GitHubista
 // (raw.githubusercontent.com/Jugisoft/kpl-testit/<commit>/js/kuormaydin.js) – muutoksen jälkeen funktio julkaistaan uudelleen.
 // Rasitus on ARVIO: kuorma (AU) = arvioitu rasitus 0–10 treenityypistä tai ohjelmasta × minuutit (sRPE-menetelmän
-// periaate, Foster ym. 2001). Akuutti:krooninen = viim. 7 pv / edellisten 4 viikon keskiarvo; yli 1,5 on tutkimuksissa
-// liitetty kohonneeseen vammariskiin (Hulin ym. 2016; katsaus Arazi ym. 2020, Front Physiol).
+// periaate, Foster ym. 2001). Kuorma vs. oma taso = viim. 7 pv / edellisten (enintään 4) viikon keskiarvo.
+// 14.11.2026: suhde on seurannan apuväline, ei vammariskin ennuste (Impellizzeri ym. 2020) – tekstit eivät enää väitä riskiä.
+// Vertailutaso lasketaan vain viikoilta, joilta dataa on (ensimmäisestä datan viikosta alkaen), ja vaatii vähintään 2 viikkoa:
+// ennen tätä tyhjät viikot laskettiin jakajaan, jolloin kirjaamisen aloittaneen pelaajan suhde näytti esim. 3,9 tasaisella kuormalla.
 // 7.11.2026: pelaaja voi säätää omatoimisen treenin rasituksen kirjauksessa (omat_treenit.rpe), muuten oletus.
 // 12.11.2026 (Jugi): Nimenhuudossa ei IN = OUT, kun tapahtuman IN/OUT on haettu (tapahtumat.ilmo_haettu). Pelaajan
 // treeniprofiili (pelaajat.treeniprofiili): haastaja (treenaa Superpesiksen mukana) ja reissu (asuu muualla) – omatoiminen
@@ -149,9 +151,12 @@ export function analysoi(rivit, viikko, nyt = tanaanHki()) {
   // akuutti:krooninen viitepäivään (tänään tai valitun viikon loppu, kumpi aiempi)
   const viite = loppu < nyt ? loppu : nyt;
   const akuutti = summa(rivit, (r) => r.pvm > lisaaPv(viite, -7) && r.pvm <= viite);
-  const krooninen = summa(rivit, (r) => r.pvm > lisaaPv(viite, -35) && r.pvm <= lisaaPv(viite, -7)) / 4;
-  const ekaPv = rivit.map((r) => r.pvm).sort()[0];
-  const historiaa = !!ekaPv && ekaPv <= lisaaPv(viite, -21);
+  // vertailuviikot 1–4 taaksepäin; mukaan ensimmäisestä viikosta, jolla on dataa (sen jälkeiset tyhjät viikot = todellista lepoa)
+  const vkSumma = [1, 2, 3, 4].map((i) => summa(rivit, (r) => r.pvm > lisaaPv(viite, -7 * (i + 1)) && r.pvm <= lisaaPv(viite, -7 * i)));
+  const vkDataa = [1, 2, 3, 4].map((i) => rivit.some((r) => r.pvm > lisaaPv(viite, -7 * (i + 1)) && r.pvm <= lisaaPv(viite, -7 * i)));
+  const vertailuVk = vkDataa.lastIndexOf(true) + 1; // 0 = ei dataa vertailujaksolla
+  const krooninen = vertailuVk ? vkSumma.slice(0, vertailuVk).reduce((a, b) => a + b, 0) / vertailuVk : 0;
+  const historiaa = vertailuVk >= 2;
   const acwr = historiaa && krooninen > 0 ? akuutti / krooninen : null;
 
   const viim7 = [...Array(7)].map((_, i) => lisaaPv(viite, -i));
@@ -166,7 +171,7 @@ export function analysoi(rivit, viikko, nyt = tanaanHki()) {
   const tulevat = rivit.filter((x) => (x.tyyppi === "peli" || x.tyyppi === "testi") && x.pvm > nyt && x.pvm <= lisaaPv(nyt, 2));
 
   const huomiot = [];
-  if (acwr != null && acwr > RAJA_NOUSU) huomiot.push({ taso: "varoitus", koodi: "nousu", teksti: `Viimeisen 7 päivän kuorma on ${desi(acwr)} × edellisten neljän viikon keskitaso. Yli 1,5-kertainen äkillinen nousu on tutkimuksissa liitetty kohonneeseen vammariskiin – puhu valmentajan kanssa, voisiko jotain keventää.` });
+  if (acwr != null && acwr > RAJA_NOUSU) huomiot.push({ taso: "varoitus", koodi: "nousu", teksti: `Viimeisen 7 päivän kuorma on ${desi(acwr)} × oma tavallinen viikkotasosi. Iso äkillinen nousu kannattaa käydä läpi valmentajan kanssa – voisiko jotain keventää?` });
   else if (acwr != null && acwr < RAJA_KEVYT) huomiot.push({ taso: "info", koodi: "kevyt", teksti: `Viimeinen viikko on selvästi kevyempi kuin edellisten viikkojen keskitaso (${Math.round(acwr * 100)} %). Jos tauko on tarkoituksellinen, hyvä – palaa tasoon vähitellen.` });
   if (dataViikolta && lepoViim7 === 0) huomiot.push({ taso: "varoitus", koodi: "eilepoa", teksti: "Viimeisen 7 päivän aikana ei ole ollut yhtään lepopäivää (palauttavaa harjoittelua lukuun ottamatta). Mieti, mihin väliin mahtuisi vapaa päivä." });
   if (pisin >= 3) huomiot.push({ taso: "info", koodi: "putki", teksti: `${pisin} raskasta päivää peräkkäin (päättyi ${pvLyh(putkiLoppu)}). Raskaiden päivien väliin kannattaa yleensä sijoittaa kevyempi tai vapaa päivä.` });
@@ -210,7 +215,7 @@ export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
   const putkiMed = putket.length ? putket[Math.floor(putket.length / 2)] : 0;
   for (const r of rivit) {
     const syy = [];
-    if (r.acwr != null && r.acwr > RAJA_NOUSU) syy.push(`kuorma ${desi(r.acwr)} × oma 4 viikon taso (raja 1,5)`);
+    if (r.acwr != null && r.acwr > RAJA_NOUSU) syy.push(`kuorma ${desi(r.acwr)} × oma viikkotaso (raja 1,5)`);
     if (r.lepoViim7 === 0) syy.push("ei lepopäivää 7 päivään");
     if (r.pisin >= 4 && r.pisin >= putkiMed + 2) syy.push(`${r.pisin} raskasta päivää peräkkäin (ryhmässä tavallisesti ${putkiMed})`);
     if (syy.length >= 2 || (r.acwr != null && r.acwr > 1.8)) havainnot.push({ taso: "varoitus", pelaaja: r.nimi, teksti: `${r.nimi}: kuormitus on liian kova – ${syy.join(", ")}. Keskustele ja kevennä.` });
@@ -218,7 +223,7 @@ export function kooste(pelaajat, viikko, nyt = tanaanHki()) {
     if (r.acwr != null && r.acwr < RAJA_KEVYT) havainnot.push({ taso: "info", pelaaja: r.nimi, teksti: `${r.nimi}: viikko selvästi kevyempi kuin oma taso (${Math.round(r.acwr * 100)} %). Sairaus, loukkaantuminen vai tauko?` });
     if (r.ry4Yht >= 4 && r.os4 < OS_RAJA) havainnot.push({ taso: "huomio", pelaaja: r.nimi, koodi: "poissa", teksti: `${r.nimi}: osallistuminen 4 viikossa ${r.os4} % (${r.ry4Mukana}/${r.ry4Yht}${r.ry4Out ? `, OUT ${r.ry4Out}` : ""}), tällä viikolla ${r.ryhmaMukana}/${r.ryhmaYht}. Paljon poissa – selvitä syy.` });
     else if (r.ryhmaYht >= 2 && r.ryhmaMukana * 2 <= r.ryhmaYht) havainnot.push({ taso: "info", pelaaja: r.nimi, koodi: "poissa", teksti: `${r.nimi}: tällä viikolla mukana ${r.ryhmaMukana}/${r.ryhmaYht} ryhmätreenissä${r.ryhmaOut ? ` (OUT ${r.ryhmaOut})` : ""}.` });
-    if (mediaani >= 60 && r.omaMin >= 2 * mediaani && r.omaMin >= 180) havainnot.push({ taso: "huomio", pelaaja: r.nimi, teksti: `${r.nimi}: omatoimista harjoittelua ${minStr(r.omaMin)}, yli kaksinkertainen ryhmän mediaaniin (${minStr(mediaani)}).` });
+    if (!korvaaOmat(r.profiili) && mediaani >= 60 && r.omaMin >= 2 * mediaani && r.omaMin >= 180) havainnot.push({ taso: "huomio", pelaaja: r.nimi, teksti: `${r.nimi}: omatoimista harjoittelua ${minStr(r.omaMin)}, yli kaksinkertainen ryhmän mediaaniin (${minStr(mediaani)}).` });
   }
   const eiOmia = rivit.filter((r) => !r.omaKpl && !r.lyonnit).map((r) => r.nimi);
   if (eiOmia.length && eiOmia.length < rivit.length) havainnot.push({ taso: "info", koodi: "eiomia", teksti: `Ei omatoimisia kirjauksia tällä viikolla: ${eiOmia.join(", ")}.` });

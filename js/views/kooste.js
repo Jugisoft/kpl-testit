@@ -101,8 +101,8 @@ export async function nayta(main) {
       <ul>
         <li><span>1</span><span>Ryhmän treenit Nimenhuudosta (valmentaja voi korjata tyypin ja keston). Mukana vain, jos pelaaja on IN – ei merkintää tai OUT = ei mukana, samoin pelaajan Olin poissa. Haastajaryhmä ja muualla asuvat: omatoiminen treeni korvaa saman viikon ryhmätreenin. Ei B:n treeneissä -pelaajat (esim. C-pojat) eivät ole koosteessa.</span></li>
         <li><span>2</span><span>Pelaajan omat kirjaukset ohjelmakirjastosta (Voima 1–3, Piiri 1–2, juoksut, syötöt määrinä, lenkit km) ja lyöntipäiväkirja.</span></li>
-        <li><span>3</span><span>Rasitus = treenityypin tai ohjelman <b>arvio</b> 0–10 × minuutit. Ei sykettä eikä pelaajan omaa tuntemusta.</span></li>
-        <li><span>4</span><span>Kuorma × taso = viim. 7 pv / edellisten 4 vk keskiarvo. Yli 1,5 on tutkimuksissa liitetty kohonneeseen vammariskiin (Hulin ym. 2016). <b>Liian kova</b> = vähintään kaksi merkkiä (nousu > 1,5, ei lepopäivää 7 pv:ään, 4+ raskasta päivää putkeen) tai nousu > 1,8.</span></li>
+        <li><span>3</span><span>Rasitus = treenityypin tai ohjelman <b>arvio</b> 0–10 × minuutit. Pelaaja voi kirjata omatoimiselle treenille oman tuntemuksensa (1–10), muuten oletus. Ei sykettä.</span></li>
+        <li><span>4</span><span>Kuorma × taso = viim. 7 pv / edellisten (enintään 4) viikon keskiarvo, kun dataa on vähintään 2 viikolta. Seurannan apuväline, ei vammariskin ennuste. <b>Liian kova</b> = vähintään kaksi merkkiä (nousu > 1,5, ei lepopäivää 7 pv:ään, 4+ raskasta päivää putkeen) tai nousu > 1,8.</span></li>
       </ul>
     </section>
 

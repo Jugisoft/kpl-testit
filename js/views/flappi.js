@@ -96,7 +96,7 @@ export function piirraFlappi(el, opt) {
             </div>
             <label class="kentta">Kuvaus <textarea name="kuvaus" rows="3" placeholder="Mitä kuviossa tapahtuu ja miksi. Esim. 3-kulmaan kovakätinen, jotta etenijä poltetaan kakkoselle.">${esc(L.kuvaus)}</textarea></label>
             <div class="rivi">
-              <button class="btn ensisij" type="submit"${F.likainen || !L.id ? "" : " disabled"}>Tallenna</button>
+              ${tila.valmennus ? `<button class="btn ensisij" type="submit"${F.likainen || !L.id ? "" : " disabled"}>Tallenna</button>` : `<span class="pieni">Vain luku – kuvioita tallentaa valmennus.</span>`}
               ${F.likainen && L.id ? `<button type="button" class="btn" id="fl-peru">Peru muutokset</button>` : ""}
               ${L.id && (omaKuvio || tila.admin) ? `<button type="button" class="linkkinappi" id="fl-poista">Poista kuvio</button>` : ""}
               <span class="pieni" id="fl-tila">${F.likainen ? "Tallentamattomia muutoksia" : L.id ? `Tekijä ${esc(kirjoittajanNimi(L.tekija))}` : "Muutokset tulevat voimaan vasta tallennettaessa"}</span>

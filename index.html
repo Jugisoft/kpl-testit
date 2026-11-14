@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
+<script>
+// Versiotarkistus: pakottaa päivityksen kotinäytön käyttäjille
+(function(){try{var u="version.json?_="+Date.now();fetch(u).then(function(r){return r.json()}).then(function(d){var k="kpl_v",s=localStorage.getItem(k);if(s&&s!==d.v){localStorage.setItem(k,d.v);location.reload()}else if(!s){localStorage.setItem(k,d.v)}}).catch(function(){})}catch(e){}})();
+</script>
 <title>KPL Keskus</title>
 <meta name="description" content="Kouvolan Pallonlyöjien valmennuksen keskus: huomiot, siirtomarkkinat, analyysi, testit ja pelikirja.">
 <meta name="theme-color" content="#181818">
@@ -13,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700;1,800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261114-21">
+<link rel="stylesheet" href="styles.css?v=20261114-22">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
 </head>
 <body>
@@ -34,55 +38,55 @@
 <script type="importmap">
 {
  "imports": {
-  "./js/db.js": "./js/db.js?v=20261114-21",
-  "./js/huomiointi.js": "./js/huomiointi.js?v=20261114-21",
-  "./js/kentta.js": "./js/kentta.js?v=20261114-21",
-  "./js/keskus.js": "./js/keskus.js?v=20261114-21",
-  "./js/liitteet.js": "./js/liitteet.js?v=20261114-21",
-  "./js/lyontikartta.js": "./js/lyontikartta.js?v=20261114-21",
-  "./js/pelaajakuva.js": "./js/pelaajakuva.js?v=20261114-21",
-  "./js/profiili.js": "./js/profiili.js?v=20261114-21",
-  "./js/util.js": "./js/util.js?v=20261114-21",
-  "./js/views/analyysi.js": "./js/views/analyysi.js?v=20261114-21",
-  "./js/views/flappi.js": "./js/views/flappi.js?v=20261114-21",
-  "./js/views/hallinta.js": "./js/views/hallinta.js?v=20261114-21",
-  "./js/views/juoksu.js": "./js/views/juoksu.js?v=20261114-21",
-  "./js/views/juoksuodotus.js": "./js/views/juoksuodotus.js?v=20261114-21",
-  "./js/views/kerrat.js": "./js/views/kerrat.js?v=20261114-21",
-  "./js/views/kerta.js": "./js/views/kerta.js?v=20261114-21",
-  "./js/views/keskus.js": "./js/views/keskus.js?v=20261114-21",
-  "./js/views/kirjaudu.js": "./js/views/kirjaudu.js?v=20261114-21",
-  "./js/views/korjaamo.js": "./js/views/korjaamo.js?v=20261114-21",
-  "./js/views/kortti.js": "./js/views/kortti.js?v=20261114-21",
-  "./js/views/lyonnit.js": "./js/views/lyonnit.js?v=20261114-21",
-  "./js/views/treenit.js": "./js/views/treenit.js?v=20261114-21",
-  "./js/views/ohjelmat.js": "./js/views/ohjelmat.js?v=20261114-21",
-  "./js/views/muistio.js": "./js/views/muistio.js?v=20261114-21",
-  "./js/views/ohje.js": "./js/views/ohje.js?v=20261114-21",
-  "./js/views/pelaaja.js": "./js/views/pelaaja.js?v=20261114-21",
-  "./js/views/pelaajat.js": "./js/views/pelaajat.js?v=20261114-21",
-  "./js/views/siirtomarkkinat.js": "./js/views/siirtomarkkinat.js?v=20261114-21",
-  "./js/views/syotto.js": "./js/views/syotto.js?v=20261114-21",
-  "./js/views/testit.js": "./js/views/testit.js?v=20261114-21",
-  "./js/views/vertailu.js": "./js/views/vertailu.js?v=20261114-21",
-  "./js/views/vastustaja.js": "./js/views/vastustaja.js?v=20261114-21",
-  "./js/views/vpelaaja.js": "./js/views/vpelaaja.js?v=20261114-21",
-  "./js/views/yleiskuva.js": "./js/views/yleiskuva.js?v=20261114-21",
-  "./js/views/oma.js": "./js/views/oma.js?v=20261114-21",
-  "./js/lyontianalyysi.js": "./js/lyontianalyysi.js?v=20261114-21",
-  "./js/minunpeli.js": "./js/minunpeli.js?v=20261114-21",
-  "./js/kuorma.js": "./js/kuorma.js?v=20261114-21",
-  "./js/kuormaydin.js": "./js/kuormaydin.js?v=20261114-21",
-  "./js/views/kooste.js": "./js/views/kooste.js?v=20261114-21",
-  "./js/cooperVauhti.js": "./js/cooperVauhti.js?v=20261114-21",
-  "./js/views/seuranta.js": "./js/views/seuranta.js?v=20261114-21",
-  "./js/minunpeli_tilastot.js": "./js/minunpeli_tilastot.js?v=20261114-21",
-  "./js/views/minunpelisivu.js": "./js/views/minunpelisivu.js?v=20261114-21",
-  "./js/views/minunkehityssivu.js": "./js/views/minunkehityssivu.js?v=20261114-21",
-  "./js/minunkehitys.js": "./js/minunkehitys.js?v=20261114-21"
+  "./js/db.js": "./js/db.js?v=20261114-22",
+  "./js/huomiointi.js": "./js/huomiointi.js?v=20261114-22",
+  "./js/kentta.js": "./js/kentta.js?v=20261114-22",
+  "./js/keskus.js": "./js/keskus.js?v=20261114-22",
+  "./js/liitteet.js": "./js/liitteet.js?v=20261114-22",
+  "./js/lyontikartta.js": "./js/lyontikartta.js?v=20261114-22",
+  "./js/pelaajakuva.js": "./js/pelaajakuva.js?v=20261114-22",
+  "./js/profiili.js": "./js/profiili.js?v=20261114-22",
+  "./js/util.js": "./js/util.js?v=20261114-22",
+  "./js/views/analyysi.js": "./js/views/analyysi.js?v=20261114-22",
+  "./js/views/flappi.js": "./js/views/flappi.js?v=20261114-22",
+  "./js/views/hallinta.js": "./js/views/hallinta.js?v=20261114-22",
+  "./js/views/juoksu.js": "./js/views/juoksu.js?v=20261114-22",
+  "./js/views/juoksuodotus.js": "./js/views/juoksuodotus.js?v=20261114-22",
+  "./js/views/kerrat.js": "./js/views/kerrat.js?v=20261114-22",
+  "./js/views/kerta.js": "./js/views/kerta.js?v=20261114-22",
+  "./js/views/keskus.js": "./js/views/keskus.js?v=20261114-22",
+  "./js/views/kirjaudu.js": "./js/views/kirjaudu.js?v=20261114-22",
+  "./js/views/korjaamo.js": "./js/views/korjaamo.js?v=20261114-22",
+  "./js/views/kortti.js": "./js/views/kortti.js?v=20261114-22",
+  "./js/views/lyonnit.js": "./js/views/lyonnit.js?v=20261114-22",
+  "./js/views/treenit.js": "./js/views/treenit.js?v=20261114-22",
+  "./js/views/ohjelmat.js": "./js/views/ohjelmat.js?v=20261114-22",
+  "./js/views/muistio.js": "./js/views/muistio.js?v=20261114-22",
+  "./js/views/ohje.js": "./js/views/ohje.js?v=20261114-22",
+  "./js/views/pelaaja.js": "./js/views/pelaaja.js?v=20261114-22",
+  "./js/views/pelaajat.js": "./js/views/pelaajat.js?v=20261114-22",
+  "./js/views/siirtomarkkinat.js": "./js/views/siirtomarkkinat.js?v=20261114-22",
+  "./js/views/syotto.js": "./js/views/syotto.js?v=20261114-22",
+  "./js/views/testit.js": "./js/views/testit.js?v=20261114-22",
+  "./js/views/vertailu.js": "./js/views/vertailu.js?v=20261114-22",
+  "./js/views/vastustaja.js": "./js/views/vastustaja.js?v=20261114-22",
+  "./js/views/vpelaaja.js": "./js/views/vpelaaja.js?v=20261114-22",
+  "./js/views/yleiskuva.js": "./js/views/yleiskuva.js?v=20261114-22",
+  "./js/views/oma.js": "./js/views/oma.js?v=20261114-22",
+  "./js/lyontianalyysi.js": "./js/lyontianalyysi.js?v=20261114-22",
+  "./js/minunpeli.js": "./js/minunpeli.js?v=20261114-22",
+  "./js/kuorma.js": "./js/kuorma.js?v=20261114-22",
+  "./js/kuormaydin.js": "./js/kuormaydin.js?v=20261114-22",
+  "./js/views/kooste.js": "./js/views/kooste.js?v=20261114-22",
+  "./js/cooperVauhti.js": "./js/cooperVauhti.js?v=20261114-22",
+  "./js/views/seuranta.js": "./js/views/seuranta.js?v=20261114-22",
+  "./js/minunpeli_tilastot.js": "./js/minunpeli_tilastot.js?v=20261114-22",
+  "./js/views/minunpelisivu.js": "./js/views/minunpelisivu.js?v=20261114-22",
+  "./js/views/minunkehityssivu.js": "./js/views/minunkehityssivu.js?v=20261114-22",
+  "./js/minunkehitys.js": "./js/minunkehitys.js?v=20261114-22"
  }
 }
 </script>
-<script type="module" src="app.js?v=20261114-21"></script>
+<script type="module" src="app.js?v=20261114-22"></script>
 </body>
 </html>

@@ -56,6 +56,8 @@ def main():
         if t != s:
             p.write_text(t, encoding="utf-8")
             muutetut += len(KUVIO.findall(s))
+    # Päivitä version.json kotinäytön cache-tarkistusta varten
+    (JUURI / "version.json").write_text(f'{{"v":"{uusi}"}}', encoding="utf-8")
     print(f"Versio {nyt} → {uusi} ({muutetut} kohtaa)")
 
 

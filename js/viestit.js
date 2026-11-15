@@ -122,19 +122,24 @@ export function kytkeViestiLomake(main, { pelaajaId, joukkueId }) {
   };
 }
 
-// --- Pelaajan lukemattomien viestien banneri ---
-export function viestiBanneri(viestit) {
+// --- Pelaajan viestibanneri: kaikki viestit, lukemattomat korostettuina ---
+export function viestiBanneri(viestit, lukemattomatIdt) {
   if (!viestit.length) return "";
+  const lkm = lukemattomatIdt ? lukemattomatIdt.size : 0;
+  const otsikko = lkm ? `Viestit (${lkm} uutta)` : "Viestit";
   return `<section class="paneeli viesti-banneri" id="viesti-banneri">
-    <div class="oma-osa-paa"><h2>Lukemattomia viestejä (${viestit.length})</h2></div>
-    <ol class="viesti-lista">${viestit.slice(0, 10).map((v) => `
-      <li class="viesti-rivi" data-viesti-id="${v.id}">
+    <div class="oma-osa-paa"><h2>${otsikko}</h2></div>
+    <ol class="viesti-lista">${viestit.slice(0, 20).map((v) => {
+      const uusi = lukemattomatIdt && lukemattomatIdt.has(v.id);
+      return `
+      <li class="viesti-rivi${uusi ? "" : " luettu"}" data-viesti-id="${v.id}">
         <div class="viesti-paa">
-          <strong>${esc(v.otsikko)}</strong>
+          <strong>${uusi ? "🔵 " : ""}${esc(v.otsikko)}</strong>
           <span class="pieni">${esc(kirjoittajanNimi(v.lahettaja_email))}, ${aikaSitten(v.luotu)}</span>
         </div>
         ${v.teksti ? `<p class="viesti-teksti">${esc(v.teksti)}</p>` : ""}
-      </li>`).join("")}
+      </li>`;
+    }).join("")}
     </ol>
   </section>`;
 }

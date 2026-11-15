@@ -10,6 +10,7 @@ import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
 import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, valmentajaltaKortti, merkitseNahdyiksi } from "../huomiointi.js";
+import { haeLukemattomat, viestiLomake, kytkeViestiLomake, viestiBanneri, kytkeViestiBanneri, nollaaCache as nollaaViestiCache } from "../viestit.js";
 
 const PAIVA = 864e5;
 let HM = []; // 14.11.2026: valmentajan huomioinnit tälle pelaajalle (js/huomiointi.js)
@@ -50,7 +51,7 @@ async function piirra(main) {
   const joukkue = tila.joukkueet.find((j) => j.id === p.joukkue_id);
   const vkLoppu = lisaaPv(viikko, 6);
 
-  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit, rasRes, hmLista] = await Promise.all([
+  const [kaikki, tav, ohj, missiot, kirjaukset, nhLaaja, poissaRes, ilmoRes, treeniOhj, vkTreenit, rasRes, hmLista, lukemattomatViestit] = await Promise.all([
     lataaTulokset().then(testiParhaat),
     sb.from("tavoitteet").select("*").eq("pelaaja_id", pid).order("luotu"),
     sb.from("ohjelma").select("*").eq("viikko", viikko).or(`pelaaja_id.eq.${pid},joukkue_id.eq.${p.joukkue_id}`).order("jarjestys").order("luotu"),
@@ -66,6 +67,7 @@ async function piirra(main) {
     sb.from("omat_treenit").select("ohjelma,pvm").eq("pelaaja_id", pid).gte("pvm", viikko).lte("pvm", vkLoppu),
     sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
     lataaNimet().then(() => haeHm([pid])),
+    oma ? haeLukemattomat() : Promise.resolve([]),
   ]);
   HM = hmLista || [];
   const poissa = new Set((poissaRes.data || []).map((x) => x.uid));
@@ -128,9 +130,13 @@ async function piirra(main) {
       </div>
     </div>
 
+    ${oma ? viestiBanneri(lukemattomatViestit) : ""}
+
     ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa: eiMukana, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
 
     ${hmOsio}
+
+    ${tila.ohjaaja && !oma ? viestiLomake({ pelaajaId: pid, pelaajanNimi: p.etunimi, joukkueId: p.joukkue_id, joukkueenNimi: joukkue?.nimi }) : ""}
 
     ${peliEnsin ? peliOsiot : ""}
 
@@ -214,6 +220,10 @@ async function piirra(main) {
   kytkeRasitus(main, p, () => piirra(main));
   hmKytke(main);
   if (oma && HM.some((h) => !h.nahty)) merkitseNahdyiksi(); // kuitataan nähdyiksi; "uutta"-merkki näkyy tämän käynnin ajan
+
+  // --- viestit ---
+  if (tila.ohjaaja && !oma) kytkeViestiLomake(main, { pelaajaId: pid, joukkueId: p.joukkue_id });
+  if (oma) kytkeViestiBanneri(main, () => piirra(main));
 
   // --- tapahtumat ---
   $(".ti", main).onclick = (e) => { const a = e.target.closest("[data-ti]"); if (!a) return; e.preventDefault(); $("#" + a.dataset.ti, main)?.scrollIntoView({ behavior: "smooth", block: "start" }); };

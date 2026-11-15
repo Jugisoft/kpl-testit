@@ -2776,3 +2776,17 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
   .mk-vk-rivi { grid-template-columns: 1fr; }
   .mk-tavoitteet { grid-template-columns: 1fr; }
 }
+
+/* --- Viestit (15.11.2026) --- */
+.viesti-banneri { background: var(--card); border-left: 4px solid var(--cyan); }
+.viesti-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.viesti-rivi { padding: 12px 14px; background: var(--bg2, rgba(255,255,255,0.04)); border-radius: 8px; cursor: pointer; transition: opacity .2s; }
+.viesti-rivi.luettu { opacity: .5; }
+.viesti-paa { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.viesti-paa strong { font-size: 15px; }
+.viesti-teksti { margin: 6px 0 0; font-size: 14px; color: var(--fg2); white-space: pre-line; }
+.viesti-osio { background: var(--card); }
+.viesti-osio .oma-lomake { margin-top: 10px; }
+.nav-viesti { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; margin-left: auto; border-radius: 10px; background: var(--cyan); color: var(--musta); font: 700 12px/1 var(--num); }
+#alapalkki a .nav-viesti { position: absolute; top: 3px; left: calc(50% + 6px); margin: 0; }
+[aria-current="page"] > .nav-viesti { background: var(--musta); color: var(--cyan); }

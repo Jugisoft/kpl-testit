@@ -27,6 +27,7 @@ import * as minunpelisivu from "./js/views/minunpelisivu.js";
 import * as minunkehityssivu from "./js/views/minunkehityssivu.js";
 import * as kooste from "./js/views/kooste.js";
 import * as seuranta from "./js/views/seuranta.js";
+import { lukemattomienMaara } from "./js/viestit.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -104,7 +105,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261114-26", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261115-1", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -191,7 +192,7 @@ function piirraNav(polku, r) {
   }
   $("#mp-sivu").textContent = aktiivinenNimi;
   avaaValikko(false);
-  if (tila.jasen && tila.omaPelaaja) naytaUudetHuomioinnit();
+  if (tila.jasen && tila.omaPelaaja) { naytaUudetHuomioinnit(); naytaLukemattomatViestit(); }
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;
@@ -210,6 +211,17 @@ async function naytaUudetHuomioinnit() {
     if (a.querySelector(".nav-uusi")) return;
     a.insertAdjacentHTML("beforeend", `<b class="nav-uusi" aria-label="${count} uutta valmentajalta">${count}</b>`);
   });
+}
+// 15.11.2026: lukemattomien viestien badge Oma-linkissä
+async function naytaLukemattomatViestit() {
+  try {
+    const lkm = await lukemattomienMaara();
+    if (!lkm) return;
+    document.querySelectorAll('#nav a[href="#/oma"], #alapalkki a[href="#/oma"]').forEach((a) => {
+      if (a.querySelector(".nav-viesti")) return;
+      a.insertAdjacentHTML("beforeend", `<b class="nav-viesti" aria-label="${lkm} lukematonta viestiä">${lkm}</b>`);
+    });
+  } catch (e) { /* hiljaa: viestit eivät ole kriittisiä */ }
 }
 // Uloskirjautuminen (1.11.2026, korjaamo): näkyvä palaute heti, istunto poistetaan paikallisesti
 // (ei jää odottamaan verkkoa) ja sivu ladataan kirjautumissivulle ylhäältä alkaen.

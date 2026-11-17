@@ -54,7 +54,7 @@ function rooli(d) {
   const toinen = [0, 1, 2, 3].filter((k) => k !== n).sort((a, b) => o[b] - o[a])[0];
   const lisa = o[toinen] >= 0.2 ? `, toiseksi eniten ${["nollatilanteessa", "1-tilanteessa", "2-tilanteessa", "takatilanteessa"][toinen]} ${pc(o[toinen])}` : "";
   if (max < 0.35) return { nimi: "Monipuolinen", syy: `mikään tilanne ei erotu (suurin ${["nollatilanteessa", "1-tilanteessa", "2-tilanteessa", "takatilanteessa"][n]} ${pc(max)})` };
-  if (n === 0) return { nimi: "Kärkietenijä", syy: `${pc(o[0])} kärkilyönneistä nollatilanteessa (kentälle pääsy)${lisa}` };
+  if (n === 0) return { nimi: "Nollan purkaja", syy: `${pc(o[0])} kärkilyönneistä nollatilanteessa (kentälle pääsy)${lisa}` };   // 17.11.2026 (Jugi): ei "Kärkietenijä", nollatilanteeseen voi tulla myös lyöntijärjestyksen perältä
   if (n === 1) return { nimi: "1-tilanteen vaihtaja", syy: `${pc(o[1])} kärkilyönneistä 1-tilanteessa${lisa}` };
   if (n === 2) return { nimi: "2-tilanteen vaihtaja", syy: `${pc(o[2])} kärkilyönneistä 2-tilanteessa${lisa}` };
   if (o[3] >= 0.5) return { nimi: "Kotiuttaja", syy: `${pc(o[3])} kärkilyönneistä takatilanteessa${lisa}` };

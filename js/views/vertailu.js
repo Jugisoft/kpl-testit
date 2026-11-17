@@ -257,7 +257,7 @@ function kehitys(kaikki) {
 // ---------- Rooli kentällä: missä tilanteissa pelaaja lyö kärkilyönnit ja tuoko vai lyökö juoksut
 const TILANTEET = [["KLY0", "0", "kentälle pääsy"], ["KLY1", "1", "1-tilanne"], ["KLY2", "2", "2-tilanne"], ["KLY3", "3", "takatilanne"]];
 const TVARIT = ["#94A3B8", "#7DD3FC", "#F5A800", "#2EE59D"];
-// Roolit kärkilyöntien tilannejakauman mukaan (Jugi 20.10.2026): pääosin 0-tilanne = kärkietenijä,
+// Roolit kärkilyöntien tilannejakauman mukaan (Jugi 20.10.2026): pääosin 0-tilanne = nollan purkaja (17.11.2026, ennen kärkietenijä),
 // 1-tilanne = 1-tilanteen vaihtaja, 2-tilanne = 2-tilanteen vaihtaja, takatilanne = kotiuttaja
 // vähintään puolet; jos takatilanne on yleisin mutta alle puolet, vaihtaja / kotiuttaja). Mikään tilanne ei yli 35 % = monipuolinen.
 function rooli(d) {
@@ -267,7 +267,7 @@ function rooli(d) {
   const toinen = [0, 1, 2, 3].filter((k) => k !== n).sort((a, b) => o[b] - o[a])[0];
   const lisa = o[toinen] >= 0.2 ? `, toiseksi eniten ${["0-tilanne", "1-tilanne", "2-tilanne", "takatilanne"][toinen]} ${pc(o[toinen])}` : "";
   if (max < 0.35) return { nimi: "Monipuolinen", syy: `mikään tilanne ei erotu (suurin ${["0-tilanne", "1-tilanne", "2-tilanne", "takatilanne"][n]} ${pc(max)})` };
-  if (n === 0) return { nimi: "Kärkietenijä", syy: `${pc(o[0])} kärkilyönneistä 0-tilanteessa (kotipesältä kentälle)${lisa}` };
+  if (n === 0) return { nimi: "Nollan purkaja", syy: `${pc(o[0])} kärkilyönneistä nollatilanteessa (kentälle pääsy)${lisa}` };   // 17.11.2026 (Jugi): ei "Kärkietenijä"
   if (n === 1) return { nimi: "1-tilanteen vaihtaja", syy: `${pc(o[1])} kärkilyönneistä 1-tilanteessa${lisa}` };
   if (n === 2) return { nimi: "2-tilanteen vaihtaja", syy: `${pc(o[2])} kärkilyönneistä 2-tilanteessa${lisa}` };
   const muut12 = o[1] + o[2];

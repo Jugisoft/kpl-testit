@@ -17,6 +17,10 @@ const MAILAT = ["oma", "Optima", "Ultima"];
 const maila = (r) => (r.huomio || "").match(/^Maila:\s*(.+)$/i)?.[1] || "";
 const kevat = (s) => +s.slice(0, 4) + (+s.slice(5, 7) >= 7 ? 1 : 0);
 const tnimi = (T) => T.nimi.replace(/^Edustuksen lyöntitesti: /, "Lyöntitesti: ");
+// 17.11.2026 (Jugi): testijakso syksy = elo–joulu, kevät = tammi–heinä (joulutauko rajana). Avain "2026-2" = syksy 2026,
+// "2027-1" = kevät 2027, jolloin avaimet järjestyvät aikajärjestykseen merkkijonoina.
+const jakso = (s) => `${s.slice(0, 4)}-${+s.slice(5, 7) >= 8 ? 2 : 1}`;
+const jaksoNimi = (j) => `${j.endsWith("-2") ? "Syksy" : "Kevät"} ${j.slice(0, 4)}`;
 const desi = (x) => (x == null ? "" : x.toFixed(1).replace(".", ","));
 // sijoitus ryhmässä (1 = paras) ja montako prosenttia ryhmästä ohitetaan
 function sijoitus(t, arvo, arvot) {
@@ -159,15 +163,17 @@ export async function nayta(main, ryhma, luokka, testi) {
     const g = S.ryhma, t = T.koodi, rr = data[g].parhaat.filter((x) => x.testi === t);
     const kerrat = [...new Set(rr.map((x) => x.kerta))].map((k) => tila.kerta[k]).sort((a, b) => b.pvm.localeCompare(a.pvm));
     const kaudet = [...new Set(rr.map((x) => kausi(x.pvm)))].sort().reverse();
+    const jaksot = [...new Set(rr.map((x) => jakso(x.pvm)))].sort().reverse();
     const avain = g + "|" + t;
     let val = S.tarkastelu[avain];
-    const ok = (v) => v && ((v.startsWith("k:") && kerrat.some((k) => "k:" + k.id === v)) || (v.startsWith("s:") && kaudet.includes(v.slice(2))));
-    if (!ok(val)) val = g === "superpesis" ? (kerrat[0] ? "k:" + kerrat[0].id : null) : kaudet[0] ? "s:" + kaudet[0] : null;
+    const ok = (v) => v && ((v.startsWith("k:") && kerrat.some((k) => "k:" + k.id === v)) || (v.startsWith("s:") && kaudet.includes(v.slice(2))) || (v.startsWith("j:") && jaksot.includes(v.slice(2))));
+    if (!ok(val)) val = g === "superpesis" ? (jaksot[0] ? "j:" + jaksot[0] : null) : kaudet[0] ? "s:" + kaudet[0] : null;   // 17.11.2026: edustukselle oletuksena uusin testijakso
     const ikaluokat = g === "juniorit" ? [...new Set(rr.map((x) => tila.pelaaja[x.pelaaja]?.syntymavuosi).filter(Boolean))].sort() : [];
     if (S.ikaluokka && !ikaluokat.includes(+S.ikaluokka)) S.ikaluokka = "";
     $("#tst-ohjaimet").innerHTML = `
       <label class="jtt-valinta"><span>Tarkastelu</span><select id="tst-val">
         ${kerrat.length ? `<optgroup label="Testikerta">${kerrat.map((k) => `<option value="k:${k.id}"${"k:" + k.id === val ? " selected" : ""}>${pvm(k.pvm)}${k.nimi ? ` · ${esc(k.nimi)}` : ""}</option>`).join("")}</optgroup>` : ""}
+        ${jaksot.length ? `<optgroup label="Testijakso (paras tulos)">${jaksot.map((j) => `<option value="j:${j}"${"j:" + j === val ? " selected" : ""}>${jaksoNimi(j)}</option>`).join("")}</optgroup>` : ""}
         <optgroup label="Kauden paras">${kaudet.map((ka) => `<option value="s:${ka}"${"s:" + ka === val ? " selected" : ""}>Kausi ${ka}, paras tulos</option>`).join("")}</optgroup>
       </select></label>
       ${ikaluokat.length > 1 ? `<div class="jtt-chipit" role="radiogroup" aria-label="Ikäluokka"><button class="chip" data-ika="" aria-pressed="${!S.ikaluokka}">Kaikki</button>${ikaluokat.map((v) => `<button class="chip" data-ika="${v}" aria-pressed="${String(v) === String(S.ikaluokka)}">${v}</button>`).join("")}</div>` : ""}
@@ -186,17 +192,19 @@ export async function nayta(main, ryhma, luokka, testi) {
     const mukaan = (pid) => { const p = tila.pelaaja[pid]; return p && (!S.nykyiset || p.aktiivinen !== false) && (!S.ikaluokka || String(p.syntymavuosi) === String(S.ikaluokka)); };
     const parasMap = (a) => { const m = new Map(); a.forEach((x) => { const o = m.get(x.pelaaja); if (!o || parannus(t, x.arvo, o.arvo) > 0) m.set(x.pelaaja, x); }); return m; };
     if (!val) { el.innerHTML = `<div class="paneeli jtt-tyhja"><h2>Ei tuloksia</h2></div>`; return; }
-    const onKerta = val.startsWith("k:"), ka = onKerta ? kausi(tila.kerta[val.slice(2)].pvm) : val.slice(2);
+    const onKerta = val.startsWith("k:"), onJakso = val.startsWith("j:");
+    const jaksoOf = onJakso ? jakso : kausi;   // kauden paras tai testijakson paras
+    const ka = onKerta ? kausi(tila.kerta[val.slice(2)].pvm) : val.slice(2);
     let lista;
     if (onKerta) lista = kaikki.filter((x) => x.kerta === val.slice(2) && mukaan(x.pelaaja));
-    else lista = [...parasMap(kaikki.filter((x) => kausi(x.pvm) === ka && mukaan(x.pelaaja))).values()];
+    else lista = [...parasMap(kaikki.filter((x) => jaksoOf(x.pvm) === ka && mukaan(x.pelaaja))).values()];
     // vertailukohta: sama pelaaja edellisellä kerralla (testikerta) tai edellisellä kaudella (kauden paras)
     const edellinen = (x) => {
       if (onKerta) return kaikki.filter((y) => y.pelaaja === x.pelaaja && y.pvm < x.pvm).sort((a, b) => a.pvm.localeCompare(b.pvm)).at(-1) || null;
-      const ed = [...new Set(kaikki.filter((y) => y.pelaaja === x.pelaaja && kausi(y.pvm) < ka).map((y) => kausi(y.pvm)))].sort().at(-1);
-      return ed ? parasMap(kaikki.filter((y) => y.pelaaja === x.pelaaja && kausi(y.pvm) === ed)).get(x.pelaaja) : null;
+      const ed = [...new Set(kaikki.filter((y) => y.pelaaja === x.pelaaja && jaksoOf(y.pvm) < ka).map((y) => jaksoOf(y.pvm)))].sort().at(-1);
+      return ed ? parasMap(kaikki.filter((y) => y.pelaaja === x.pelaaja && jaksoOf(y.pvm) === ed)).get(x.pelaaja) : null;
     };
-    const kpIka = g === "juniorit" ? parasMap(kaikki.filter((y) => kausi(y.pvm) === ka)) : null;
+    const kpIka = g === "juniorit" ? parasMap(kaikki.filter((y) => (onKerta ? kausi(y.pvm) : jaksoOf(y.pvm)) === ka)) : null;
     const rivit = lista.map((x) => {
       const aiemmat = kaikki.filter((y) => y.pelaaja === x.pelaaja && y.pvm < x.pvm).map((y) => y.arvo);
       const pbEnnen = aiemmat.length ? paras(t, aiemmat) : null, ed = edellinen(x);
@@ -213,8 +221,8 @@ export async function nayta(main, ryhma, luokka, testi) {
     const parani = vrt.filter((r) => parannus(t, r.v, r.ed.arvo) > 0).length;
     const mdMuutos = mediaani(vrt.map((r) => r.v - r.ed.arvo));
     const ennKaikki = [...kaikki].sort((a, b) => (T.pienempi_parempi ? a.arvo - b.arvo : b.arvo - a.arvo))[0];
-    const otsikko = onKerta ? `${pvm(tila.kerta[val.slice(2)].pvm)}${tila.kerta[val.slice(2)].nimi ? ` · ${esc(tila.kerta[val.slice(2)].nimi)}` : ""}` : `Kausi ${ka} · pelaajan paras tulos`;
-    const vrtNimi = onKerta ? "edellisestä kerrasta" : "edellisestä kaudesta";
+    const otsikko = onKerta ? `${pvm(tila.kerta[val.slice(2)].pvm)}${tila.kerta[val.slice(2)].nimi ? ` · ${esc(tila.kerta[val.slice(2)].nimi)}` : ""}` : onJakso ? `${jaksoNimi(ka)} · pelaajan paras tulos jakson testeistä` : `Kausi ${ka} · pelaajan paras tulos`;
+    const vrtNimi = onKerta ? "edellisestä kerrasta" : onJakso ? "edellisestä jaksosta" : "edellisestä kaudesta";
     const fmt = (v) => (v == null ? "–" : muotoile(v, t));
 
     el.innerHTML = `
@@ -226,7 +234,7 @@ export async function nayta(main, ryhma, luokka, testi) {
       </div>
 
       <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Tulostaulu</h2><span class="pieni">${otsikko}</span></div>
-        <div class="jtt-selite"><span><i class="jtt-pallo"></i>tulos</span><span><i class="jtt-pallo haamu"></i>${onKerta ? "edellinen kerta" : "edellinen kausi"}</span><span><i class="jtt-pallo pb"></i>uusi ennätys</span><span><i class="jtt-mdviiva"></i>mediaani</span><span>oikealla = parempi</span></div>
+        <div class="jtt-selite"><span><i class="jtt-pallo"></i>tulos</span><span><i class="jtt-pallo haamu"></i>${onKerta ? "edellinen kerta" : onJakso ? "edellinen jakso" : "edellinen kausi"}</span><span><i class="jtt-pallo pb"></i>uusi ennätys</span><span><i class="jtt-mdviiva"></i>mediaani</span><span>oikealla = parempi</span></div>
         <div class="jtt-taulu tst-taulu" id="tst-taulu" role="table" aria-label="Tulostaulu"></div></section>
 
       <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kehitys</h2><span class="pieni">${g === "superpesis" ? "testikerroittain, pelaajan paras kerralla" : "kausittain, pelaajan kauden paras"}</span></div>
@@ -266,7 +274,11 @@ export async function nayta(main, ryhma, luokka, testi) {
     const kehitys = () => {
       const varit = ["#F5A800", "#FF3B4E", "#2EE59D", "#7DD3FC", "#A78BFA", "#C98A00", "#F472B6"];
       let labels, arvo;
-      if (g === "superpesis") {
+      if (onJakso) {   // testijaksoittain: pelaajan paras tulos kultakin jaksolta
+        const js = [...new Set(kaikki.map((x) => jakso(x.pvm)))].sort();
+        labels = js.map(jaksoNimi);
+        arvo = (pid) => js.map((j) => parasMap(kaikki.filter((x) => x.pelaaja === pid && jakso(x.pvm) === j)).get(pid)?.arvo ?? null);
+      } else if (g === "superpesis") {
         const kk = [...new Set(kaikki.map((x) => x.kerta))].map((k) => tila.kerta[k]).sort((a, b) => a.pvm.localeCompare(b.pvm));
         labels = kk.map((k) => pvmLyhyt(k.pvm));
         arvo = (pid) => kk.map((k) => kaikki.find((x) => x.pelaaja === pid && x.kerta === k.id)?.arvo ?? null);

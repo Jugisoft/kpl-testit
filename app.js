@@ -105,7 +105,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261117-1", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261117-2", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -128,7 +128,7 @@ const RYHMAT_PSU = [
   ]],
 ];
 const ALAPALKKI_PSU = [["Testit", "#/testit/juniorit", "testit"], ["Juoksu", "#/juoksu/30m/juniorit", "juoksuodotus"], ["Pelaajat", "#/pelaajat", "muistio"], ["Vertailu", "#/vertailu", "analyysi"]];
-const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|seuranta|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
+const PSU_SALLITTU = (polku, r) => r?.osio === "testit" || /^\/(oma|kooste|seuranta|treenit|ohjelmat|lyonnit|ohje|korjaamo|kirjaudu)/.test(polku);
 // Juniori-pelaaja (1.11.2026): oma Keskus, junioreiden testit (luku), lyöntipäiväkirja
 const OMA = ["Oma Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
 const TREENIT = ["Treenipäiväkirja", "#/treenit", "treeni", (p) => /^\/treenit/.test(p)];
@@ -156,7 +156,8 @@ function valikko() {
   const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
   const koosteL = ["Viikkokooste", "#/kooste", "kooste", (p) => /^\/kooste/.test(p)];
   const seurantaL = ["Tavoiteseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026; 12.11.2026 nimi Tavoiteseuranta (omatoimiset Viikkokoosteessa)
-  if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, TREENIT, OHJELMAT]]), ALAPALKKI_PSU];
+  const lyontiseurantaL = ["Lyöntiseuranta", "#/lyonnit/seuranta", "lyonnit", (p) => /^\/lyonnit/.test(p)];   // 17.11.2026: PSU näkee junioreiden lyöntipäiväkirjat
+  if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, lyontiseurantaL, TREENIT, OHJELMAT]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
   ryhmat[1][1].unshift(TREENIT, OHJELMAT);   // treenipäiväkirja kaikille: pelaaja kirjaa, valmentaja katsoo pelaajan kirjauksia

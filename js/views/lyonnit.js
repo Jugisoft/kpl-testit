@@ -3,6 +3,7 @@
 import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita, palkki } from "../util.js";
 import { lataaNimet, kirjoittajanNimi } from "../keskus.js";
+import { PROFIILIT } from "../kuormaydin.js";
 
 // 14.11.2026: pääluokat Pienet ja Kovat korvaavat erittelemättömät
 const KAIKKI = "Kaikki lyönnit";   // missio, johon lasketaan kaikki lajit
@@ -141,7 +142,9 @@ async function hae(email) {
   return { missiot: m.data, kirjaukset: k.data };
 }
 
-const valilehdet = (aktiivinen) => tila.valmennus ? `<div class="ly-tabit" role="tablist">
+// 17.11.2026: seuranta myös PSU-valmennukselle; tietokanta (RLS) rajaa heille vain heille näkyvät pelaajat
+const seuraa = () => tila.valmennus || tila.psu;
+const valilehdet = (aktiivinen) => seuraa() ? `<div class="ly-tabit" role="tablist">
   <a href="#/lyonnit" role="tab" aria-selected="${aktiivinen === "oma"}">Oma päiväkirja</a>
   <a href="#/lyonnit/seuranta" role="tab" aria-selected="${aktiivinen === "seuranta"}">Seuranta</a></div>` : "";
 
@@ -153,7 +156,7 @@ export async function nayta(main, osa, kenen) {
 }
 
 async function paivakirja(main, email, muokattava) {
-  if (!muokattava && !tila.valmennus) { location.hash = "#/lyonnit"; return; }
+  if (!muokattava && !seuraa()) { location.hash = "#/lyonnit"; return; }
   const { missiot, kirjaukset } = await hae(email);
   const aktiiviset = missiot.filter((m) => !m.arkistoitu);
   const arkisto = missiot.filter((m) => m.arkistoitu);
@@ -306,11 +309,25 @@ async function paivakirja(main, email, muokattava) {
   }));
 }
 
+// 17.11.2026 (Jugi): treeniryhmän valitsin, ettei MSU ja B-ryhmä mene sekaisin. Ryhmä = pelaajan treeniprofiili
+// (rpc lyojien_ryhmat: kirjaajan sähköposti -> pelaaja). Valinta muistetaan selaimessa.
+const RYHMA_AVAIN = "kpl-lyonnit-ryhma";
+let seurantaRyhma = null;
 async function seuranta(main) {
-  if (!tila.valmennus) { location.hash = "#/lyonnit"; return; }
-  const { missiot, kirjaukset } = await hae(null);
+  if (!seuraa()) { location.hash = "#/lyonnit"; return; }
+  const [{ missiot, kirjaukset }, rr] = await Promise.all([hae(null), sb.rpc("lyojien_ryhmat")]);
+  const ryhmaOf = new Map((rr.data || []).map((r) => [r.email, r.treeniprofiili || "b"]));
+  const ryhma = (e) => ryhmaOf.get(e) || "muut";
   const t = tanaan(), raja4 = lisaaPv(t, -28);
-  const henkilot = [...new Set([...missiot.filter((m) => !m.arkistoitu).map((m) => m.omistaja), ...kirjaukset.map((k) => k.omistaja)])];
+  const kaikki = [...new Set([...missiot.filter((m) => !m.arkistoitu).map((m) => m.omistaja), ...kirjaukset.map((k) => k.omistaja)])];
+  const maarat = new Map();
+  kaikki.forEach((e) => maarat.set(ryhma(e), (maarat.get(ryhma(e)) || 0) + 1));
+  const NIMET = { ...PROFIILIT, msu: "MSU", muut: "Ei liitetty pelaajaan" };
+  const jarj = [...Object.keys(PROFIILIT).filter((k) => k === "msu"), ...Object.keys(PROFIILIT).filter((k) => k !== "msu"), "muut"].filter((k) => maarat.get(k));
+  if (seurantaRyhma === null) { try { seurantaRyhma = localStorage.getItem(RYHMA_AVAIN); } catch { /* ohitetaan */ } }
+  if (seurantaRyhma !== "kaikki" && !jarj.includes(seurantaRyhma)) seurantaRyhma = jarj[0] || "kaikki";
+  const henkilot = seurantaRyhma === "kaikki" ? kaikki : kaikki.filter((e) => ryhma(e) === seurantaRyhma);
+  const valitsin = jarj.length > 1 ? `<div class="chipit ly-ryhmat" role="group" aria-label="Treeniryhmä">${jarj.map((k) => `<button type="button" class="chip" data-ryhma="${k}" aria-pressed="${seurantaRyhma === k}">${esc(NIMET[k] || k)} <span class="pieni">${maarat.get(k)}</span></button>`).join("")}<button type="button" class="chip" data-ryhma="kaikki" aria-pressed="${seurantaRyhma === "kaikki"}">Kaikki <span class="pieni">${kaikki.length}</span></button></div>` : "";
   const rivit = henkilot.map((e) => {
     const omat = kirjaukset.filter((k) => k.omistaja === e);
     const ms = missiot.filter((m) => m.omistaja === e && !m.arkistoitu).map((m) => ({ m, s: laske(m, kirjaukset) }));
@@ -320,7 +337,8 @@ async function seuranta(main) {
 
   main.innerHTML = `${valilehdet("seuranta")}
     <h1>Lyöntipäiväkirjat · seuranta</h1>
-    <p class="ingressi">Pelaajien omat missiot ja kirjaukset. Vain valmentajat ja ylläpitäjä näkevät tämän sivun. Pelaajat näkevät vain oman päiväkirjansa.</p>
+    <p class="ingressi">Pelaajien omat missiot ja kirjaukset. Vain valmennus näkee tämän sivun. Pelaajat näkevät vain oman päiväkirjansa.</p>
+    ${valitsin}
     <div class="kpi-rivi">
       <div class="kpi"><div class="otsikko">Kirjaajia</div><div class="arvo">${rivit.length}</div></div>
       <div class="kpi"><div class="otsikko">Aktiivisia missioita</div><div class="arvo">${rivit.reduce((s, r) => s + r.ms.length, 0)}</div><div class="ala">${jaljessa ? `${jaljessa} jäljessä aikataulusta` : "kaikki aikataulussa"}</div></div>
@@ -335,5 +353,10 @@ async function seuranta(main) {
         ${i === 0 ? `<td class="n num" rowspan="${Math.max(1, r.ms.length)}">${luku(r.vk4)}</td><td rowspan="${Math.max(1, r.ms.length)}">${r.viim ? pvm(r.viim) : "–"}</td>` : ""}
       </tr>`).join("")).join("")}</tbody></table></div>
       <p class="vihje">Aikataulu = tehdyt lyönnit verrattuna tasaiseen tahtiin mission alusta tähän päivään. 4 vk = kaikki kirjatut lyönnit neljän viikon ajalta.</p>`
-    : `<p class="tyhja">Kukaan ei ole vielä kirjannut lyöntejä.</p>`}`;
+    : `<p class="tyhja">${kaikki.length ? "Tässä ryhmässä ei ole vielä kirjauksia." : "Kukaan ei ole vielä kirjannut lyöntejä."}</p>`}`;
+  $$("[data-ryhma]").forEach((b) => (b.onclick = () => {
+    seurantaRyhma = b.dataset.ryhma;
+    try { localStorage.setItem(RYHMA_AVAIN, seurantaRyhma); } catch { /* ohitetaan */ }
+    seuranta(main);
+  }));
 }

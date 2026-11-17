@@ -1057,6 +1057,8 @@ td.n.kt-ei { font-style: normal; }
 .ly-tabit { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
 .ly-tabit a { padding: 10px 14px; color: var(--ink-2); text-decoration: none; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .ly-tabit a[aria-selected="true"] { color: var(--kpl); border-bottom-color: var(--kpl); }
+.ly-ryhmat { margin: 4px 0 18px; }
+.ly-ryhmat .chip .pieni { opacity: .7; }
 .ly-otsikko { display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; align-items: flex-end; }
 .ly-otsikko h1 { margin-bottom: 4px; }
 .ly-yht { display: flex; gap: 28px; margin-bottom: 20px; }

@@ -419,7 +419,7 @@ function nokYhteenveto(rivit) {
   const lajit = [...ss].sort((a, b) => a.sdec - b.sdec);
   const n1 = Math.round(lajit.length / 3), n2 = Math.round((lajit.length * 2) / 3);   // sijoitus ryhmässä kolmanneksittain
   const luokka = (i) => (i < n1 ? ["hyva", "Kunnossa"] : i < n2 ? ["kesk", "Keskitaso"] : ["heikko", "Kehitettävää"]);
-  const s3 = (s) => (s.sarjat[2] / s.sarjat[0] - 1) * 100;
+  const hitain = (s) => Math.max(...s.ajat);   // 17.11.2026 (Jugi): hitain − nopein juoksu sekunteina (ei sarjavertailua)
   const mdPar = mediaani(ss.map((s) => s.paras));
   return `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Millä juoksulla nopein aika?</h2><span class="pieni">${ss.length} pelaajaa, joilla kaikki 9 juoksua</span></div>
     <p class="pieni">Ylempi rivi: monellako pelaajalla nopein aika tuli kultakin juoksulta. Alempi: mediaani, paljonko juoksu oli hitaampi kuin pelaajan oma nopein.</p>
@@ -429,11 +429,11 @@ function nokYhteenveto(rivit) {
       <div class="jtt-vy-rivi jtt-vy-akseli"><span class="jtt-vy-ots"></span>${osuus.map((_, i) => `<div class="jtt-vy-sar"><small>${i + 1}.${i % 3 === 0 ? ` · ${i / 3 + 1}. sarja` : ""}</small></div>`).join("")}</div>
     </div></section>
     <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kenellä nopeuskestävyys on kunnossa?</h2><span class="pieni">pienin pudotus ylimpänä</span></div>
-    <p class="pieni">Pudotus = kuinka paljon yhdeksän juoksun keskiarvo on hitaampi kuin oma nopein juoksu. 3. sarja = sarjan keskiarvo verrattuna 1. sarjaan. Luokat ovat ryhmän sisäisiä kolmanneksia. Pieni pudotus kertoo kestävyydestä vain, jos nopein juoksu on oikeasti täysillä: vertaa nopeinta aikaa ryhmän mediaaniin (${f(mdPar)} s).</p>
-    <div class="taulu-wrap"><table class="jtt-nok-analyysi"><thead><tr><th>Pelaaja</th><th class="n">Nopein</th><th class="n">Keskiarvo</th><th class="n">Pudotus</th><th class="n">3. sarja vs. 1.</th><th>Nopein juoksu</th><th>Arvio</th></tr></thead><tbody>
-    ${lajit.map((s, i) => { const p = tila.pelaaja[s.pelaaja], [lk, ln] = luokka(i), d3 = s3(s);
+    <p class="pieni">Pudotus = kuinka paljon yhdeksän juoksun keskiarvo on hitaampi kuin oma nopein juoksu. Ero = hitaimman ja nopeimman juoksun erotus. Luokat ovat ryhmän sisäisiä kolmanneksia. Pieni pudotus kertoo kestävyydestä vain, jos nopein juoksu on oikeasti täysillä: vertaa nopeinta aikaa ryhmän mediaaniin (${f(mdPar)} s).</p>
+    <div class="taulu-wrap"><table class="jtt-nok-analyysi"><thead><tr><th>Pelaaja</th><th class="n">Nopein</th><th class="n">Keskiarvo</th><th class="n">Pudotus</th><th class="n">Hitain</th><th class="n">Ero</th><th>Nopein juoksu</th><th>Arvio</th></tr></thead><tbody>
+    ${lajit.map((s, i) => { const p = tila.pelaaja[s.pelaaja], [lk, ln] = luokka(i), hi = hitain(s);
       return `<tr><td><a href="#/juoksu/pelaaja/${p.id}">${esc(nimi(p))}</a></td><td class="n">${f(s.paras)}${s.paras > mdPar ? ` <small class="pieni" title="Hitaampi kuin ryhmän mediaani">hidas</small>` : ""}</td><td class="n">${f(s.ka)}</td><td class="n"><b>${f(s.sdec, 1)} %</b></td>
-        <td class="n">${d3 >= 0 ? "+" : "−"}${f(Math.abs(d3), 1)} %</td><td>${pj(s)}.</td><td><span class="jtt-nok-lk ${lk}">${ln}</span></td></tr>`; }).join("")}
+        <td class="n">${f(hi)}</td><td class="n">+${f(hi - s.paras)} s</td><td>${pj(s)}.</td><td><span class="jtt-nok-lk ${lk}">${ln}</span></td></tr>`; }).join("")}
     </tbody></table></div></section>`;
 }
 function lampoVari(h) { // 0 = oma paras (vihreä) → 0,5 kulta → 1 punainen (+8 %)

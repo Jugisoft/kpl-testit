@@ -1526,7 +1526,7 @@ a.jtt-yla:hover { text-decoration: underline; }
 /* tulostaulu */
 .jtt-taulu { border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(180deg, var(--surface-2), var(--surface)); box-shadow: var(--glow); overflow: hidden; }
 .jtt-r { display: grid; align-items: center; gap: 10px; padding: 7px 14px; border-top: 1px solid var(--line-2); min-height: 50px; }
-.jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(160px, 2fr) 64px 78px 54px 70px 76px 84px; }
+.jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(130px, 1.5fr) 64px 78px 180px 54px 70px 76px 84px; }
 .jtt-taulu-nok .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(140px, 1.6fr) 64px 78px 150px 58px 64px 84px; }
 .jtt-taulu-cooper .jtt-r { grid-template-columns: 40px minmax(170px, 1.2fr) minmax(160px, 2fr) 70px 78px 120px 76px 84px; }
 .jtt-r.jtt-ots { min-height: 0; border-top: 0; padding-top: 10px; padding-bottom: 8px; font: 600 11.5px/1.2 var(--text); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); background: rgba(0,0,0,.18); }
@@ -1566,6 +1566,31 @@ a.jtt-yla:hover { text-decoration: underline; }
 .jtt-lampo i { width: 13px; height: 22px; border-radius: 3px; }
 .jtt-lampo i.vali { margin-left: 5px; }
 .jtt-lampo i.tyhja { background: var(--line-2); }
+/* 17.11.2026: 30 m vetonauha, avattavat vedot ja vetoyhteenveto */
+.jtt-vedot { display: inline-flex; align-items: center; gap: 2px; vertical-align: middle; }
+.jtt-vedot { flex-wrap: nowrap; }
+.jtt-vedot i { width: 11px; height: 22px; border-radius: 3px; box-sizing: border-box; }
+.jtt-vedot i.paras { border: 2px solid var(--ink); box-shadow: 0 0 6px rgba(46,229,157,.7); }
+.jtt-vedot b { margin-left: 6px; font: 700 15px/1 var(--num); color: var(--ink); }
+.jtt-avattava { cursor: pointer; }
+.jtt-avattava.auki { background: rgba(245,168,0,.06); }
+.jtt-vetotaulu { padding: 4px 14px 14px 64px; border-top: 1px dashed var(--line-2); background: rgba(0,0,0,.12); }
+.jtt-vetotaulu table { border-collapse: collapse; font-size: 15px; width: auto; min-width: 460px; }
+.jtt-vetotaulu th { text-align: left; font: 600 11.5px/1.2 var(--text); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); padding: 8px 12px 6px 0; }
+.jtt-vetotaulu td { padding: 5px 12px 5px 0; border-top: 1px solid var(--line-2); font-variant-numeric: tabular-nums; }
+.jtt-vetotaulu .n { text-align: right; }
+.jtt-vetotaulu tr.paras td { color: var(--green); }
+.jtt-vetotaulu p { margin: 8px 0 0; }
+.jtt-vetoyht { display: grid; gap: 10px; padding: 18px; overflow-x: auto; }
+.jtt-vy-rivi { display: flex; align-items: end; gap: 8px; }
+.jtt-vy-ots { flex: 0 0 150px; font-size: 13px; color: var(--ink-2); align-self: center; }
+.jtt-vy-sar { flex: 1 0 64px; display: grid; justify-items: center; gap: 3px; text-align: center; }
+.jtt-vy-pylvas { width: 100%; max-width: 54px; height: 110px; display: flex; align-items: flex-end; background: var(--line-2); border-radius: 6px; overflow: hidden; }
+.jtt-vy-pylvas i { display: block; width: 100%; background: var(--cyan); }
+.jtt-vy-sar b { font: 700 18px/1 var(--num); }
+.jtt-vy-sar small { color: var(--ink-3); font-size: 12px; }
+.jtt-vy-hid { display: inline-block; min-width: 58px; padding: 6px 4px; border-radius: 6px; color: #14110D; font: 700 14px/1 var(--num); }
+@media (max-width: 640px) { .jtt-vetotaulu { padding-left: 10px; } .jtt-vetotaulu table { min-width: 0; width: 100%; font-size: 14px; } .jtt-vy-ots { flex-basis: 90px; } }
 /* SVG-kaaviot */
 .jtt-svg { padding: 14px 18px; overflow: hidden; }
 .jtt-svg svg { display: block; font-family: var(--text); }
@@ -1617,7 +1642,7 @@ a.jtt-yla:hover { text-decoration: underline; }
   .jtt-pgrid { grid-template-columns: 1fr 1fr; } .jtt-pkaavio { grid-column: 1 / -1; }
   .jtt-pkortti { grid-template-columns: auto 1fr; } .jtt-vahvuudet { grid-column: 1 / -1; }
   .jtt-taulu .jtt-lisa2 { display: none; }
-  .jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(120px, 2fr) 64px 74px 54px 70px 76px; }
+  .jtt-taulu-30m .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(100px, 1.4fr) 64px 74px 180px 54px 70px 76px; }
   .jtt-taulu-nok .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(110px, 1.4fr) 64px 74px 150px 58px 64px; }
   .jtt-taulu-cooper .jtt-r { grid-template-columns: 40px minmax(150px, 1.2fr) minmax(120px, 2fr) 70px 74px 120px 76px; }
 }

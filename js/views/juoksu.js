@@ -29,7 +29,7 @@ const TESTI = Object.fromEntries(TESTIT.map((t) => [t.k, t]));
 const RYHMAT = [["juniorit", "Juniorit"], ["superpesis", "Superpesis"], ["kaikki", "Kaikki testatut"]];
 const LAJIVARIT = ["#7DD3FC", "#2EE59D", "#A78BFA", "#F472B6", "#FFC93C", "#94A3B8", "#FB923C", "#5EEAD4"];
 
-let S = { testi: "30m", ryhma: "juniorit", valinta: {}, ikaluokka: "", korostus: new Set() };
+let S = { testi: "30m", ryhma: "juniorit", valinta: {}, ikaluokka: "", korostus: new Set(), vedotAuki: new Set() };
 let D = null;
 let piirtajat = []; // uudelleenpiirto ikkunan koon muuttuessa
 let kokoAjastin = null;
@@ -91,6 +91,13 @@ function valmistele(rivit) {
       s.l20 = l.length ? Math.min(...l) : null;
       s.yrit = Math.max(Object.keys(o.b).filter((y) => +y < 100).length, v10.length);
       s.nok30 = Object.keys(o.b).some((y) => +y >= 100 && o.b[y] === s.t30); // 30 m paras tuli NOK-juoksusta
+      // 17.11.2026: 30 m vedot järjestyksessä (yritysnumero), NOK-juoksut eivät kuulu tähän
+      const yy = [...new Set([...Object.keys(o.b).filter((y) => +y < 100), ...Object.keys(o.a)])].map(Number).sort((x, y) => x - y);
+      s.vedot = yy.map((y) => { const b = o.b[y] ?? null, a = o.a[y] ?? null, l = b != null && a != null ? Math.round((b - a) * 100) / 100 : null;
+        return { y, t30: b, t10: a, l20: l != null && l > 1.5 && l < 4.5 ? l : null }; });
+      const omat30 = s.vedot.map((v) => v.t30).filter((x) => x != null);
+      s.paras30 = omat30.length ? Math.min(...omat30) : null;
+      s.parasVeto = s.paras30 != null ? s.vedot.filter((v) => v.t30 != null).findIndex((v) => v.t30 === s.paras30) + 1 : null;
       if (s.t30 == null && s.t10 == null) continue;
     } else if (o.fam === "nok") {
       const ajat = Array.from({ length: 9 }, (_, i) => o.b[i + 1] ?? null);
@@ -281,7 +288,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
     </div>
 
     <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Tulostaulu</h2><span class="pieni">${otsikko}</span></div>
-      <div class="jtt-selite"><span><i class="jtt-pallo"></i>tulos</span><span><i class="jtt-pallo haamu"></i>edellinen tulos</span><span><i class="jtt-mdviiva"></i>mediaani</span><span>oikealla = parempi</span>${fam === "nok" ? `<span><i class="jtt-lampo-selite"></i>juoksut 1–9: väri kertoo hidastumisen omasta parhaasta</span>` : ""}</div>
+      <div class="jtt-selite"><span><i class="jtt-pallo"></i>tulos</span><span><i class="jtt-pallo haamu"></i>edellinen tulos</span><span><i class="jtt-mdviiva"></i>mediaani</span><span>oikealla = parempi</span>${fam === "30m" ? `<span><i class="jtt-lampo-selite"></i>vedot: oma paras → +4 %, numero = parhaan vedon järjestys · avaa vedot klikkaamalla riviä</span>` : ""}${fam === "nok" ? `<span><i class="jtt-lampo-selite"></i>juoksut 1–9: väri kertoo hidastumisen omasta parhaasta</span>` : ""}</div>
       <div class="jtt-taulu jtt-taulu-${fam}" id="jtt-taulu" role="table" aria-label="Tulostaulu"></div></section>
 
     <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kaikki samalla janalla</h2><span class="pieni">Kausi ${nykyKausi} · jokaisen pelaajan kauden paras</span></div>
@@ -290,7 +297,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
 
     ${fam === "30m" ? `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Lähtö vai huippunopeus?</h2><span class="pieni">${otsikko}</span></div>
       <p class="pieni">Vaaka-akseli 10 m lähtö, pystyakseli lentävä 20 m. Viivat ovat näytettävien pelaajien mediaanit: oikea yläkulma on vahva molemmissa.</p>
-      <div class="paneeli jtt-svg" id="jtt-hajonta"></div></section>` : ""}
+      <div class="paneeli jtt-svg" id="jtt-hajonta"></div></section>${vetoYhteenveto(rivit)}` : ""}
     ${fam === "nok" ? `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Juoksuprofiili 1–9</h2><span class="pieni">${otsikko}</span></div>
       <p class="pieni">Mediaani ja keskimmäinen puolikas juoksuittain. Korosta pelaajia tulostaulusta nähdäksesi heidän käyränsä.</p>
       <div class="paneeli"><div class="kaavio"><canvas id="jtt-profiili"></canvas></div></div></section>` : ""}
@@ -324,17 +331,18 @@ function piirraTaulu(fam, m, rivit, md) {
   let lo = Math.min(...kaikkiArvot), hi = Math.max(...kaikkiArvot);
   const pad = (hi - lo) * 0.06 || Math.abs(hi) * 0.02 || 1; lo -= pad; hi += pad;
   const pos = (v) => (M[m].pp ? (hi - v) / (hi - lo) : (v - lo) / (hi - lo)) * 100;
-  const sarakkeet = { "30m": ["10 m", "Lentävä 20", "Huippu"], nok: ["Juoksut 1–9", "Paras", "Pudotus"], cooper: ["Kierrokset", "VO₂ arvio"] }[fam];
+  const sarakkeet = { "30m": ["Vedot", "10 m", "Lentävä 20", "Huippu"], nok: ["Juoksut 1–9", "Paras", "Pudotus"], cooper: ["Kierrokset", "VO₂ arvio"] }[fam];
   $("#jtt-taulu").innerHTML = `
     <div class="jtt-r jtt-ots" role="row"><span role="columnheader">#</span><span role="columnheader">Pelaaja</span><span role="columnheader" class="jtt-rata-ots">${esc(M[m].pitka)}</span><span role="columnheader" class="n">Tulos</span><span role="columnheader" class="n">Muutos</span>
       ${sarakkeet.map((s) => `<span role="columnheader" class="n jtt-lisa">${s}</span>`).join("")}<span role="columnheader" class="n jtt-lisa2">Ikäluokassa</span></div>
     ${rivit.map((r) => {
       const p = tila.pelaaja[r.s.pelaaja], kor = S.korostus.has(p.id), sy = synt(p.id);
       const plus = r.ero != null && parannus(m, r.v, r.ed[m]) > 0, miinus = r.ero != null && parannus(m, r.v, r.ed[m]) < 0;
-      const lisat = fam === "30m" ? [`${fm("t10", r.s.t10)}`, `${fm("l20", r.s.l20)}`, r.s.l20 ? `${f(huippu(r.s.l20), 1)}<small> km/h</small>` : "–"]
+      const lisat = fam === "30m" ? [vetonauha(r.s), `${fm("t10", r.s.t10)}`, `${fm("l20", r.s.l20)}`, r.s.l20 ? `${f(huippu(r.s.l20), 1)}<small> km/h</small>` : "–"]
         : fam === "nok" ? [lampo(r.s), fm("paras", r.s.paras), r.s.sdec != null ? `${f(r.s.sdec, 1)}<small> %</small>` : `<span class="pieni" title="Kaikkia yhdeksää juoksua ei ole kirjattu">${r.s.n}/9</span>`]
         : [r.v != null ? kierrokset(r.v) : "–", r.v != null ? f(vo2(r.v), 1) : "–"];
-      return `<div class="jtt-r${kor ? " korostettu" : ""}" role="row" data-p="${p.id}">
+      const auki = fam === "30m" && S.vedotAuki.has(r.s.kerta + "|" + p.id);
+      return `<div class="jtt-r${kor ? " korostettu" : ""}${fam === "30m" && r.s.vedot?.length ? " jtt-avattava" : ""}${auki ? " auki" : ""}" role="row" data-p="${p.id}" data-veto="${r.s.kerta}|${p.id}">
         <span role="cell"><button class="jtt-sija" data-kor="${p.id}" aria-pressed="${kor}" title="Korosta kaavioissa">${r.sija?.sija ?? "–"}</button></span>
         <span role="cell" class="jtt-nimi"><a href="#/juoksu/pelaaja/${p.id}">${kuva(p)}<span><b>${esc(nimi(p))}</b><small>${ryhmaOf(p.id) === "superpesis" ? "Superpesis" : sy ? `${sy} · ${ika(p.id, r.s.kausi)} v` : "juniori"}</small></span></a></span>
         <span role="cell" class="jtt-rata" aria-hidden="true"><i class="jtt-md" style="left:${pos(md)}%"></i>
@@ -344,8 +352,50 @@ function piirraTaulu(fam, m, rivit, md) {
         <span role="cell" class="n jtt-muutos ${plus ? "plus" : miinus ? "miinus" : ""}" title="${r.ed ? `Edellinen ${fm(m, r.ed[m])} ${M[m].yks}, ${pvm(r.ed.pvm)}` : "Ensimmäinen testi"}">${r.ed ? `${plus ? "▲" : miinus ? "▼" : "•"} ${muutosTxt(m, r.ero)}` : `<span class='pieni'>1. testi</span>`}</span>
         ${lisat.map((x) => `<span role="cell" class="n jtt-lisa">${x}</span>`).join("")}
         <span role="cell" class="n jtt-lisa2">${r.ikaS ? `<span class="jtt-ikas ${pctLuokka(r.ikaS.pct)}" title="Kauden parhaiden perusteella ikäluokassa ${sy}">${r.ikaS.sija}./${r.ikaS.n}</span>` : "<span class='pieni'>–</span>"}</span>
-      </div>`; }).join("")}`;
+      </div>${auki ? vetoTaulu(r.s) : ""}`; }).join("")}`;
   $$("[data-kor]", $("#jtt-taulu")).forEach((b) => (b.onclick = () => vaihdaKorostus(b.dataset.kor)));
+  // 17.11.2026: rivin klikkaus avaa 30 m vedot (ei linkeistä eikä sijanapista)
+  if (fam === "30m") $$(".jtt-avattava", $("#jtt-taulu")).forEach((row) => (row.onclick = (e) => {
+    if (e.target.closest("a, button")) return;
+    const k = row.dataset.veto; S.vedotAuki.has(k) ? S.vedotAuki.delete(k) : S.vedotAuki.add(k);
+    piirraTaulu(fam, m, rivit, md);
+  }));
+}
+
+// 17.11.2026: 30 m vetonauha. Väri = ero saman testin parhaaseen vetoon (0 → +4 %), paras veto kehystetty ja numero perässä.
+const VETO_SKAALA = 0.04;
+function vetonauha(s) {
+  const v = (s.vedot || []).filter((x) => x.t30 != null);
+  if (v.length < 2) return `<span class="pieni">${v.length ? "1 veto" : "–"}</span>`;
+  return `<span class="jtt-vedot" aria-label="Vedot: ${v.map((x) => f(x.t30)).join(", ")}; paras ${s.parasVeto}. vedolla">${v.map((x, i) => {
+    const h = Math.min(1, (x.t30 / s.paras30 - 1) / VETO_SKAALA), paras = i + 1 === s.parasVeto;
+    return `<i class="${paras ? "paras" : ""}" style="background:${lampoVari(h)}" title="${i + 1}. veto ${f(x.t30)} s${paras ? " · paras" : ` (+${f(x.t30 - s.paras30)} s)`}"></i>`; }).join("")}<b>${s.parasVeto}.</b></span>`;
+}
+function vetoTaulu(s) {
+  const v = s.vedot || [];
+  return `<div class="jtt-vetotaulu" role="row"><div role="cell">
+    <table><thead><tr><th>Veto</th><th class="n">10 m</th><th class="n">Lentävä 20</th><th class="n">30 m</th><th class="n">Ero parhaaseen</th></tr></thead><tbody>
+    ${v.map((x, i) => `<tr class="${x.t30 != null && x.t30 === s.paras30 ? "paras" : ""}"><td>${i + 1}.</td><td class="n">${fm("t10", x.t10)}</td><td class="n">${fm("l20", x.l20)}</td>
+      <td class="n"><b>${fm("t30", x.t30)}</b></td><td class="n">${x.t30 == null ? "–" : x.t30 === s.paras30 ? "paras" : `+${f(x.t30 - s.paras30)} s`}</td></tr>`).join("")}
+    </tbody></table><p class="pieni">${pvm(s.pvm)}${s.nok30 ? " · 30 m paras tuli tällä kertaa NOK-juoksusta" : ""}</p></div></div>`;
+}
+// Joukkueen yhteenveto: millä vedolla paras aika tuli ja paljonko vedot hidastuvat keskimäärin
+function vetoYhteenveto(rivit) {
+  const ss = rivit.map((r) => r.s).filter((s) => (s.vedot || []).filter((x) => x.t30 != null).length >= 3);
+  if (ss.length < 3) return "";
+  const pit = ss.map((s) => s.vedot.filter((x) => x.t30 != null).length);
+  const N = Math.min(12, Math.max(...Array.from({ length: 12 }, (_, i) => i + 1).filter((n) => pit.filter((x) => x >= n).length >= 3)));   // vedot, joita vähintään 3 pelaajalla
+  const osuus = Array.from({ length: N }, (_, i) => ss.filter((s) => s.parasVeto === i + 1).length);
+  const yli = ss.filter((s) => s.parasVeto > N).length;
+  const hidPct = Array.from({ length: N }, (_, i) => { const a = ss.map((s) => { const x = s.vedot.filter((v) => v.t30 != null)[i]; return x ? (x.t30 / s.paras30 - 1) * 100 : null; }).filter((x) => x != null); return a.length >= 3 ? mediaani(a) : null; });
+  const maxO = Math.max(...osuus, 1);
+  return `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Millä vedolla paras aika?</h2><span class="pieni">${ss.length} pelaajaa, joilla vähintään 3 vetoa</span></div>
+    <p class="pieni">Ylempi rivi: monellako pelaajalla paras 30 m tuli kultakin vedolta. Alempi: mediaani, paljonko veto oli hitaampi kuin pelaajan oma paras. Mukana vedot, jotka vähintään kolme pelaajaa juoksi${yli ? ` (${yli} pelaajalla paras tuli myöhemmällä vedolla)` : ""}.</p>
+    <div class="paneeli jtt-vetoyht">
+      <div class="jtt-vy-rivi"><span class="jtt-vy-ots">Paras veto</span>${osuus.map((n, i) => `<div class="jtt-vy-sar"><div class="jtt-vy-pylvas"><i style="height:${Math.round((n / maxO) * 100)}%"></i></div><b>${n}</b><small>${Math.round((n / ss.length) * 100)} %</small></div>`).join("")}</div>
+      <div class="jtt-vy-rivi"><span class="jtt-vy-ots">Hitaampi kuin oma paras</span>${hidPct.map((x) => `<div class="jtt-vy-sar"><span class="jtt-vy-hid" style="background:${x == null ? "var(--line-2)" : lampoVari(Math.min(1, x / 100 / VETO_SKAALA))}">${x == null ? "–" : `+${f(x, 1)} %`}</span></div>`).join("")}</div>
+      <div class="jtt-vy-rivi jtt-vy-akseli"><span class="jtt-vy-ots"></span>${osuus.map((_, i) => `<div class="jtt-vy-sar"><small>${i + 1}. veto</small></div>`).join("")}</div>
+    </div></section>`;
 }
 
 // 9 juoksun lämpökartta: väri = hidastuminen omasta parhaasta juoksusta

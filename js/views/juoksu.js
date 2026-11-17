@@ -300,7 +300,7 @@ function piirraRunko(fam, tark, val, nykyKausi) {
       <div class="paneeli jtt-svg" id="jtt-hajonta"></div></section>${vetoYhteenveto(rivit)}` : ""}
     ${fam === "nok" ? `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Juoksuprofiili 1–9</h2><span class="pieni">${otsikko}</span></div>
       <p class="pieni">Mediaani ja keskimmäinen puolikas juoksuittain. Korosta pelaajia tulostaulusta nähdäksesi heidän käyränsä.</p>
-      <div class="paneeli"><div class="kaavio"><canvas id="jtt-profiili"></canvas></div></div></section>` : ""}
+      <div class="paneeli"><div class="kaavio"><canvas id="jtt-profiili"></canvas></div></div></section>${nokYhteenveto(rivit)}` : ""}
 
     <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kehitys kausittain</h2><span class="pieni">${esc(M[m].pitka)} · mediaani kauden parhaista</span></div>
       <p class="pieni">Juniorien ikäluokat ja Superpesis-ryhmä. ${M[m].pp ? "Ylempänä on parempi." : ""} Mukana kaudet, joilla ryhmässä vähintään kolme pelaajaa.</p>
@@ -400,10 +400,41 @@ function vetoYhteenveto(rivit) {
 
 // 9 juoksun lämpökartta: väri = hidastuminen omasta parhaasta juoksusta
 function lampo(s) {
-  return `<span class="jtt-lampo" aria-label="Juoksut: ${s.ajat.map((x) => (x == null ? "–" : f(x))).join(", ")}">${s.ajat.map((x, i) => {
+  const pj = s.ajat.indexOf(s.paras) + 1;   // 17.11.2026: nopein juoksu kehystetty ja numero perässä (kuten 30 m)
+  return `<span class="jtt-lampo" aria-label="Juoksut: ${s.ajat.map((x) => (x == null ? "–" : f(x))).join(", ")}; nopein ${pj}. juoksu">${s.ajat.map((x, i) => {
     if (x == null) return `<i class="tyhja${i % 3 === 0 && i ? " vali" : ""}"></i>`;
     const h = Math.min(1, (x / s.paras - 1) / 0.08);
-    return `<i class="${i % 3 === 0 && i ? "vali" : ""}" style="background:${lampoVari(h)}" title="${i + 1}. juoksu ${f(x)} s (+${f((x / s.paras - 1) * 100, 1)} %)"></i>`; }).join("")}</span>`;
+    return `<i class="${i % 3 === 0 && i ? "vali" : ""}${i + 1 === pj ? " paras" : ""}" style="background:${lampoVari(h)}" title="${i + 1}. juoksu ${f(x)} s${i + 1 === pj ? " · nopein" : ` (+${f((x / s.paras - 1) * 100, 1)} %)`}"></i>`; }).join("")}<b>${pj}.</b></span>`;
+}
+
+// 17.11.2026: NOK-yhteenveto. Millä juoksulla nopein aika tuli, paljonko juoksut hidastuvat, ja kenellä nopeuskestävyys
+// on kunnossa: pudotus % (keskiarvo vs. paras) ja 3. sarja vs. 1. sarja. Luokitus ryhmän sisällä kolmanneksittain.
+function nokYhteenveto(rivit) {
+  const ss = rivit.map((r) => r.s).filter((s) => s.n >= 9 && s.sdec != null);
+  if (ss.length < 3) return "";
+  const pj = (s) => s.ajat.indexOf(s.paras) + 1;
+  const osuus = Array.from({ length: 9 }, (_, i) => ss.filter((s) => pj(s) === i + 1).length);
+  const hid = Array.from({ length: 9 }, (_, i) => mediaani(ss.map((s) => (s.ajat[i] / s.paras - 1) * 100)));
+  const maxO = Math.max(...osuus, 1);
+  const lajit = [...ss].sort((a, b) => a.sdec - b.sdec);
+  const n1 = Math.round(lajit.length / 3), n2 = Math.round((lajit.length * 2) / 3);   // sijoitus ryhmässä kolmanneksittain
+  const luokka = (i) => (i < n1 ? ["hyva", "Kunnossa"] : i < n2 ? ["kesk", "Keskitaso"] : ["heikko", "Kehitettävää"]);
+  const s3 = (s) => (s.sarjat[2] / s.sarjat[0] - 1) * 100;
+  const mdPar = mediaani(ss.map((s) => s.paras));
+  return `<section class="jtt-osio"><div class="jtt-osio-paa"><h2>Millä juoksulla nopein aika?</h2><span class="pieni">${ss.length} pelaajaa, joilla kaikki 9 juoksua</span></div>
+    <p class="pieni">Ylempi rivi: monellako pelaajalla nopein aika tuli kultakin juoksulta. Alempi: mediaani, paljonko juoksu oli hitaampi kuin pelaajan oma nopein.</p>
+    <div class="paneeli jtt-vetoyht">
+      <div class="jtt-vy-rivi"><span class="jtt-vy-ots">Nopein juoksu</span>${osuus.map((n) => `<div class="jtt-vy-sar"><div class="jtt-vy-pylvas"><i style="height:${Math.round((n / maxO) * 100)}%"></i></div><b>${n}</b><small>${Math.round((n / ss.length) * 100)} %</small></div>`).join("")}</div>
+      <div class="jtt-vy-rivi"><span class="jtt-vy-ots">Hitaampi kuin oma nopein</span>${hid.map((x) => `<div class="jtt-vy-sar"><span class="jtt-vy-hid" style="background:${lampoVari(Math.min(1, x / 8))}">+${f(x, 1)} %</span></div>`).join("")}</div>
+      <div class="jtt-vy-rivi jtt-vy-akseli"><span class="jtt-vy-ots"></span>${osuus.map((_, i) => `<div class="jtt-vy-sar"><small>${i + 1}.${i % 3 === 0 ? ` · ${i / 3 + 1}. sarja` : ""}</small></div>`).join("")}</div>
+    </div></section>
+    <section class="jtt-osio"><div class="jtt-osio-paa"><h2>Kenellä nopeuskestävyys on kunnossa?</h2><span class="pieni">pienin pudotus ylimpänä</span></div>
+    <p class="pieni">Pudotus = kuinka paljon yhdeksän juoksun keskiarvo on hitaampi kuin oma nopein juoksu. 3. sarja = sarjan keskiarvo verrattuna 1. sarjaan. Luokat ovat ryhmän sisäisiä kolmanneksia. Pieni pudotus kertoo kestävyydestä vain, jos nopein juoksu on oikeasti täysillä: vertaa nopeinta aikaa ryhmän mediaaniin (${f(mdPar)} s).</p>
+    <div class="taulu-wrap"><table class="jtt-nok-analyysi"><thead><tr><th>Pelaaja</th><th class="n">Nopein</th><th class="n">Keskiarvo</th><th class="n">Pudotus</th><th class="n">3. sarja vs. 1.</th><th>Nopein juoksu</th><th>Arvio</th></tr></thead><tbody>
+    ${lajit.map((s, i) => { const p = tila.pelaaja[s.pelaaja], [lk, ln] = luokka(i), d3 = s3(s);
+      return `<tr><td><a href="#/juoksu/pelaaja/${p.id}">${esc(nimi(p))}</a></td><td class="n">${f(s.paras)}${s.paras > mdPar ? ` <small class="pieni" title="Hitaampi kuin ryhmän mediaani">hidas</small>` : ""}</td><td class="n">${f(s.ka)}</td><td class="n"><b>${f(s.sdec, 1)} %</b></td>
+        <td class="n">${d3 >= 0 ? "+" : "−"}${f(Math.abs(d3), 1)} %</td><td>${pj(s)}.</td><td><span class="jtt-nok-lk ${lk}">${ln}</span></td></tr>`; }).join("")}
+    </tbody></table></div></section>`;
 }
 function lampoVari(h) { // 0 = oma paras (vihreä) → 0,5 kulta → 1 punainen (+8 %)
   const c = h < 0.5 ? [[46, 229, 157], [245, 168, 0], h / 0.5] : [[245, 168, 0], [255, 59, 78], (h - 0.5) / 0.5];

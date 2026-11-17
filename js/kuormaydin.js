@@ -25,7 +25,8 @@ export const LYONTI_MIN = 0.3; // lyöntipäiväkirja: 100 lyöntiä ≈ 30 min 
 export const LYONTI_RPE = 4;
 export const RAJA_NOUSU = 1.5, RAJA_KEVYT = 0.6;
 // pelaajan treeniprofiili (pelaajat.treeniprofiili, Hallinta → Pelaajat)
-export const PROFIILIT = { b: "B-ryhmä", haastaja: "Haastajaryhmä", reissu: "Asuu muualla", ei_b: "Ei B:n treeneissä" };
+// 17.11.2026 (Jugi): msu = miesten Superpesis, omat treeniohjelmat (ei Nimenhuutoa, ei B-ryhmää)
+export const PROFIILIT = { b: "B-ryhmä", haastaja: "Haastajaryhmä", reissu: "Asuu muualla", ei_b: "Ei B:n treeneissä", msu: "MSU (miesten omat ohjelmat)" };
 export const PROFIILI_LYHYT = { haastaja: "haastajaryhmä" }; // 12.11.2026 (Jugi): muualla asuville ei merkintää nimen perään
 export const korvaaOmat = (profiili) => profiili === "haastaja" || profiili === "reissu";
 // ikä = vuosi – syntymävuosi (täyttää kuluvana vuonna), kuten juniorisarjoissa

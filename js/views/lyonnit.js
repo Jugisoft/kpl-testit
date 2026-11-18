@@ -14,6 +14,14 @@ const KOVAT_TARKEMMAT = ["Pomppu", "Vaakamaila", "Keskipieni", "Rajakova 1-raja"
 const LAJIT = [PIENET_LAJI, KOVAT_LAJI, ...PIENET_TARKEMMAT, ...KOVAT_TARKEMMAT];
 const PIENET = new Set([PIENET_LAJI.toLowerCase(), ...PIENET_TARKEMMAT.map((l) => l.toLowerCase())]);
 const onPieni = (laji) => PIENET.has(laji.trim().toLowerCase());
+// 18.11.2026 (Niko H.): Kovat- ja Pienet-missioon lasketaan myös tarkemmat lajit samalla jaolla kuin
+// viikkopylväissä (pieni = Pienet + PIENET_TARKEMMAT, kaikki muu = kova). Muut missiot: sama laji.
+function kuuluuMissioon(mLaji, kLaji) {
+  if (sama(mLaji, KAIKKI)) return true;
+  if (sama(mLaji, PIENET_LAJI)) return onPieni(kLaji);
+  if (sama(mLaji, KOVAT_LAJI)) return !onPieni(kLaji);
+  return sama(kLaji, mLaji);
+}
 const LISAYS = [10, 25, 50, 100];
 const PAIVA = 864e5;
 
@@ -34,7 +42,7 @@ let maara = 0;
 // Mission tila: tehty, odotettu tähän päivään mennessä, tahti
 export function laske(m, kirjaukset) {
   const t = tanaan();
-  const omat = kirjaukset.filter((k) => k.omistaja === m.omistaja && (sama(m.laji, KAIKKI) || sama(k.laji, m.laji)) && k.pvm >= m.alku && k.pvm <= m.loppu);
+  const omat = kirjaukset.filter((k) => k.omistaja === m.omistaja && kuuluuMissioon(m.laji, k.laji) && k.pvm >= m.alku && k.pvm <= m.loppu);
   const tehty = omat.reduce((s, k) => s + k.maara, 0);
   const kesto = Math.max(1, (pv(m.loppu) - pv(m.alku)) / PAIVA + 1);
   const kulunut = Math.max(0, Math.min(kesto, (pv(t) - pv(m.alku)) / PAIVA + 1));
@@ -219,7 +227,7 @@ async function paivakirja(main, email, muokattava) {
         <label class="ly-kentta ly-kasvaa">Nimi (vapaaehtoinen) <input type="text" name="nimi" maxlength="80" placeholder="esim. Talven 2-rajat"></label>
       </div>
       <div class="rivi"><button class="btn ensisij">Luo missio</button><button type="button" class="btn" id="ly-peru-m">Peru</button></div>
-      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. Laji <b>Kaikki lyönnit</b> laskee mukaan kaikki kirjaukset.</p>
+      <p class="pieni">Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. <b>Kovat</b>- ja <b>Pienet</b>-missioon lasketaan myös tarkemmat lajit (esim. pomppu ja koppi koviin, näpy ja ohitus pieniin). <b>Kaikki lyönnit</b> laskee mukaan kaikki kirjaukset.</p>
     </form>` : ""}
     <details class="ly-selite"><summary>Mitä missiokortti näyttää?</summary>
       <dl>

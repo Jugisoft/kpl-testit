@@ -108,7 +108,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261117-7",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261118-1",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -171,7 +171,7 @@ const SIVUT = [
   { id: "lyonnit", nimi: "Lyöntipäiväkirja", linkki: "#/lyonnit",
     mita: "Pelaajan oma lyöntipäiväkirja. Pelaaja asettaa missiot ja kirjaa lyöntiensä määrän lajeittain, löi hän yhteisissä treeneissä tai omalla ajalla. Valmentajat näkevät Seuranta-välilehdellä kaikkien edistymisen, mutta eivät muokkaa.",
     kohdat: [
-      ["Missio", "Laji, tavoitemäärä ja aikaväli, esim. 2000 lyöntiä pieneen 2-rajaan 31.3. mennessä. Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä."],
+      ["Missio", "Laji, tavoitemäärä ja aikaväli, esim. 2000 lyöntiä pieneen 2-rajaan 31.3. mennessä. Mission edistymiseen lasketaan saman lajin kirjaukset mission aikaväliltä. Kovat- ja Pienet-missioon lasketaan myös tarkemmat lajit samalla jaolla kuin viikkopylväissä: pienet = näpy, ohitus, pieni 1-raja ja pieni 2-raja, kaikki muut ovat kovia (18.11.2026)."],
       ["Iso luku / tavoite ja %", "Tehdyt lyönnit / tavoite ja osuus tavoitteesta."],
       ["Edellä / jäljessä aikataulusta", "Tehdyt lyönnit verrattuna tasaiseen tahtiin: tavoite × (kuluneet päivät / mission päivät). Esim. puolivälissä 2000 lyönnin missiota tasainen tahti on 1000."],
       ["Tahti 4 vk", "Lajin lyönnit viimeisen neljän viikon aikana jaettuna neljällä (lyhyemmässä missiossa kuluneilla viikoilla)."],

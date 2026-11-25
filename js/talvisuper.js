@@ -1,12 +1,11 @@
 // Talvisuper-kortti (25.11.2026): KPL:n Talvisuper-ottelut ja oma lohko. Data YDIN 2027:n julkisesta reposta
-// (data/out/talvi_<kausi>.json, ydin/talvi.py, päivittyy iltaajossa). Talvisuper pidetään tarkoituksella erillään
+// (data/out/talvi_<kausi>.json, ydin/talvi.py, päivittyy iltaajossa). Jugi 25.11.2026: ei linkkejä YDIN-sivustolle – sivustot pidetään erillisinä. Talvisuper pidetään tarkoituksella erillään
 // Superpesiksen tilastoista (Jugi 25.11.2026: halliturnaus, data tulkitaan eri tavalla) – kortti ei vie mitään
 // tilastoihin, kuormaan eikä vertailuihin. Uusi kausi: vaihda KAUSI.
 import { esc } from "./util.js";
 
 const KAUSI = 2027;
 const LAHDE = `https://raw.githubusercontent.com/Jugisoft/ydin-2027/main/data/out/talvi_${KAUSI}.json`;
-const YDIN = "https://jugisoft.github.io/ydin-2027/talvi.html";
 const OMA = "KPL";
 const VP = ["su", "ma", "ti", "ke", "to", "pe", "la"];
 let data = null;
@@ -58,12 +57,12 @@ export async function piirraTalvisuper(el, { tiivis = false, linkki = "sivu" } =
 
   el.classList.add("paneeli", "ts-kortti");
   el.innerHTML = `
-    <div class="osio-paa"><h2>${linkki === "sivu" ? `Talvisuper ${D.kausi}` : "KPL:n ottelut"}</h2>${linkki === "sivu" ? `<a href="#/talvisuper">Talvisuper-sivulle</a>` : `<a href="${YDIN}?j=${OMA}" target="_blank" rel="noopener">YDIN 2027 ↗</a>`}</div>
+    <div class="osio-paa"><h2>${linkki === "sivu" ? `Talvisuper ${D.kausi}` : "KPL:n ottelut"}</h2>${linkki === "sivu" ? `<a href="#/talvisuper">Talvisuper-sivulle</a>` : ""}</div>
     <p class="ts-erillinen"${linkki === "sivu" ? "" : " hidden"}>Halliturnaus · ${esc(lohko || "")}${pelattu.length ? ` · ${v}–${pelattu.length - v}` : ""} · ei mukana Superpesiksen tilastoissa</p>
     ${seurTeksti ? `<p class="ts-seur">${seurTeksti}</p>` : ""}
     <div class="ts-lista">${omat.map(rivi).join("")}</div>
     ${tiivis ? "" : tauluHtml}
-    ${linkki === "sivu" ? `<p class="pieni ts-lahde">Ajat Suomen aikaa · lähde pesistulokset.fi YDIN 2027:n kautta, päivittyy iltaisin.</p>` : ""}`;
+    ${linkki === "sivu" ? `<p class="pieni ts-lahde">Ajat Suomen aikaa · lähde pesistulokset.fi, päivittyy iltaisin.</p>` : ""}`;
 }
 
-export const talviApu = { hk, halli, logo, OMA, YDIN };
+export const talviApu = { hk, halli, logo, OMA };

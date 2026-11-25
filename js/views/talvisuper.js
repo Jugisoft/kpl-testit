@@ -4,7 +4,7 @@
 import { $, $$, esc } from "../util.js";
 import { hae, piirraTalvisuper, talviApu } from "../talvisuper.js";
 
-const { hk, halli, logo, OMA, YDIN } = talviApu;
+const { hk, halli, logo, OMA } = talviApu;
 const KK = ["tammikuu", "helmikuu", "maaliskuu", "huhtikuu", "toukokuu", "kesäkuu", "heinäkuu", "elokuu", "syyskuu", "lokakuu", "marraskuu", "joulukuu"];
 let st = { lohko: "", vainKpl: false };
 
@@ -51,7 +51,7 @@ function ohjelma(D) {
 export async function nayta(main) {
   main.innerHTML = `<p class="pieni">Ladataan Talvisuperia…</p>`;
   const D = await hae();
-  if (!D) { main.innerHTML = `<h1>Talvisuper</h1><div class="paneeli"><p>Talvisuperin dataa ei saatu ladattua YDIN 2027:stä. Yritä hetken päästä uudelleen.</p></div>`; return; }
+  if (!D) { main.innerHTML = `<h1>Talvisuper</h1><div class="paneeli"><p>Talvisuperin dataa ei saatu ladattua. Yritä hetken päästä uudelleen.</p></div>`; return; }
   const lohkot = [...new Set(D.ottelut.map((o) => o.lohko).filter(Boolean))];
   const pelattu = D.ottelut.filter((o) => o.tulos).length;
   const ajat = D.ottelut.map((o) => hk(o.pvm).pv.split(" ")[1]);
@@ -68,13 +68,13 @@ export async function nayta(main) {
     </div>
     <div class="ts-sivu">
       <section class="paneeli ts-ohjelma">
-        <div class="osio-paa"><h2>Otteluohjelma</h2><a href="${YDIN}" target="_blank" rel="noopener">YDIN 2027 ↗</a></div>
+        <div class="osio-paa"><h2>Otteluohjelma</h2></div>
         <div class="ts-valinnat">
           ${[["", "Kaikki"], ...lohkot.map((l) => [l, l])].map(([v, n]) => `<button type="button" class="chip" data-lohko="${esc(v)}" aria-pressed="${v === st.lohko}">${esc(n)}</button>`).join("")}
           <label class="chip"><input type="checkbox" id="ts-vain"${st.vainKpl ? " checked" : ""}>Vain KPL</label>
         </div>
         <div id="ts-lista" class="tso-lista"></div>
-        <p class="pieni ts-lahde">Ajat Suomen aikaa. Rivi avaa ottelun pesistulokset.fi:ssä. SV = supervuoropari, KK = kotiutuskilpailu.</p>
+        <p class="pieni ts-lahde">Ajat Suomen aikaa. Rivi avaa ottelun pesistulokset.fi:ssä. Päivittyy iltaisin. SV = supervuoropari, KK = kotiutuskilpailu.</p>
       </section>
       <div class="ts-sivupalkki">
         <section id="ts-kpl"></section>

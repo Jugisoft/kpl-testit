@@ -1,6 +1,7 @@
 // KPL Keskus: valmennuksen aloitusnäkymä kopin koneelle.
 import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
+import { piirraTalvisuper } from "../talvisuper.js";
 import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, omaEmail } from "../keskus.js";
 
 let kanava = null;
@@ -57,7 +58,7 @@ export async function nayta(main) {
 
     <nav class="pikalinkit" aria-label="Pääosiot">
       <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
-      <a href="pelikirja.html?v=20261118-1"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="pelikirja.html?v=20261125-1"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
       <a href="#/muistio/vastustajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
       <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
       <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spPidetyt.length}</span><span class="pl-ala">${spPidetyt.length ? `edustuksen testikertaa, viimeisin ${pvm(spPidetyt[0].pvm)}` : "edustuksen testikertaa"}${spTulevat.length ? `, seuraava ${pvm(spTulevat[0].pvm)}` : ""}</span></a>
@@ -70,6 +71,7 @@ export async function nayta(main) {
       </section>
 
       <aside class="k-sivu">
+        <section id="talvisuper" aria-label="Talvisuper"></section>
         <section class="paneeli">
           <div class="osio-paa"><h2>Siirtomarkkinoilla</h2><a href="#/siirtomarkkinat">Kaikki</a></div>
           ${kpl ? `<p class="kpl-netto">KPL <span class="num">${kpl.Tulleet}</span> tullut <span class="num">${kpl.Lähteneet}</span> lähtenyt</p>` : ""}
@@ -79,6 +81,7 @@ export async function nayta(main) {
       </aside>
     </div>`;
 
+  piirraTalvisuper($("#talvisuper"));
   const form = $("#pika"), ta = form.querySelector("textarea");
   $$(".chip[data-osio]", form).forEach((b) => (b.onclick = () => {
     valittuOsio = b.dataset.osio;

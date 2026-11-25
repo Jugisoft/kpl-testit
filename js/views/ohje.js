@@ -9,6 +9,7 @@ const SIVUT = [
       ["Pikakirjaus", "Kirjoita havainto ja valitse osio (esim. Ideat, Oma peli tai vastustaja). Ensimmäinen rivi on otsikko. Ctrl + Enter tallentaa."],
       ["Pikalinkkien luvut", "Muistiinpanojen, Pelikirjan kuvioiden, vastustajien pelaajien, siirtojen ja edustuksen testikertojen määrät."],
       ["Tervehdyksen luku", "Valmennuksen omat kirjaukset viimeiseltä 7 päivältä. Jarvisin pelaajaprofiilit mainitaan erikseen."],
+      ["Talvisuper", "KPL:n Talvisuper-ottelut (päivä, vastustaja, halli, kellonaika tai tulos) ja oman alkulohkon taulukko. Näkyy myös miesten pelaajien Oma Keskuksessa. Talvisuper on halliturnaus, joten sen tuloksia ei lasketa Superpesiksen tilastoihin, vertailuihin eikä kuormaan. Data pesistulokset.fi:stä YDIN 2027:n kautta, päivittyy iltaisin. Koko ohjelma avautuu YDINiin."],
     ] },
   { id: "muistio", nimi: "Oma peli", linkki: "#/muistio/KPL/yleiskuva",
     mita: "KPL:n oma sivu (sivupalkissa Oma peli, 17.10.2026). Yleiskuvassa myös Laittomat lyönnit: joukkueen laittomat määränä ja osuutena lyönneistä, sija sarjassa (vähiten laittomia ensin) ja pelaajittain; runkosarja tai kaikki ottelut, data pesistulokset.fi:n ottelutapahtumista. Merkattuja laittomia ei pöytäkirjoista erota. Joukkue ja pelaajat: Sisäpeli-välilehdellä Kuka hoitaa mitäkin tilannetta ja pelaajan valinnalla hänen ottelulyöntinsä kentällä, kuten vastustajilla. Lisäksi Pelaajat ja Ottelumuistiot. Muistiinpanot ovat yhdellä sivulla, ja luokka valitaan napeista: Oma peli, Merkkipeli, Ideat, Pelaajat, Muut, Joukkue ja Valmennus (vain valmennus). Vastustajien muistiinpanot ovat kunkin vastustajan sivulla.",
@@ -108,7 +109,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261118-1",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261125-1",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],

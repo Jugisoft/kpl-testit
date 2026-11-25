@@ -7,6 +7,7 @@ import { laske as laskeMissio } from "./lyonnit.js";
 import { piirraMinunPeli } from "../minunpeli.js";
 import { piirraMinunPeliTilastot } from "../minunpeli_tilastot.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
+import { piirraTalvisuper } from "../talvisuper.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
 import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, valmentajaltaKortti, merkitseNahdyiksi } from "../huomiointi.js";
@@ -144,6 +145,8 @@ async function piirra(main) {
 
     ${peliEnsin ? peliOsiot : ""}
 
+    ${peliEnsin ? `<section id="talvisuper" aria-label="Talvisuper"></section>` : ""}
+
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
     <div class="oma-ruudukko">
@@ -216,7 +219,7 @@ async function piirra(main) {
 
     `;
 
-  if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); }
+  if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); piirraTalvisuper($("#talvisuper", main)); }
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));

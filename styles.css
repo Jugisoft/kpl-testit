@@ -2825,3 +2825,33 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .nav-viesti { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; margin-left: auto; border-radius: 10px; background: var(--cyan); color: var(--musta); font: 700 12px/1 var(--num); }
 #alapalkki a .nav-viesti { position: absolute; top: 3px; left: calc(50% + 6px); margin: 0; }
 [aria-current="page"] > .nav-viesti { background: var(--musta); color: var(--cyan); }
+
+/* Talvisuper-kortti (25.11.2026, js/talvisuper.js): Keskuksen sivupalkki ja miesten Oma Keskus. Erillään Superpesiksen datasta. */
+.ts-kortti { display: flex; flex-direction: column; gap: 10px; }
+.ts-erillinen { margin: 0; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); font-family: var(--num); }
+.ts-seur { margin: 0; font-size: 14px; color: var(--ink-2); padding: 8px 10px; border-radius: 8px; background: var(--amber-bg); border-left: 3px solid var(--kpl); }
+.ts-seur b { color: var(--ink); }
+.ts-lista { display: flex; flex-direction: column; gap: 4px; }
+.ts-rivi { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 9px; border-radius: 8px; background: var(--surface-2); color: inherit; text-decoration: none; }
+.ts-rivi:hover { background: var(--line-2); outline: 1px solid var(--line); }
+.ts-rivi.seur { outline: 1px solid var(--kpl); }
+.ts-pv { font: 600 13px var(--num); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.ts-vast { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.ts-vast > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.ts-vast b { font-weight: 600; }
+.ts-vast small { font-size: 12px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-vast img, .ts-ph, .ts-taulu img { width: 22px; height: 22px; object-fit: contain; flex: none; }
+.ts-ph { display: inline-grid; place-items: center; border-radius: 50%; background: var(--line); font: 700 9px var(--num); }
+.ts-klo { font-size: 16px; color: var(--ink-2); }
+.ts-tulos { font-size: 18px; font-weight: 700; }
+.ts-tulos.v { color: var(--green); } .ts-tulos.h { color: var(--red); }
+.ts-tulos small { font-size: 11px; margin-left: 3px; color: var(--ink-3); }
+.ts-rivi.pel .ts-pv { opacity: .7; }
+.ts-taulu { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ts-taulu th { font: 600 11px var(--num); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 4px; text-align: center; border-bottom: 1px solid var(--line); }
+.ts-taulu td { padding: 5px 4px; text-align: center; border-bottom: 1px solid var(--line-2); }
+.ts-taulu .l { text-align: left; }
+.ts-taulu .ts-jk { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; vertical-align: middle; }
+.ts-taulu tr.oma td { background: var(--amber-bg); }
+.ts-lahde { margin: 0; color: var(--ink-3); }
+#talvisuper:empty { display: none; }

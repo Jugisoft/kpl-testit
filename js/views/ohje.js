@@ -1,6 +1,7 @@
 // Ohje (16.10.2026): sivu kerrallaan mitä Keskuksessa on, mitä luvut ja laskurit tarkoittavat, sekä lyhenteet.
 // Päivitä tätä, kun sivuja tai laskentaa muutetaan.
 import { $, $$, esc } from "../util.js";
+import { tila } from "../db.js";
 
 const SIVUT = [
   { id: "keskus", nimi: "Keskus", linkki: "#/",
@@ -28,6 +29,7 @@ const SIVUT = [
       ["Jarvisin kooste", "Jarvis kokoaa osion muistiinpanot pyynnöstä: Mitä tiedetään · Hypoteesit (varmuus heikko / kohtalainen / vahva) · Avoimet kysymykset."],
       ["Ottelumuistio", "Päivätty muistio ottelusta. Siihen voi liittää Word-, Excel-, kuva- tai PDF-tiedoston (enintään 25 Mt)."],
       ["Kommentit", "Kortin alle. Jarvisin kommentit näkyvät nimellä Jarvis."],
+      ["Yksityinen muistiinpano (🔒 Vain minulle)", "Valitse kirjoittaessa 🔒 Vain minulle, niin muistiinpano näkyy vain sinulle: ei muille pelaajille, valmennukselle eikä ylläpitäjälle. Sopii omiin havaintoihin ja muistutuksiin (esim. pelasin tilanteen näin, tämä pelataan jatkossa näin). Myös liitteet ja kommentit ovat yksityisiä, eikä Jarvis ota niitä koosteisiin. Muokkaa-tilassa valinnan voi poistaa, jolloin muistiinpano näkyy taas osion muille lukijoille. Valintaa voi muuttaa vain kirjoittaja. ⓘ-painike avaa saman selityksen kirjoituskentän vieressä."],
       ["Merkitse tehdyksi", "Kun muistiinpanon asia on hoidettu, paina kortin alalaidasta ✓ Merkitse tehdyksi. Kortti siirtyy listan loppuun avattavaan Tehdyt-osioon, ja siinä näkyy, kuka kuittasi ja milloin. Palauta avoimeksi tuo sen takaisin. Kuka tahansa valmentaja voi kuitata."],
     ] },
   { id: "vastustajat", nimi: "Vastustajat", linkki: "#/muistio/vastustajat",
@@ -118,7 +120,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261125-3",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261125-4",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -162,6 +164,14 @@ const SIVUT = [
       ["Juniori-pelaaja", "Oma Keskus, junioreiden testitulokset luettavissa ja lyöntipäiväkirja. Ei syötä tuloksia eikä näe miesten asioita."],
       ["PSU-valmennus", "Poikien Superpesiksen ja Poikien Ykköspesiksen yhteinen valmennus: junioreiden testit, juoksutestit, pelaajakortit, vertailu ja reaktioajat. Ei miesten testituloksia, muistiinpanoja, vastustajia, Pelikirjaa eikä siirtomarkkinoita."],
       ["Alue", "Pelaajaryhmä kuuluu joko miesten alueeseen (Miehet Superpesis) tai PSU:n alueeseen (Juniorit, Vanhat). Testikerta ja tulokset näkyvät sen mukaan, kenen pelaajia niissä on."],
+    ] },
+  { id: "tarkkailija", nimi: "Tarkkailijana Keskuksessa", linkki: "#/muistio/vastustajat",
+    mita: "Tarkkailija (25.11.2026) seuraa yhtä vastustajaa, esimerkiksi toisella paikkakunnalla. Hänellä on täydet oikeudet tämän vastustajan osioon, eikä hän näe muuta Keskuksesta.",
+    kohdat: [
+      ["Mitä näkyy", "Vastustajan joukkuesivu: Yleiskuva, Sisäpeli, Ulkopeli (myös fläppitaulun kuviot), Muistiinpanot, Ottelumuistiot, pelaajasivut ja Vastustajakortti. Mukana myös valmennuksen aiemmat havainnot ja Jarvisin kooste tästä vastustajasta."],
+      ["Mitä voi tehdä", "Kirjata havaintoja ja ottelumuistioita, liittää tiedostoja, kommentoida, lisätä pelaajia, kirjata lyöntejä ja ulkopelin liikkeitä, muokata yhteisiä tekstejä ja piirtää kuvioita fläppitaululle. Muiden kirjauksia voi muokata kuten valmennus; poistaa voi omia kirjauksiaan."],
+      ["Mitä ei näy", "KPL:n omat asiat (Oma peli, Valmennus-osio, testit, Pelikirja, pelaajien Keskukset), muut vastustajat, analyysit ja siirtomarkkinasivu. Rajaus on tietokannassa, joten muuta ei näe myöskään kirjoittamalla osoitteen käsin."],
+      ["Käyttäjän lisääminen", "Hallinta → Käyttäjät: oikeusryhmä Tarkkailija (yksi vastustaja) ja joukkue sarakkeessa Tarkkailijan vastustaja. Kirjautuminen Google-tunnuksella kuten muillakin."],
     ] },
   { id: "korjaamo", nimi: "Pärnäsen korjaamo", linkki: "#/korjaamo",
     mita: "Korjausehdotukset ja kehitysideat Keskukseen, erillään Muistiosta. Kirjaa mikä ei toimi tai mitä kaipaat, valitse tyyppi (Korjaus / Idea) ja sivu, ja seuraa tilaa.",
@@ -220,7 +230,9 @@ const LYHENTEET = [
 ];
 
 export async function nayta(main, osio) {
-  const sisalto = SIVUT.map((s) => `<section class="oh-sivu" id="oh-${s.id}" data-haku="${esc((s.nimi + " " + s.mita + " " + s.kohdat.flat().join(" ")).toLowerCase())}">
+  // tarkkailija näkee vain omaa työtään koskevat ohjesivut (25.11.2026)
+  const SIVUT_N = tila.tarkkailija ? SIVUT.filter((s) => ["tarkkailija", "vastustajat", "kortti", "korjaamo"].includes(s.id)).map((s) => ({ ...s, linkki: s.id === "korjaamo" ? s.linkki : s.id === "kortti" ? `#/kortti/${tila.tarkkailijaJoukkue}` : `#/muistio/${tila.tarkkailijaJoukkue}/yleiskuva` })) : SIVUT;
+  const sisalto = SIVUT_N.map((s) => `<section class="oh-sivu" id="oh-${s.id}" data-haku="${esc((s.nimi + " " + s.mita + " " + s.kohdat.flat().join(" ")).toLowerCase())}">
       <div class="oh-paa"><h2>${esc(s.nimi)}</h2><a class="btn oh-avaa" href="${s.linkki}">Avaa sivu</a></div>
       <p class="oh-mita">${esc(s.mita)}</p>
       <dl class="oh-lista">${s.kohdat.map(([t, x]) => `<div data-haku="${esc((t + " " + x).toLowerCase())}"><dt>${esc(t)}</dt><dd>${esc(x)}</dd></div>`).join("")}</dl>
@@ -234,7 +246,7 @@ export async function nayta(main, osio) {
     <div class="oh-runko">
       <nav class="oh-sisallys" aria-label="Ohjeen sisällys">
         <input type="search" id="oh-haku" placeholder="Hae termiä, esim. KL% tai tahti" aria-label="Hae ohjeesta">
-        ${[...SIVUT, { id: "lyhenteet", nimi: "Lyhenteet ja termit" }].map((s) => `<a href="#/ohje/${s.id}" data-oh="${s.id}">${esc(s.nimi)}</a>`).join("")}
+        ${[...SIVUT_N, { id: "lyhenteet", nimi: "Lyhenteet ja termit" }].map((s) => `<a href="#/ohje/${s.id}" data-oh="${s.id}">${esc(s.nimi)}</a>`).join("")}
       </nav>
       <div class="oh-sisalto">${sisalto}${lyh}<p class="tyhja" id="oh-eitulos" hidden>Ei osumia.</p></div>
     </div>`;

@@ -77,7 +77,7 @@ function tekstiLohko(avain, otsikko, ohje) {
   return `<section class="jaettu-teksti" data-avain="${esc(avain)}">
     <div class="jt-paa"><h2>${esc(otsikko)}</h2>
       ${t?.teksti ? `<span class="pieni">${esc(kirjoittajanNimi(t.muokkaaja))}, ${aikaSitten(t.muokattu)}</span>` : ""}
-      ${tila.valmennus ? `<button class="linkkinappi" data-jt="muokkaa">${t?.teksti ? "Muokkaa" : "Kirjoita"}</button>` : ""}</div>
+      ${tila.vastustajaMuokkaus ? `<button class="linkkinappi" data-jt="muokkaa">${t?.teksti ? "Muokkaa" : "Kirjoita"}</button>` : ""}</div>
     <div class="jt-sisalto">${t?.teksti ? `<div class="md">${md(t.teksti)}</div>` : `<p class="jt-tyhja">${esc(ohje)}</p>`}</div>
   </section>`;
 }

@@ -3,8 +3,11 @@ import { sb, tila, nimi, lataaPelaajat, lataaPerus, SUPABASE_URL } from "../db.j
 import { LUOKAT } from "./testit.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 import { ika, PROFIILIT } from "../kuormaydin.js";
+import { VASTUSTAJAT } from "../keskus.js";
 
-const ROOLIT = { admin: "Master (ylläpitäjä)", valmentaja: "Master-valmennus", pelaaja: "Miesten SP -pelaaja", psu: "PSU-valmennus", juniori: "Juniori-pelaaja", sp_juniori: "Miesten SP -pelaaja + juniori" };
+const ROOLIT = { admin: "Master (ylläpitäjä)", valmentaja: "Master-valmennus", pelaaja: "Miesten SP -pelaaja", psu: "PSU-valmennus", juniori: "Juniori-pelaaja", sp_juniori: "Miesten SP -pelaaja + juniori", tarkkailija: "Tarkkailija (yksi vastustaja)" };
+// Tarkkailijan vastustaja (25.11.2026): tarkkailija näkee ja muokkaa vain tätä joukkuetta
+const vastSel = (v, nimi = "") => `<select ${nimi ? `name="${nimi}"` : `data-vast-v="${esc(v.email)}"`} aria-label="Tarkkailijan vastustaja${v.email ? `: ${esc(v.email)}` : ""}"><option value="">–</option>${VASTUSTAJAT.map((j) => `<option value="${j}"${j === v.vastustaja ? " selected" : ""}>${j}</option>`).join("")}</select>`;
 // Pelaajaliitos (1.11.2026): tunnus ↔ pelaaja, pelaajan oma Keskus
 const pelaajaSel = (v) => `<select data-pelaaja-v="${esc(v.email)}" aria-label="Pelaaja: ${esc(v.email)}"><option value="">– ei pelaajaa –</option>${tila.joukkueet.map((j) => `<optgroup label="${esc(j.nimi)}">${tila.pelaajat.filter((x) => x.joukkue_id === j.id).map((x) => `<option value="${x.id}"${x.id === v.pelaaja_id ? " selected" : ""}>${esc(nimi(x))}</option>`).join("")}</optgroup>`).join("")}</select>`;
 
@@ -25,14 +28,16 @@ export async function nayta(main) {
       <li><b>Miesten SP -pelaaja</b>: miesten asiat (testit, Muistio, vastustajat, Pelikirja, analyysit), mutta ei junioreiden testituloksia eikä Muistion Valmennus-osiota.</li>
       <li><b>Juniori-pelaaja</b>: oma Keskus (viikko-ohjelma, tavoitteet, omat testit), junioreiden testitulokset luettavissa ja lyöntipäiväkirja. Ei syötä tuloksia. Liitä tunnus pelaajaan sarakkeessa <b>Pelaaja</b>.</li>
       <li><b>Miesten SP -pelaaja + juniori</b>: molempien oikeudet yhdessä: miesten asiat kuten SP-pelaajalla sekä junioreiden testitulokset. Oma Keskus, Treenipäiväkirja ja lyöntipäiväkirja. Liitä tunnus pelaajaan sarakkeessa <b>Pelaaja</b>.</li>
+      <li><b>Tarkkailija (yksi vastustaja)</b>: esim. toisella paikkakunnalla vastustajaa seuraava henkilö. Näkee ja voi muokata kaikkea valitun vastustajan osalta (havainnot, valmennuksen merkinnät, pelaajat ja lyönnit, ulkopeli ja fläppitaulu, liitteet, Jarvisin kooste, vastustajakortti). Ei näe KPL:n omia asioita, muita vastustajia, testejä, Pelikirjaa eikä analyysejä. Valitse joukkue sarakkeessa <b>Tarkkailijan vastustaja</b>.</li>
       <li><b>PSU-valmennus</b> (Poikien Superpesis ja Poikien Ykköspesis): vain junioreiden testit, pelaajat ja reaktioajat. Ei miesten testituloksia, muistiinpanoja, vastustajia, Pelikirjaa eikä siirtomarkkinoita.</li>
     </ul>
     <p class="pieni">Pelaajaryhmän alue: <b>Miehet Superpesis</b> kuuluu miesten alueeseen, <b>Juniorit</b> ja <b>Vanhat</b> PSU:n alueeseen.</p>
-    <div class="taulu-wrap"><table><thead><tr><th>Sähköposti</th><th>Nimi</th><th>Oikeusryhmä</th><th>Pelaaja (oma Keskus)</th><th></th></tr></thead>
-      <tbody>${valmentajat.map((v) => `<tr><td>${v.email === tila.istunto.user.email.toLowerCase() ? esc(v.email) : `<input type="email" data-email-v="${esc(v.email)}" value="${esc(v.email)}" aria-label="Sähköposti" style="width:250px">`}</td><td><input type="text" data-nimi-v="${esc(v.email)}" value="${esc(v.nimi || "")}" placeholder="nimi" aria-label="Nimi: ${esc(v.email)}" style="width:170px"></td><td>${v.email === tila.istunto.user.email.toLowerCase() ? `${ROOLIT[v.rooli] || v.rooli} <span class="pieni">(oma tunnus)</span>` : `<select data-rooli-v="${esc(v.email)}" aria-label="Oikeusryhmä: ${esc(v.email)}">${Object.entries(ROOLIT).map(([k, n]) => `<option value="${k}"${k === v.rooli ? " selected" : ""}>${n}</option>`).join("")}</select>`}</td><td>${pelaajaSel(v)}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
+    <div class="taulu-wrap"><table><thead><tr><th>Sähköposti</th><th>Nimi</th><th>Oikeusryhmä</th><th>Pelaaja (oma Keskus)</th><th>Tarkkailijan vastustaja</th><th></th></tr></thead>
+      <tbody>${valmentajat.map((v) => `<tr><td>${v.email === tila.istunto.user.email.toLowerCase() ? esc(v.email) : `<input type="email" data-email-v="${esc(v.email)}" value="${esc(v.email)}" aria-label="Sähköposti" style="width:250px">`}</td><td><input type="text" data-nimi-v="${esc(v.email)}" value="${esc(v.nimi || "")}" placeholder="nimi" aria-label="Nimi: ${esc(v.email)}" style="width:170px"></td><td>${v.email === tila.istunto.user.email.toLowerCase() ? `${ROOLIT[v.rooli] || v.rooli} <span class="pieni">(oma tunnus)</span>` : `<select data-rooli-v="${esc(v.email)}" aria-label="Oikeusryhmä: ${esc(v.email)}">${Object.entries(ROOLIT).map(([k, n]) => `<option value="${k}"${k === v.rooli ? " selected" : ""}>${n}</option>`).join("")}</select>`}</td><td>${pelaajaSel(v)}</td><td>${vastSel(v)}</td><td class="n">${v.email === tila.istunto.user.email.toLowerCase() ? "" : `<button class="btn vaara" data-poista-v="${esc(v.email)}">Poista</button>`}</td></tr>`).join("")}</tbody></table></div>
     <form id="uusi-v" class="rivi" style="margin-top:10px">
       <input type="email" name="email" placeholder="sähköposti" required style="width:240px"><input type="text" name="nimi" placeholder="nimi">
       <select name="rooli">${Object.entries(ROOLIT).map(([k, n]) => `<option value="${k}"${k === "valmentaja" ? " selected" : ""}>${n}</option>`).join("")}</select>
+      <label class="pieni">Tarkkailijan vastustaja ${vastSel({}, "vastustaja")}</label>
       <button class="btn ensisij">Lisää käyttäjä</button></form>
 
     <h2>Nimenhuudon kalenterit</h2>
@@ -112,12 +117,22 @@ export async function nayta(main) {
     ilmoita(`${b.dataset.nimi}: tiedot poistettu pysyvästi (testituloksia ${data?.tulokset ?? 0}, omia treenejä ${data?.omat_treenit ?? 0}, tunnuksia ${data?.tunnukset ?? 0})`);
     nayta(main);
   }));
+  $$("[data-vast-v]").forEach((s) => (s.onchange = async () => {
+    const email = s.dataset.vastV, v = valmentajat.find((x) => x.email === email);
+    if (v?.rooli !== "tarkkailija") return ilmoita("Vastustaja vaikuttaa vain tarkkailijaan. Vaihda oikeusryhmäksi Tarkkailija.", false);
+    if (!s.value) { s.value = v.vastustaja || ""; return ilmoita("Tarkkailijalla pitää olla vastustaja.", true); }
+    const { error } = await sb.from("valmentajat").update({ vastustaja: s.value }).eq("email", email);
+    if (error) return ilmoita(error.message, true);
+    v.vastustaja = s.value; ilmoita(`${email}: vastustaja ${s.value}`);
+  }));
   $$("[data-rooli-v]").forEach((s) => {
     const alku = s.value;
     s.onchange = async () => {
       const email = s.dataset.rooliV, uusi = s.value;
-      if (!confirm(`Muutetaanko käyttäjän ${email} oikeusryhmäksi ${ROOLIT[uusi]}?${uusi === "pelaaja" ? " Valmennus-osio ei enää näy hänelle." : ""}`)) { s.value = alku; return; }
-      const { error } = await sb.from("valmentajat").update({ rooli: uusi }).eq("email", email);
+      const vast = $(`[data-vast-v="${email}"]`, main)?.value || null;
+      if (uusi === "tarkkailija" && !vast) { s.value = alku; return ilmoita("Valitse ensin tarkkailijan vastustaja samalta riviltä.", true); }
+      if (!confirm(`Muutetaanko käyttäjän ${email} oikeusryhmäksi ${ROOLIT[uusi]}${uusi === "tarkkailija" ? ` (${vast})` : ""}?${uusi === "pelaaja" ? " Valmennus-osio ei enää näy hänelle." : ""}`)) { s.value = alku; return; }
+      const { error } = await sb.from("valmentajat").update({ rooli: uusi, vastustaja: uusi === "tarkkailija" ? vast : null }).eq("email", email);
       if (error) { s.value = alku; return ilmoita(error.message, true); }
       ilmoita(`${email}: ${ROOLIT[uusi]}`); nayta(main);
     };
@@ -170,7 +185,8 @@ export async function nayta(main) {
   }));
   $("#uusi-v").onsubmit = async (e) => {
     e.preventDefault(); const f = e.target;
-    const { error } = await sb.from("valmentajat").insert({ email: f.email.value.trim().toLowerCase(), nimi: f.nimi.value.trim() || null, rooli: f.rooli.value });
+    if (f.rooli.value === "tarkkailija" && !f.vastustaja.value) return ilmoita("Valitse tarkkailijalle vastustaja.", true);
+    const { error } = await sb.from("valmentajat").insert({ email: f.email.value.trim().toLowerCase(), nimi: f.nimi.value.trim() || null, rooli: f.rooli.value, vastustaja: f.rooli.value === "tarkkailija" ? f.vastustaja.value : null });
     if (error) return ilmoita(error.message, true);
     nayta(main);
   };

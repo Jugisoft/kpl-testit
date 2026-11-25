@@ -108,7 +108,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261125-3", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261125-4", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -153,10 +153,16 @@ const RYHMAT_JUNIORI = [
   ]],
 ];
 const ALAPALKKI_JUNIORI = [["Oma", "#/oma", "oma"], ["Treeni", "#/treenit", "treeni"], ["Lyönnit", "#/lyonnit", "lyonnit"], ["Testit", "#/testit/juniorit", "testit"]];
+// Tarkkailija (25.11.2026): vain oma vastustaja (Muistio-joukkuesivu, pelaajasivut, vastustajakortti), Ohje ja korjaamo. Rajaus tietokannassa.
+const TARKKAILIJA_SALLITTU = (polku) => new RegExp(`^/(muistio/${tila.tarkkailijaJoukkue}(/|$)|kortti/${tila.tarkkailijaJoukkue}$|vp/|huomio/|ohje|korjaamo|kirjaudu)`).test(polku);
 const JUNIORI_SALLITTU = (polku, r) => (r?.osio === "testit" && !/^\/(kerrat|syota|kerta)/.test(polku)) || /^\/(oma|minunpeli|minunkehitys|lyonnit|treenit|ohjelmat|ohje|korjaamo|kirjaudu)/.test(polku);
 // Valikko roolin mukaan: pelaajalla Oma Keskus ylimpänä, valmentajilla Pelaajien Keskus Valmennus-ryhmässä
 function valikko() {
   if (tila.juniori) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
+  if (tila.tarkkailija) {
+    const j = tila.tarkkailijaJoukkue, osoite = `#/muistio/${j}/yleiskuva`;
+    return [[[`Vastustaja`, [[j, osoite, "vastustajat", (p) => /^\/(muistio|vp|kortti|huomio)/.test(p)]]]], [[j, osoite, "vastustajat"], ["Ohje", "#/ohje", "ohje"]]];
+  }
   const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
   const koosteL = ["Viikkokooste", "#/kooste", "kooste", (p) => /^\/kooste/.test(p)];
   const seurantaL = ["Tavoiteseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026; 12.11.2026 nimi Tavoiteseuranta (omatoimiset Viikkokoosteessa)
@@ -267,6 +273,7 @@ async function reititä() {
   if (r.admin && !tila.admin) { location.hash = "#/"; return; }
   if (tila.psu && !PSU_SALLITTU(polku, r)) { location.replace("#/testit/juniorit"); return; }
   if (tila.juniori && !JUNIORI_SALLITTU(polku, r)) { location.replace("#/oma"); return; }
+  if (tila.tarkkailija && !TARKKAILIJA_SALLITTU(polku)) { location.replace(`#/muistio/${tila.tarkkailijaJoukkue}/yleiskuva`); return; }
   // 14.11.2026: miesten pelaajan etusivu = oma Keskus (valmennuksen etusivu Keskus-linkistä alapalkissa ja valikossa)
   if (tila.spPelaaja && !tila.valmennus && r.nakyma === etusivu && !sessionStorage.getItem("kpl-etusivu-ohitettu")) { sessionStorage.setItem("kpl-etusivu-ohitettu", "1"); location.replace("#/oma"); return; }
   // toisen pelaajan oma Keskus vain valmentajille

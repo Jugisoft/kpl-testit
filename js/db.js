@@ -33,6 +33,9 @@ export const tila = {
   juniori: false,     // Juniori-pelaaja (1.11.2026): junioreiden testit luku, oma Keskus, ei syöttöä
   ohjaaja: false,     // valmentajan rooli pelaajille (tavoitteet, viikko-ohjelma): admin, valmentaja, psu
   omaPelaaja: null,   // tunnukseen liitetty pelaaja (valmentajat.pelaaja_id)
+  tarkkailija: false, // 25.11.2026: tarkkailija = täydet oikeudet yhteen vastustajaan (valmentajat.vastustaja), ei muuta
+  tarkkailijaJoukkue: null,
+  vastustajaMuokkaus: false, // saa muokata vastustajan yhteisiä tekstejä ja fläppitaulua: valmennus tai tarkkailija
   testit: [],          // testimääritelmät
   testi: {},           // koodi -> testi
   joukkueet: [],
@@ -65,7 +68,7 @@ export async function tarkistaRooli() {
   tila.istunto = data.session;
   // Käyttöoikeusluokat (31.10.2026): rajaus on tietokannassa (RLS), tämä vain piilottaa näkymät, joihin ei ole pääsyä.
   // tila.valmentaja = miesten alue (admin, valmentaja, pelaaja); tila.valmennus = Valmennus-osio (admin, valmentaja).
-  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = tila.juniori = tila.spJuniori = tila.ohjaaja = false; tila.rooli = null; tila.omaPelaaja = null;
+  tila.valmentaja = tila.admin = tila.valmennus = tila.jasen = tila.psu = tila.spPelaaja = tila.juniori = tila.spJuniori = tila.ohjaaja = tila.tarkkailija = tila.vastustajaMuokkaus = false; tila.rooli = null; tila.omaPelaaja = null; tila.tarkkailijaJoukkue = null;
   if (tila.istunto) {
     const [v, a, vm, r] = await Promise.all([sb.rpc("on_valmentaja"), sb.rpc("on_admin"), sb.rpc("on_valmennus"), sb.rpc("kayttajan_rooli")]);
     tila.valmentaja = !!v.data;
@@ -73,8 +76,9 @@ export async function tarkistaRooli() {
     tila.valmennus = !!vm.data;
     tila.rooli = r.data || null;
     if (tila.rooli) {
-      const { data: oma } = await sb.from("valmentajat").select("pelaaja_id").eq("email", (tila.istunto.user.email || "").toLowerCase()).maybeSingle();
+      const { data: oma } = await sb.from("valmentajat").select("pelaaja_id,vastustaja").eq("email", (tila.istunto.user.email || "").toLowerCase()).maybeSingle();
       tila.omaPelaaja = oma?.pelaaja_id || null;
+      if (tila.rooli === "tarkkailija") tila.tarkkailijaJoukkue = oma?.vastustaja || null;
     }
   }
   tila.juniori = tila.rooli === "juniori";
@@ -83,6 +87,8 @@ export async function tarkistaRooli() {
   tila.spJuniori = tila.rooli === "sp_juniori";   // 6.11.2026: miesten SP -pelaaja + juniori (molemmat alueet)
   tila.spPelaaja = tila.rooli === "pelaaja" || tila.spJuniori;
   tila.jasen = !!tila.rooli;
+  tila.tarkkailija = tila.rooli === "tarkkailija" && !!tila.tarkkailijaJoukkue;
+  tila.vastustajaMuokkaus = tila.valmennus || tila.tarkkailija;
 }
 
 // Testiryhmät, jotka roolille näytetään (null = kaikki)

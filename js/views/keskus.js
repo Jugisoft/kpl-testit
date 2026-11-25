@@ -2,6 +2,7 @@
 import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 import { piirraTalvisuper } from "../talvisuper.js";
+import { yksityinenValinta, kytkeYksityinen } from "../yksityinen.js";
 import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, omaEmail } from "../keskus.js";
 
 let kanava = null;
@@ -9,7 +10,7 @@ let valittuOsio = "idea";
 export function poistu() { if (kanava) { sb.removeChannel(kanava); kanava = null; } }
 
 const rivi = (h) => `<li><a class="tuore" href="#/huomio/${h.id}">
-  <span class="t-osio">${esc(osioNimi(huomionOsio(h)))}${h.tyyppi === "ottelumuistio" ? " · muistio" : ""}</span>
+  <span class="t-osio">${esc(osioNimi(huomionOsio(h)))}${h.tyyppi === "ottelumuistio" ? " · muistio" : ""}${h.nakyvyys === "oma" ? " · 🔒 vain sinulle" : ""}</span>
   <strong>${esc(h.otsikko)}</strong>
   <span class="pieni">${esc(kirjoittajanNimi(h.kirjoittaja))}, ${aikaSitten(h.luotu)}</span></a></li>`;
 
@@ -52,13 +53,13 @@ export async function nayta(main) {
         <div class="osiovalinta" role="group" aria-label="Osio">
           ${[...(tila.valmennus ? ["valmennus"] : []), ...AIHEOSIOT.filter((o) => o !== "muu")].map(chip).join("")}<span class="erotin" aria-hidden="true"></span>${JOUKKUEET.map(chip).join("")}
         </div>
-        <div class="rivi"><button class="btn ensisij" type="submit">Tallenna</button><span class="pieni vihje-nappain">Ctrl + Enter tallentaa</span></div>
+        <div class="rivi">${yksityinenValinta(false)}<button class="btn ensisij" type="submit">Tallenna</button><span class="pieni vihje-nappain">Ctrl + Enter tallentaa</span></div>
       </form>
     </section>
 
     <nav class="pikalinkit" aria-label="Pääosiot">
       <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
-      <a href="pelikirja.html?v=20261125-3"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="pelikirja.html?v=20261125-4"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
       <a href="#/muistio/vastustajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
       <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
       <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spPidetyt.length}</span><span class="pl-ala">${spPidetyt.length ? `edustuksen testikertaa, viimeisin ${pvm(spPidetyt[0].pvm)}` : "edustuksen testikertaa"}${spTulevat.length ? `, seuraava ${pvm(spTulevat[0].pvm)}` : ""}</span></a>
@@ -83,6 +84,7 @@ export async function nayta(main) {
 
   piirraTalvisuper($("#talvisuper"));
   const form = $("#pika"), ta = form.querySelector("textarea");
+  kytkeYksityinen(form);
   $$(".chip[data-osio]", form).forEach((b) => (b.onclick = () => {
     valittuOsio = b.dataset.osio;
     $$(".chip[data-osio]", form).forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -94,10 +96,11 @@ export async function nayta(main) {
     if (!ta.value.trim()) return;
     const nappi = form.querySelector("[type=submit]"); nappi.disabled = true;
     try {
-      const h = await tallennaMuistiinpano(ta.value, valittuOsio);
+      const yks = form.querySelector("[name=oma]");
+      const h = await tallennaMuistiinpano(ta.value, valittuOsio, yks?.checked ? { nakyvyys: "oma" } : {});
       if (!huomiot.some((x) => x.id === h.id)) huomiot.unshift(h);
-      ta.value = "";
-      ilmoita(`Tallennettu osioon ${osioNimi(valittuOsio)}`);
+      ta.value = ""; if (yks) yks.checked = false;
+      ilmoita(`Tallennettu osioon ${osioNimi(valittuOsio)}${h.nakyvyys === "oma" ? " (vain sinulle)" : ""}`);
       $("#tuoreet").innerHTML = huomiot.slice(0, 8).map(rivi).join("");
     } catch (err) { ilmoita("Tallennus epäonnistui: " + err.message, true); }
     finally { nappi.disabled = false; }

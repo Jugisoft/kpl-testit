@@ -2892,3 +2892,16 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 }
 /* tummat seuralogot (KiPa, Ura) näkyviin tummalla pohjalla */
 .tso-jk img, .ts-vast img, .ts-taulu img { background: rgba(255,255,255,.82); border-radius: 50%; padding: 2px; box-sizing: border-box; }
+
+/* Yksityinen muistiinpano (25.11.2026, js/yksityinen.js) */
+.yksityinen-valinta { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.yks-chip { font-size: 14px; padding: 5px 11px; }
+.info-nappi { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 700 13px/1 Georgia, serif; font-style: italic; cursor: pointer; display: inline-grid; place-items: center; padding: 0; }
+.info-nappi[aria-expanded="true"], .info-nappi:hover { border-color: var(--kpl); color: var(--kpl); }
+.yks-info { position: absolute; z-index: 40; left: 0; top: calc(100% + 8px); width: min(420px, 86vw); background: var(--surface); border: 1px solid var(--kpl); border-radius: 12px; padding: 14px 16px 10px; box-shadow: 0 12px 32px rgba(0,0,0,.45); font-size: 14px; line-height: 1.45; color: var(--ink-2); text-align: left; white-space: normal; }
+.yks-info p { margin: 0 0 8px; color: var(--ink); }
+.yks-info ul { margin: 0 0 8px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.yks-info b { color: var(--ink); }
+.lukko.yksityinen { background: rgba(245,168,0,.14); color: var(--kpl); border-color: var(--kpl); }
+.muistiinpano.on-yksityinen { box-shadow: inset 3px 0 0 var(--kpl); }
+@media (max-width: 700px) { .yks-info { position: fixed; left: 50%; top: auto; bottom: 84px; transform: translateX(-50%); width: calc(100vw - 24px); } }

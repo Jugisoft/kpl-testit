@@ -173,7 +173,7 @@ async function piirra(main) {
         <details class="oma-tav-uusi"><summary>+ Lisää harjoite viikolle ${viikkoNro(viikko)}</summary>
         <form id="ohj-uusi" class="oma-lomake">
           <div class="oma-kentat">
-            <label class="kentta">Treeniohjelma<select name="treeniohjelma"><option value="">– ei ohjelmaa, oma harjoite –</option>${ohjelmaValinnat(treeniOhj)}</select></label>
+            <label class="kentta">Treeniohjelma<select name="treeniohjelma"><option value="">– ei ohjelmaa, oma harjoite –</option>${ohjelmaValinnat(treeniOhj, pid)}</select></label>
             <label class="kentta">Päivä<select name="paiva"><option value="">Mikä tahansa päivä</option>${[0, 1, 2, 3, 4, 5, 6].map((n) => { const d = lisaaPv(viikko, n); return `<option value="${d}">${paivaNimi(d)}</option>`; }).join("")}</select></label>
           </div>
           <div class="oma-kentat">
@@ -483,8 +483,9 @@ function missio(m, kirjaukset) {
 // 6.11.2026: valmennuksen harjoitteen päivä ja treeniohjelmavalinta
 const PV_NIMET = ["Su", "Ma", "Ti", "Ke", "To", "Pe", "La"];
 function paivaNimi(d) { const x = new Date(d + "T12:00:00Z"); return `${PV_NIMET[x.getUTCDay()]} ${x.getUTCDate()}.${x.getUTCMonth() + 1}.`; }
-function ohjelmaValinnat(oh) {
-  const lista = Object.values(oh || {}).filter((o) => o.kuvaus && o.kuvaus.trim());
-  const ryhmat = [...new Set(lista.map((o) => o.ryhma))];
+function ohjelmaValinnat(oh, pid) {
+  // 25.11.2026: henkilökohtaiset ohjelmat vain kyseiselle pelaajalle, ensimmäisinä
+  const lista = Object.values(oh || {}).filter((o) => o.kuvaus && o.kuvaus.trim() && (!o.pelaaja_id || o.pelaaja_id === pid));
+  const ryhmat = [...new Set(lista.map((o) => o.ryhma))].sort((a, b) => lista.some((o) => o.ryhma === b && o.pelaaja_id) - lista.some((o) => o.ryhma === a && o.pelaaja_id));
   return ryhmat.map((r) => `<optgroup label="${esc(r)}">${lista.filter((o) => o.ryhma === r).map((o) => `<option value="${o.koodi}">${esc(o.nimi)}</option>`).join("")}</optgroup>`).join("");
 }

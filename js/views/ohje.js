@@ -120,7 +120,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261125-4",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261125-5",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -184,6 +184,7 @@ const SIVUT = [
     mita: "Pelaajan omatoimisten treenien nopea kirjaus omasta valikosta (1.11.2026), lyöntipäiväkirjan tapaan. Puhelimella alapalkissa Treeni.",
     kohdat: [
       ["Treenin valinta", "Isot painikkeet ryhmittäin: Voimat, Juoksut ja Lisäosat (valmennuksen ohjelmat) sekä omatoiminen laji ja kunto. Ylimpänä viimeksi tehdyt. Painikkeessa näkyy ohjelman tyypillinen kesto."],
+      ["Henkilökohtaiset ohjelmat", "Valmennus voi tehdä pelaajalle omat ohjelmat (25.11.2026, ensimmäisenä Elmeri Lieto). Ne näkyvät vain pelaajalle itselleen ja valmennukselle, ylimpänä otsikolla Sinun ohjelmasi (valmennus), ja kirjataan kuten muutkin treenit. Valmennuksen kalenterin päivät näkyvät Oma Keskus → Viikon ohjelma -kortissa. Uudet ohjelmat lisää Jarvis: lähetä ohjelmatiedosto ja kalenteri."],
       ["Kirjaus", "Valinta avaa lomakkeen: kesto (−/+15), lajin määrät (esim. tolppasyötöt, matalat, muut) tai lenkillä ja pyöräilyllä matka km, päivä (tänään, eilen, toissapäivänä tai muu enintään 2 viikkoa taaksepäin). Näytä ohjelma avaa ohjelman sisällön, esimerkiksi punttisalilla."],
       ["Valmentajalle", "Valmentaja näkee Treenipäiväkirjan valikossa ja valitsee pelaajan: pelaajan kirjaukset ja yhteenveto (vain luku). Viikon ohjelmaa annetaan pelaajan omassa Keskuksessa kohdasta + Lisää harjoite."],
       ["Yhteenveto ja historia", "Yläosassa treenit ja minuutit tällä viikolla sekä treenit 4 viikossa. Alla viimeisimmät kirjaukset; viimeisen 2 viikon kirjauksia voi poistaa. Kirjaukset näkyvät oman Keskuksen Viikkonissa ja kuorma-arviossa sekä valmentajan viikkokoosteessa."],

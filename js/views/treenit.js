@@ -45,9 +45,12 @@ async function piirra(main, pid, vainLuku) {
   ]);
   if (omatRes.error) { main.innerHTML = `<h1>Treenipäiväkirja</h1><p class="ingressi">Kirjauksia ei saatu haettua: ${esc(omatRes.error.message)}</p>`; return; }
   const omat = omatRes.data || [];
-  const lista = Object.values(ohjelmat);
+  // 25.11.2026: henkilökohtaiset ohjelmat (treeniohjelmat.pelaaja_id) vain sille pelaajalle, jonka päiväkirja on auki – ja ensimmäisinä
+  const lista = Object.values(ohjelmat).filter((o) => !o.pelaaja_id || o.pelaaja_id === pid);
+  const omaRyhma = lista.find((o) => o.pelaaja_id)?.ryhma;
   const viimeksi = [...new Set(omat.map((o) => o.ohjelma).filter((k) => ohjelmat[k]))].slice(0, 4);
-  const ryhmat = [...new Set(lista.map((o) => o.ryhma))].sort((a, b) => (RYHMAJARJ.indexOf(a) + 1 || 99) - (RYHMAJARJ.indexOf(b) + 1 || 99));
+  const ryhmat = [...new Set(lista.map((o) => o.ryhma))].sort((a, b) => (a === omaRyhma ? -1 : b === omaRyhma ? 1 : 0) || (RYHMAJARJ.indexOf(a) + 1 || 99) - (RYHMAJARJ.indexOf(b) + 1 || 99));
+  const ryhmaNimi = (r) => (r === omaRyhma && !vainLuku ? "Sinun ohjelmasi (valmennus)" : r);
   const tamaVk = omat.filter((o) => o.pvm >= vk);
   const vkMin = tamaVk.reduce((s, o) => s + (o.kesto_min || 0), 0);
   const kerrat4 = omat.filter((o) => o.pvm > lisaaPv(t, -28)).length;
@@ -66,7 +69,7 @@ async function piirra(main, pid, vainLuku) {
     </div>
 
     ${vainLuku ? "" : `${viimeksi.length ? `<section class="tr-ryhma"><h2>Viimeksi tehdyt</h2><div class="tr-napit">${viimeksi.map((k) => nappi(ohjelmat[k])).join("")}</div></section>` : ""}
-    ${ryhmat.map((r) => `<section class="tr-ryhma"><h2>${esc(r)}</h2><div class="tr-napit">${lista.filter((o) => o.ryhma === r).map(nappi).join("")}</div></section>`).join("")}
+    ${ryhmat.map((r) => `<section class="tr-ryhma"><h2>${esc(ryhmaNimi(r))}</h2><div class="tr-napit">${lista.filter((o) => o.ryhma === r).map(nappi).join("")}</div></section>`).join("")}
 
     <form id="tr-lomake" class="tr-lomake" ${valittu ? "" : "hidden"}></form>`}
 

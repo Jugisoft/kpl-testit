@@ -3,6 +3,7 @@
 // Pelkkä muistilappu: treeni kirjataan erikseen Treenipäiväkirjaan (6.11.2026 Jugi: ei rukseja).
 // Data: taulu treeniohjelmat (sama kuin Treenipäiväkirjan napit), sarake kuvaus = rivit.
 import { $, $$, esc } from "../util.js";
+import { tila } from "../db.js";
 import { haeOhjelmat } from "../kuorma.js";
 import { T, minStr } from "../kuormaydin.js";
 
@@ -19,13 +20,16 @@ const korosta = (l) => esc(l)
 export async function nayta(main, koodi) {
   main.innerHTML = `<p class="lataa">Ladataan ohjelmia…</p>`;
   const ohjelmat = await haeOhjelmat();
+  // 25.11.2026: pelaajan henkilökohtaiset ohjelmat ensin ("Sinun ohjelmasi"); ohjaajat näkevät kaikkien (RLS rajaa muut)
   const lista = Object.values(ohjelmat).filter((o) => o.kuvaus && o.kuvaus.trim());
+  const omaRyhma = lista.find((o) => o.pelaaja_id && o.pelaaja_id === tila.omaPelaaja)?.ryhma;
+  const henk = new Set(lista.filter((o) => o.pelaaja_id).map((o) => o.ryhma));
   if (koodi && ohjelmat[koodi]?.kuvaus) return yksi(main, ohjelmat[koodi]);
-  const ryhmat = [...new Set(lista.map((o) => o.ryhma))].sort((a, b) => (RYHMAJARJ.indexOf(a) + 1 || 99) - (RYHMAJARJ.indexOf(b) + 1 || 99));
+  const ryhmat = [...new Set(lista.map((o) => o.ryhma))].sort((a, b) => (a === omaRyhma ? -1 : b === omaRyhma ? 1 : 0) || (henk.has(b) - henk.has(a)) || (RYHMAJARJ.indexOf(a) + 1 || 99) - (RYHMAJARJ.indexOf(b) + 1 || 99));
   main.innerHTML = `
     <div class="tro-paa"><p class="oma-yla">Harjoittelu</p><h1>Treeniohjelmat</h1>
       <p class="ingressi">Valmennuksen ohjelmat mukaan salille. Avaa ohjelma, niin näet mitä se sisältää. Tehty treeni kirjataan Treenipäiväkirjaan.</p></div>
-    ${ryhmat.map((r) => `<section class="tro-ryhma"><h2>${esc(r)}</h2><div class="tro-kortit">${lista.filter((o) => o.ryhma === r).map((o) => {
+    ${ryhmat.map((r) => `<section class="tro-ryhma"><h2>${esc(r === omaRyhma ? "Sinun ohjelmasi (valmennus)" : r)}</h2><div class="tro-kortit">${lista.filter((o) => o.ryhma === r).map((o) => {
       const rivit = o.kuvaus.split("\n").filter((l) => l.trim() && !onTai(l)).length;
       return `<a class="tro-kortti" href="#/ohjelmat/${o.koodi}" style="--v:${T[o.tyyppi]?.vari || "#888"}">
         <span class="tro-k-nimi">${esc(lyhyt(o.nimi))}</span>${tarkenne(o.nimi) ? `<span class="tro-k-tark">${esc(tarkenne(o.nimi))}</span>` : ""}

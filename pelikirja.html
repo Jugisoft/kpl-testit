@@ -1093,12 +1093,13 @@ const KN_IK={
   hallinta: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   valikko: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   korjaamo: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5a1.4 1.4 0 0 0 0 2l1 1a1.4 1.4 0 0 0 2 0l5.8-5.8a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.3-.5-.5-2.3z"/>',
+  talvi: '<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="m9.5 3.5 2.5 2 2.5-2M9.5 20.5l2.5-2 2.5 2M3 10.3l3.2.5-1.2 3M21 13.7l-3.2-.5 1.2-3M3 13.7l3.2-.5L5 10.2M21 10.3l-3.2.5 1.2 3"/>',
   ulos: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
 };
 const knIk=n=>`<svg class="kn-ikoni" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${KN_IK[n]}</svg>`;
 function knValikko(){
   const K="index.html#/";
-  const ryhmat=[[null,[["Keskus","","koti"]]],
+  const ryhmat=[[null,[["Keskus","","koti"],["Talvisuper","talvisuper","talvi"]]],
     ["Oma harjoittelu",[["Lyöntipäiväkirja","lyonnit","lyonnit"],["Testit","testit","testit"]]],
     ["Valmennus",[["Oma peli","muistio/KPL/yleiskuva","muistio"],["Vastustajat","muistio/vastustajat","vastustajat"],["Pelikirja",null,"pelikirja"]]],
     ["Analyysi",[["Analyysi","analyysi","analyysi"],["Juoksuodotus","juoksuodotus","juoksuodotus"],["Siirtomarkkinat","siirtomarkkinat","siirrot"]]]];

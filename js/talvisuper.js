@@ -11,7 +11,7 @@ const OMA = "KPL";
 const VP = ["su", "ma", "ti", "ke", "to", "pe", "la"];
 let data = null;
 
-async function hae() {
+export async function hae() {
   if (data) return data;
   try { const r = await fetch(LAHDE, { cache: "no-cache" }); data = r.ok ? await r.json() : null; } catch { data = null; }
   return data;
@@ -25,7 +25,7 @@ const halli = (o) => (o.halli || "").split(",")[0].replace(" Messu- ja Urheiluke
 const logo = (D, t) => D.logot?.[t] ? `<img src="${esc(D.logot[t])}" alt="" loading="lazy">` : `<span class="ts-ph">${esc(t.slice(0, 3))}</span>`;
 
 /** Piirtää kortin elementtiin el. tiivis = true: vain seuraava ottelu + otteluohjelma (Keskuksen sivupalkki). */
-export async function piirraTalvisuper(el, { tiivis = false } = {}) {
+export async function piirraTalvisuper(el, { tiivis = false, linkki = "sivu" } = {}) {
   if (!el) return;
   const D = await hae();
   const omat = (D?.ottelut || []).filter((o) => o.koti === OMA || o.vieras === OMA);
@@ -58,10 +58,12 @@ export async function piirraTalvisuper(el, { tiivis = false } = {}) {
 
   el.classList.add("paneeli", "ts-kortti");
   el.innerHTML = `
-    <div class="osio-paa"><h2>Talvisuper ${D.kausi}</h2><a href="${YDIN}?j=${OMA}" target="_blank" rel="noopener">Koko ohjelma ↗</a></div>
-    <p class="ts-erillinen">Halliturnaus · ${esc(lohko || "")}${pelattu.length ? ` · ${v}–${pelattu.length - v}` : ""} · ei mukana Superpesiksen tilastoissa</p>
+    <div class="osio-paa"><h2>${linkki === "sivu" ? `Talvisuper ${D.kausi}` : "KPL:n ottelut"}</h2>${linkki === "sivu" ? `<a href="#/talvisuper">Talvisuper-sivulle</a>` : `<a href="${YDIN}?j=${OMA}" target="_blank" rel="noopener">YDIN 2027 ↗</a>`}</div>
+    <p class="ts-erillinen"${linkki === "sivu" ? "" : " hidden"}>Halliturnaus · ${esc(lohko || "")}${pelattu.length ? ` · ${v}–${pelattu.length - v}` : ""} · ei mukana Superpesiksen tilastoissa</p>
     ${seurTeksti ? `<p class="ts-seur">${seurTeksti}</p>` : ""}
     <div class="ts-lista">${omat.map(rivi).join("")}</div>
     ${tiivis ? "" : tauluHtml}
-    <p class="pieni ts-lahde">Ajat Suomen aikaa · lähde pesistulokset.fi YDIN 2027:n kautta, päivittyy iltaisin.</p>`;
+    ${linkki === "sivu" ? `<p class="pieni ts-lahde">Ajat Suomen aikaa · lähde pesistulokset.fi YDIN 2027:n kautta, päivittyy iltaisin.</p>` : ""}`;
 }
+
+export const talviApu = { hk, halli, logo, OMA, YDIN };

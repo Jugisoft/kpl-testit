@@ -2855,3 +2855,40 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ts-taulu tr.oma td { background: var(--amber-bg); }
 .ts-lahde { margin: 0; color: var(--ink-3); }
 #talvisuper:empty { display: none; }
+/* Talvisuper-välisivu #/talvisuper (25.11.2026, js/views/talvisuper.js) */
+.ts-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.ts-kpi > div { background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.ts-kpi b { display: block; font-size: 30px; line-height: 1; }
+.ts-kpi span { font: 600 12px var(--num); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.ts-sivu { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
+.ts-sivupalkki { display: flex; flex-direction: column; gap: 16px; }
+.ts-ohjelma { display: flex; flex-direction: column; gap: 10px; }
+.ts-valinnat { display: flex; flex-wrap: wrap; gap: 6px; }
+.tso-lista { display: flex; flex-direction: column; }
+.tso-kk { font: 700 13px var(--num); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); padding: 14px 4px 4px; border-bottom: 1px solid var(--line); }
+.tso-pv { font: 600 12px var(--num); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); padding: 10px 4px 2px; }
+.tso-rivi { display: grid; grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1fr) 190px; gap: 10px; align-items: center; padding: 8px 8px; border-bottom: 1px solid var(--line-2); color: inherit; text-decoration: none; border-radius: 6px; }
+.tso-rivi:hover { background: var(--surface-2); }
+.tso-rivi.kpl { background: var(--amber-bg); box-shadow: inset 3px 0 0 var(--kpl); }
+.tso-rivi.ohi { opacity: .6; }
+.tso-jk { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 600; }
+.tso-jk.k { justify-content: flex-end; text-align: right; }
+.tso-jk.h { color: var(--ink-3); font-weight: 400; }
+.tso-jk span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tso-jk img, .tso-jk .ts-ph { width: 24px; height: 24px; object-fit: contain; flex: none; }
+.tso-klo { text-align: center; font-size: 17px; color: var(--ink-2); }
+.tso-tulos { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.tso-tulos b { font-size: 21px; }
+.tso-tulos b small { font-size: 11px; color: var(--ink-3); }
+.tso-tulos > small { font-size: 11px; color: var(--ink-3); }
+.tso-halli { display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3); min-width: 0; }
+.tso-halli span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tso-halli i { font: 700 12px var(--num); font-style: normal; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; color: var(--ink-2); flex: none; }
+@media (max-width: 1100px) { .ts-sivu { grid-template-columns: minmax(0, 1fr); } .ts-sivupalkki { order: -1; } }
+@media (max-width: 700px) {
+  .ts-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tso-rivi { grid-template-columns: minmax(0, 1fr) 78px minmax(0, 1fr); row-gap: 2px; }
+  .tso-halli { grid-column: 1 / -1; justify-content: center; font-size: 12px; }
+}
+/* tummat seuralogot (KiPa, Ura) näkyviin tummalla pohjalla */
+.tso-jk img, .ts-vast img, .ts-taulu img { background: rgba(255,255,255,.82); border-radius: 50%; padding: 2px; box-sizing: border-box; }

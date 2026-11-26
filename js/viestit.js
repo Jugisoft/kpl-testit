@@ -19,6 +19,12 @@ const omaEmail = () => (tila.istunto?.user?.email || "").toLowerCase();
 export async function haeViestit() {
   const { data } = await sb.from("viestit").select("*")
     .order("luotu", { ascending: false }).limit(50);
+  // Katso käyttäjänä (26.11.2026): ylläpitäjä näkee kaikki viestit → näytetään vain katsotulle käyttäjälle kohdistetut
+  if (tila.katselu) {
+    const p = tila.pelaaja[tila.omaPelaaja];
+    const ika = p?.syntymavuosi;
+    return (data || []).filter((v) => (v.pelaaja_id ? v.pelaaja_id === tila.omaPelaaja : v.joukkue_id ? v.joukkue_id === p?.joukkue_id : v.ikaluokka ? v.ikaluokka === ika : true) && !!p);
+  }
   return data || [];
 }
 

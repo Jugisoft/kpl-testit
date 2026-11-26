@@ -11,8 +11,11 @@ import { tallennusRpe, naytaRpe, rpeVari, laajennaPaketti, viikonPaivat, viikkoN
 
 const PROFIILIT_TK = ["msu", "haastaja"];
 const VKP_PITKA = ["Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai", "Sunnuntai"];
-const VALILEHDET = [["viikko", "Viikko"], ["kauppa", "Rakenna ohjelma"], ["ohjelmat", "Ohjelmani"], ["asetukset", "Asetukset"]];
-const KORI_AVAIN = "kpl-tk-kori";
+const VALILEHDET = [["viikko", "Viikko"], ["rakenna", "Rakenna ohjelma"], ["suunnittele", "Suunnittele viikot"], ["asetukset", "Asetukset"]];
+const KORI_AVAIN = "kpl-tk-kori", VK_AVAIN = "kpl-tk-viikkopohja";
+// 26.11.2026 (Jugi): miehille ei valmennuksen valmiita ohjelmia (ne ovat junioreille ja haastajaryhmälle);
+// miehillä valittavissa omat ohjelmat, valmennuksen henkilökohtaiset sekä perustreenit (laji, kunto, Superpesis-voimat)
+const PERUSRYHMAT = ["Omatoiminen laji", "Omatoiminen kunto", "Superpesis-voimat"];
 let valilehti = "viikko";
 let viikko = null;
 let D = null; // ladattu data
@@ -48,30 +51,32 @@ export async function nayta(main, id) {
 }
 
 // ---------- data ----------
-async function lataa(pid) {
+async function lataa(pid, alku = viikko, vkLoppu = lisaaPv(viikko, 6)) {
   const p = tila.pelaaja[pid];
-  const vkLoppu = lisaaPv(viikko, 6);
   const msu = p.treeniprofiili === "msu";
-  const [oh, pak, ohj, tot, sai, mui, ase, tie, tap, poi, ras] = await Promise.all([
+  const [oh, pak, ohj, tot, sai, mui, ase, tie, tap, poi, ras, lii] = await Promise.all([
     sb.from("treeniohjelmat").select("*").eq("aktiivinen", true).order("jarjestys"),
     sb.from("treenipaketit").select("*").eq("pelaaja_id", pid).order("alku", { ascending: false }),
-    sb.from("ohjelma").select("*").gte("paiva", viikko).lte("paiva", vkLoppu).eq("pelaaja_id", pid),
-    sb.from("omat_treenit").select("*").eq("pelaaja_id", pid).gte("pvm", viikko).lte("pvm", vkLoppu).order("luotu"),
-    sb.from("sairaudet").select("*").eq("pelaaja_id", pid).lte("alku", vkLoppu).gte("loppu", viikko),
+    sb.from("ohjelma").select("*").gte("paiva", alku).lte("paiva", vkLoppu).eq("pelaaja_id", pid),
+    sb.from("omat_treenit").select("*").eq("pelaaja_id", pid).gte("pvm", alku).lte("pvm", vkLoppu).order("luotu"),
+    sb.from("sairaudet").select("*").eq("pelaaja_id", pid).lte("alku", vkLoppu).gte("loppu", alku),
     pid === tila.omaPelaaja ? sb.from("omat_muistiot").select("*").eq("pelaaja_id", pid) : Promise.resolve({ data: [] }),
     sb.from("treeniasetukset").select("*").eq("pelaaja_id", pid).maybeSingle(),
     sb.from("ohjelmatiedostot").select("*").eq("pelaaja_id", pid).order("luotu", { ascending: false }),
     // yhteinen MSU-ohjelma = miesten tapahtumat (valmennuksen viikko-ohjelma, tuotu tapahtumat-tauluun); RLS antaa haastajalle
     // myös oman B-ryhmän Nimenhuudon tapahtumat, jotka suodatetaan pois alla
-    sb.from("tapahtumat").select("joukkue_id,uid,pvm,alku,otsikko,paikka,peruttu").gte("pvm", viikko).lte("pvm", vkLoppu).order("alku"),
+    sb.from("tapahtumat").select("joukkue_id,uid,pvm,alku,otsikko,paikka,peruttu").gte("pvm", alku).lte("pvm", vkLoppu).order("alku"),
     msu ? sb.from("poissaolot").select("uid").eq("pelaaja_id", pid) : Promise.resolve({ data: [] }),
     msu ? sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid) : Promise.resolve({ data: [] }),
+    sb.from("liikkeet").select("*").eq("aktiivinen", true).or(`pelaaja_id.is.null,pelaaja_id.eq.${pid}`).order("jarjestys").order("nimi"),
   ]);
   const virhe = [oh, pak, ohj, tot, sai].find((r) => r.error);
   if (virhe) throw new Error(virhe.error.message);
   const ohjelmat = Object.fromEntries((oh.data || []).filter((o) => !o.pelaaja_id || o.pelaaja_id === pid).map((o) => [o.koodi, o]));
+  // valittavat ohjelmat (viikolle ja kirjaukseen): miehillä ei valmennuksen yhteisiä valmiita ohjelmia
+  const valittavat = Object.values(ohjelmat).filter((o) => o.pelaaja_id || !msu || PERUSRYHMAT.includes(o.ryhma));
   return {
-    p, ohjelmat, paketit: pak.data || [],
+    p, ohjelmat, valittavat, liikkeet: lii.data || [], paketit: pak.data || [],
     ohjelma: [...(ohj.data || []), ...(tap.data || [])
       .filter((e) => !e.peruttu && (msu ? e.joukkue_id === p.joukkue_id : e.joukkue_id !== p.joukkue_id && !tila.joukkueet.some((j) => j.id === e.joukkue_id && j.alue === "psu")))
       .map((e, i) => ({ id: e.uid, tapahtuma: true, joukkue_id: e.joukkue_id, pelaaja_id: null, paiva: e.pvm, otsikko: e.otsikko, kuvaus: [e.alku?.slice(0, 5).replace(":", "."), e.paikka].filter(Boolean).join(" "), jarjestys: i }))],
@@ -91,7 +96,7 @@ async function piirra(main, pid, oma) {
   main.innerHTML = `
     <div class="tk-paa">
       <div><span class="jtt-yla">${oma ? "Oma harjoittelu" : "Treenikeskus · valmennus"}</span><h1>${oma ? "Treenikeskus" : esc(nimi(D.p))}</h1>
-      <p class="ingressi">${oma ? "Oma viikkosi, tulevat viikot ja tehdyt treenit. Rakenna oma ohjelmasi tai seuraa yhteistä ohjelmaa." : `Pelaajan suunnitelmat ja toteutuneet treenit. 🔒-huomiot näkyvät vain pelaajalle. <a href="#/oma/${pid}">Pelaajan oma Keskus →</a>`}</p></div>
+      <p class="ingressi">${oma ? "Oma viikkosi, tulevat viikot ja tehdyt treenit. Rakenna omat ohjelmasi liikkeistä ja suunnittele viikot." : `Pelaajan suunnitelmat ja toteutuneet treenit. 🔒-huomiot näkyvät vain pelaajalle. <a href="#/oma/${pid}">Pelaajan oma Keskus →</a>`}</p></div>
     </div>
     <div class="tk-valilehdet" role="tablist">${lehdet.map(([k, t]) => `<button type="button" role="tab" class="chip" data-vl="${k}" aria-pressed="${valilehti === k}">${t}</button>`).join("")}</div>
     <div id="tk-vl"></div>
@@ -99,8 +104,9 @@ async function piirra(main, pid, oma) {
   $$("[data-vl]", main).forEach((b) => (b.onclick = () => { valilehti = b.dataset.vl; piirra(main, pid, oma); }));
   const el = $("#tk-vl", main);
   const paivita = () => piirra(main, pid, oma);
-  if (valilehti === "kauppa") return kauppa(el, paivita);
-  if (valilehti === "ohjelmat") return ohjelmatVl(el, paivita);
+  if (!VALILEHDET.some(([k]) => k === valilehti)) valilehti = "viikko";
+  if (valilehti === "rakenna") return rakenna(el, paivita);
+  if (valilehti === "suunnittele") return suunnittele(el, paivita);
   if (valilehti === "asetukset") return asetukset(el, paivita);
   return viikkoVl(el, paivita, main);
 }
@@ -184,7 +190,7 @@ function rpeValinta(rpe10) {
     `<label style="--rv:${rpeVari(tallennusRpe(r, a), D.asetukset)}"><input type="radio" name="rpe" value="${r}"${r === valittu ? " checked" : ""}><span>${r}</span></label>`).join("")}</div>`;
 }
 const ohjelmaValinta = (valittu) => {
-  const lista = Object.values(D.ohjelmat), ryhmat = [...new Set(lista.map((o) => o.ryhma))];
+  const lista = D.valittavat.length ? D.valittavat : Object.values(D.ohjelmat), ryhmat = [...new Set(lista.map((o) => o.ryhma))];
   return `<select name="koodi" required><option value="">Valitse treeni…</option>${ryhmat.map((r) => `<optgroup label="${esc(r)}">${lista.filter((o) => o.ryhma === r).map((o) => `<option value="${esc(o.koodi)}"${o.koodi === valittu ? " selected" : ""}>${esc(o.nimi)}</option>`).join("")}</optgroup>`).join("")}</select>`;
 };
 function avaaDialogi(dlg, html) {
@@ -321,54 +327,208 @@ function huomioLomake(dlg, kohde, otsikko, paivita) {
   f.onsubmit = async (e) => { e.preventDefault(); await tallennaMuistio(kohde, f.elements.teksti.value); dlg.close(); paivita(); };
 }
 
-// ---------- Kauppa: tuotteet → kori → viikkopohja ----------
-const lueKori = () => { try { return JSON.parse(sessionStorage.getItem(KORI_AVAIN + D.pid)) || []; } catch { return []; } };
+// ---------- Rakenna ohjelma: liikkeet → kori → oma ohjelma ----------
+const lueKori = () => { try { return JSON.parse(sessionStorage.getItem(KORI_AVAIN + D.pid)) || { rivit: [] }; } catch { return { rivit: [] }; } };
 const tallennaKori = (k) => { try { sessionStorage.setItem(KORI_AVAIN + D.pid, JSON.stringify(k)); } catch { /* ohitetaan */ } };
+let kategoria = null;
+const omatOhjelmat = () => Object.values(D.ohjelmat).filter((o) => o.pelaaja_id === D.pid);
+const valmiit = () => Object.values(D.ohjelmat).filter((o) => !o.pelaaja_id && o.kuvaus && !PERUSRYHMAT.includes(o.ryhma));
+const voiMuokataOhjelmaa = (o) => (D.oma ? o.oma : !o.oma);
 
-function kauppa(el, paivita) {
+function rakenna(el, paivita) {
   const kori = lueKori();
-  const lista = Object.values(D.ohjelmat);
-  const omaVal = lista.filter((o) => o.pelaaja_id && !o.oma), omat = lista.filter((o) => o.oma), perus = lista.filter((o) => !o.pelaaja_id);
-  const ryhmat = [["Valmennuksen ohjelmasi sinulle", omaVal], ["Omat treenit", omat], ...[...new Set(perus.map((o) => o.ryhma))].map((r) => [r, perus.filter((o) => o.ryhma === r)])].filter(([, l]) => l.length);
-  const ma = lisaaPv(maanantai(tanaan()), 7);
-  const kortti = (o) => `<article class="tk-tuote" style="--v:${T[o.tyyppi]?.vari || "#888"}"><div><b>${esc(lyhyt(o.nimi))}</b><small>${esc(T[o.tyyppi]?.nimi || "")}${o.kesto_min ? ` · ${minStr(o.kesto_min)}` : ""}</small></div>
-      ${rpePallo(o.rpe)}<button class="btn pieni-nappi" data-koriin="${esc(o.koodi)}" aria-label="Lisää ohjelmaan: ${esc(lyhyt(o.nimi))}">+ Lisää</button></article>`;
+  const kategoriat = [...new Set(D.liikkeet.filter((l) => !l.pelaaja_id).map((l) => l.kategoria))];
+  const valinnat = [...kategoriat, ...(D.liikkeet.some((l) => l.pelaaja_id) ? ["Omat liikkeet"] : []), ...(!D.msu && valmiit().length ? ["Valmiit ohjelmat"] : [])];
+  if (!valinnat.includes(kategoria)) kategoria = valinnat[0];
+  const omat = omatOhjelmat();
+  const liikeRivit = kategoria === "Omat liikkeet" ? D.liikkeet.filter((l) => l.pelaaja_id) : D.liikkeet.filter((l) => !l.pelaaja_id && l.kategoria === kategoria);
+  const muokattava = kori.koodi ? D.ohjelmat[kori.koodi] : null;
+  const liikeVoiMuokata = (l) => (l.pelaaja_id ? D.oma : !D.oma);
   el.innerHTML = `
+    <section class="tk-osio"><h2>${D.oma ? "Omat ohjelmat" : "Pelaajan ohjelmat"}</h2>
+      ${omat.length ? `<div class="tk-ohjelmat">${omat.map((o) => {
+        const rivit = (o.liikkeet || []).length ? o.liikkeet.map((l) => `${l.nimi}${l.maara ? ` ${l.maara}` : ""}`) : (o.kuvaus || "").split("\n").filter((x) => x.trim());
+        return `<article class="tk-ohjelma" style="--v:${T[o.tyyppi]?.vari || "#888"}"><header><b>${esc(lyhyt(o.nimi))}</b>${o.oma ? "" : `<span class="tk-tagi">valmennus</span>`}</header>
+          <small>${esc(T[o.tyyppi]?.nimi || "")} · ${minStr(o.kesto_min || 0)} ${rpePallo(o.rpe)}</small>
+          <ul>${rivit.slice(0, 6).map((r) => `<li>${esc(r)}</li>`).join("")}${rivit.length > 6 ? `<li class="pieni">+ ${rivit.length - 6} muuta</li>` : ""}</ul>
+          <footer>${voiMuokataOhjelmaa(o) ? `<button class="linkkinappi" data-muokkaa-o="${esc(o.koodi)}">Muokkaa</button>` : ""}<a class="linkkinappi" href="#/ohjelmat/${esc(o.koodi)}">Avaa</a></footer></article>`; }).join("")}</div>`
+        : `<p class="tyhja">${D.oma ? "Et ole vielä rakentanut omia ohjelmia. Valitse liikkeitä alta, kokoa ohjelma oikealla ja tallenna." : "Pelaajalla ei ole vielä omia ohjelmia."}</p>`}
+    </section>
     <div class="tk-kauppa">
       <div class="tk-hylly">
-        <article class="tk-tuote tk-yhteinen"><div><b>Yhteinen viikko-ohjelma (MSU)</b><small>Valmennuksen yhteinen ohjelma Kouvolassa treenaaville. Valitse jakso Ohjelmani-välilehdellä.</small></div><button class="btn pieni-nappi" data-vl-yhteinen>Valitse jakso →</button></article>
-        ${ryhmat.map(([r, l]) => `<section><h2>${esc(r)}</h2><div class="tk-tuotteet">${l.map(kortti).join("")}</div></section>`).join("")}
-        ${D.oma ? `<p><button class="btn" data-uusi-tuote>+ Luo oma treeni</button></p>` : ""}
+        <label class="tk-kentta tk-kategoria"><span>Kategoria</span><select id="tk-kat">${valinnat.map((k) => `<option${k === kategoria ? " selected" : ""}>${esc(k)}</option>`).join("")}</select></label>
+        ${kategoria === "Valmiit ohjelmat"
+          ? `<div class="tk-tuotteet">${valmiit().map((o) => `<article class="tk-tuote" style="--v:${T[o.tyyppi]?.vari || "#888"}"><div><b>${esc(lyhyt(o.nimi))}</b><small>${esc(o.ryhma)}</small></div>
+              <a class="linkkinappi" href="#/ohjelmat/${esc(o.koodi)}">Avaa</a><button class="btn pieni-nappi" data-kopioi="${esc(o.koodi)}">Kopioi koriin</button></article>`).join("")}</div>`
+          : `<div class="tk-tuotteet">${liikeRivit.map((l) => `<article class="tk-tuote tk-liike"><div><b>${esc(l.nimi)}</b><small>${esc(l.oletus || "")}${l.kuvaus ? ` · ${esc(l.kuvaus)}` : ""}</small></div>
+              ${liikeVoiMuokata(l) ? `<button class="linkkinappi" data-muokkaa-l="${l.id}" aria-label="Muokkaa liikettä ${esc(l.nimi)}">✎</button>` : ""}
+              <button class="btn pieni-nappi" data-liike="${l.id}" aria-label="Lisää koriin: ${esc(l.nimi)}">+ Lisää</button></article>`).join("") || `<p class="tyhja">Ei liikkeitä tässä kategoriassa.</p>`}</div>`}
+        <p><button class="btn" data-uusi-liike>+ Luo oma liike</button></p>
       </div>
-      <aside class="tk-kori" aria-label="Uusi ohjelma">
-        <h2>Uusi ohjelma <span class="num">(${kori.length} treeniä)</span></h2>
+      <aside class="tk-kori" aria-label="Ohjelma rakenteilla">
+        <h2>${muokattava ? `Muokkaa: ${esc(lyhyt(muokattava.nimi))}` : "Uusi ohjelma"} <span class="num">(${kori.rivit.length})</span></h2>
+        ${kori.rivit.length ? `<ol class="tk-kori-liikkeet">${kori.rivit.map((r, i) => `<li><b>${esc(r.nimi)}</b>
+            <div class="tk-kori-rivi"><input data-i="${i}" data-k="maara" value="${esc(r.maara || "")}" placeholder="esim. 3 × 8" aria-label="Sarjat ja toistot: ${esc(r.nimi)}">
+            <input data-i="${i}" data-k="huomio" value="${esc(r.huomio || "")}" placeholder="huomio / paino" aria-label="Huomio: ${esc(r.nimi)}">
+            <button class="linkkinappi" data-ylos="${i}" aria-label="Siirrä ylös"${i ? "" : " disabled"}>↑</button><button class="linkkinappi" data-pois="${i}" aria-label="Poista ohjelmasta">✕</button></div></li>`).join("")}</ol>` : `<p class="tyhja">Lisää liikkeitä vasemmalta. Muokkaa sarjat ja toistot omiksesi.</p>`}
+        <form class="tk-kassa">
+          <label class="tk-kentta"><span>Ohjelman nimi</span><input name="nimi" required maxlength="60" value="${esc(kori.nimi || "")}" placeholder="esim. Oma voima A"></label>
+          <div class="tk-kentta-rivi"><label class="tk-kentta"><span>Tyyppi <small>(kuormaan)</small></span><select name="tyyppi">${TYYPIT.filter((t) => t.k !== "testi").map((t) => `<option value="${t.k}"${t.k === (kori.tyyppi || "fysiikka") ? " selected" : ""}>${t.nimi}</option>`).join("")}</select></label>
+          <label class="tk-kentta"><span>Kesto, min</span><input type="number" name="kesto" min="5" max="600" step="5" value="${kori.kesto || 60}"></label></div>
+          <div class="tk-kentta"><span>Rasitus</span>${rpeValinta(kori.rpe || 6)}</div>
+          <button class="btn ensisij"${kori.rivit.length ? "" : " disabled"}>${muokattava ? "Tallenna muutokset" : `Tallenna ohjelma${D.oma ? "" : " pelaajalle"}`}</button>
+          ${muokattava ? `<button type="button" class="linkkinappi" data-peru>Peru muokkaus</button><button type="button" class="linkkinappi vaara" data-poista-o>Poista ohjelma</button>` : kori.rivit.length ? `<button type="button" class="linkkinappi" data-tyhjenna>Aloita alusta</button>` : ""}
+        </form>
+      </aside>
+    </div>
+    <section class="tk-osio"><h2>Ohjelmatiedostot</h2>
+      <p class="pieni">${D.oma ? "Onko ohjelmasi Wordissa, Excelissä tai PDF:nä? Lataa se tänne. Tiedosto tallentuu valmennuksen Driveen nimelläsi – vain sinä ja valmennus näette sen – ja siitä voidaan tehdä sinulle valmis ohjelma." : "Pelaajan lataamat ohjelmatiedostot (valmennuksen Drive)."}</p>
+      ${D.tiedostot.length ? `<ul class="tk-tiedostot">${D.tiedostot.map((x) => `<li>${D.oma ? `<span>📄 ${esc(x.nimi)}</span>` : `<a href="https://drive.google.com/file/d/${encodeURIComponent(x.drive_id)}/view" target="_blank" rel="noopener">${esc(x.nimi)} ↗</a>`}<small>${pvLyh(x.luotu.slice(0, 10))}</small></li>`).join("")}</ul>` : ""}
+      ${D.oma ? `<label class="btn"><input type="file" id="tk-tiedosto" accept=".doc,.docx,.xls,.xlsx,.pdf,.png,.jpg,.jpeg,.txt" hidden>Lataa ohjelmatiedosto</label>` : ""}
+    </section>`;
+  const uudelleen = () => rakenna(el, paivita);
+  const kassa = $(".tk-kassa", el);
+  const muistaLomake = () => { const x = kassa.elements; Object.assign(kori, { nimi: x.nimi.value, tyyppi: x.tyyppi.value, kesto: +x.kesto.value, rpe: tallennusRpe(+([...x.rpe].find((r) => r.checked)?.value || 6), D.asetukset.asteikko) }); tallennaKori(kori); };
+  $("#tk-kat", el).onchange = (e) => { muistaLomake(); kategoria = e.target.value; uudelleen(); };
+  $$("[data-liike]", el).forEach((b) => (b.onclick = () => { const l = D.liikkeet.find((x) => x.id === b.dataset.liike); muistaLomake(); kori.rivit.push({ liike_id: l.id, nimi: l.nimi, maara: l.oletus || "" }); tallennaKori(kori); ilmoita(`Lisätty: ${l.nimi}`); uudelleen(); }));
+  $$("[data-kopioi]", el).forEach((b) => (b.onclick = () => { const o = D.ohjelmat[b.dataset.kopioi]; muistaLomake();
+    o.kuvaus.split("\n").map((r) => r.trim()).filter(Boolean).forEach((r) => kori.rivit.push({ liike_id: null, nimi: r, maara: "" }));
+    Object.assign(kori, { nimi: kori.nimi || `Oma ${lyhyt(o.nimi)}`, tyyppi: o.tyyppi, kesto: o.kesto_min, rpe: o.rpe }); tallennaKori(kori); uudelleen(); }));
+  $$("[data-i]", el).forEach((i) => (i.onchange = () => { kori.rivit[+i.dataset.i][i.dataset.k] = i.value.trim(); tallennaKori(kori); }));
+  $$("[data-pois]", el).forEach((b) => (b.onclick = () => { muistaLomake(); kori.rivit.splice(+b.dataset.pois, 1); tallennaKori(kori); uudelleen(); }));
+  $$("[data-ylos]", el).forEach((b) => (b.onclick = () => { const i = +b.dataset.ylos; if (!i) return; muistaLomake(); [kori.rivit[i - 1], kori.rivit[i]] = [kori.rivit[i], kori.rivit[i - 1]]; tallennaKori(kori); uudelleen(); }));
+  $$("[data-muokkaa-o]", el).forEach((b) => (b.onclick = () => { const o = D.ohjelmat[b.dataset.muokkaaO];
+    tallennaKori({ koodi: o.koodi, nimi: lyhyt(o.nimi), tyyppi: o.tyyppi, kesto: o.kesto_min, rpe: o.rpe,
+      rivit: (o.liikkeet || []).length ? o.liikkeet : (o.kuvaus || "").split("\n").filter((x) => x.trim()).map((x) => ({ liike_id: null, nimi: x.trim(), maara: "" })) });
+    uudelleen(); window.scrollTo({ top: el.querySelector(".tk-kori").getBoundingClientRect().top + scrollY - 90, behavior: "smooth" }); }));
+  $$("[data-muokkaa-l]", el).forEach((b) => (b.onclick = () => liikeLomake($("#tk-dialogi"), D.liikkeet.find((x) => x.id === b.dataset.muokkaaL), kategoriat, paivita)));
+  $("[data-uusi-liike]", el).onclick = () => liikeLomake($("#tk-dialogi"), null, kategoriat, paivita);
+  $("[data-tyhjenna]", el)?.addEventListener("click", () => { tallennaKori({ rivit: [] }); uudelleen(); });
+  $("[data-peru]", el)?.addEventListener("click", () => { tallennaKori({ rivit: [] }); uudelleen(); });
+  $("[data-poista-o]", el)?.addEventListener("click", async () => {
+    if (!confirm(`Poistetaanko ohjelma "${lyhyt(muokattava.nimi)}"? Jo kirjatut treenit säilyvät.`)) return;
+    const { error } = await sb.from("treeniohjelmat").update({ aktiivinen: false }).eq("koodi", muokattava.koodi);
+    if (error) return ilmoita("Poisto ei onnistunut: " + error.message, true);
+    tallennaKori({ rivit: [] }); ilmoita("Ohjelma poistettu"); paivita();
+  });
+  kassa.onsubmit = async (e) => {
+    e.preventDefault(); muistaLomake();
+    if (!kori.rivit.length) return ilmoita("Lisää ohjelmaan liikkeitä", true);
+    const liikkeet = kori.rivit.map((r) => ({ liike_id: r.liike_id || null, nimi: r.nimi, maara: r.maara || "", huomio: r.huomio || "" }));
+    const rivi = { nimi: kori.nimi.trim(), tyyppi: kori.tyyppi, kesto_min: kori.kesto || 60, rpe: kori.rpe, liikkeet, paivitetty: new Date().toISOString(),
+      kuvaus: liikkeet.map((l) => [l.nimi, l.maara, l.huomio && `(${l.huomio})`].filter(Boolean).join(" ")).join("\n") };
+    const r = muokattava ? await sb.from("treeniohjelmat").update(rivi).eq("koodi", muokattava.koodi)
+      : await sb.from("treeniohjelmat").insert({ ...rivi, koodi: `oma_${crypto.randomUUID().slice(0, 8)}`, ryhma: D.oma ? "Omat ohjelmat" : `Henkilökohtainen: ${nimi(D.p)}`, pelaaja_id: D.pid, oma: D.oma, aktiivinen: true, jarjestys: 900 });
+    if (r.error) return ilmoita("Tallennus ei onnistunut: " + r.error.message, true);
+    tallennaKori({ rivit: [] }); ilmoita(`Ohjelma tallennettu: ${rivi.nimi}. Lisää se viikolle Suunnittele viikot -välilehdellä tai päivän + Treeni -napilla.`); paivita();
+  };
+  const tied = $("#tk-tiedosto", el);
+  if (tied) tied.onchange = () => lataaTiedosto(tied.files[0], paivita);
+}
+
+async function lataaTiedosto(file, paivita) {
+  if (!file) return;
+  if (file.size > 15 * 1024 * 1024) return ilmoita("Tiedosto on yli 15 Mt", true);
+  ilmoita("Ladataan tiedostoa…");
+  const { data: { session } } = await sb.auth.getSession();
+  const fd = new FormData(); fd.append("tiedosto", file);
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/ohjelmatiedosto`, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` }, body: fd });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.virhe || `HTTP ${r.status}`);
+    ilmoita("Tiedosto ladattu valmennuksen Driveen"); paivita();
+  } catch (err) { ilmoita("Lataus ei onnistunut: " + err.message, true); }
+}
+
+function liikeLomake(dlg, l, kategoriat, paivita) {
+  const f = avaaDialogi(dlg, `
+    <header><h2>${l ? "Muokkaa liikettä" : "Uusi liike"}</h2><button class="tr-sulje" data-sulje aria-label="Sulje">✕</button></header>
+    ${!D.oma && !l?.pelaaja_id ? `<p class="pieni">Valmennuksen liike näkyy kaikille pelaajille.</p>` : ""}
+    <label class="tk-kentta"><span>Nimi</span><input name="nimi" required maxlength="60" value="${esc(l?.nimi || "")}" placeholder="esim. Bulgarian kyykky"></label>
+    <label class="tk-kentta"><span>Kategoria</span><select name="kategoria">${kategoriat.map((k) => `<option${k === (l?.kategoria || kategoria) ? " selected" : ""}>${esc(k)}</option>`).join("")}</select></label>
+    <label class="tk-kentta"><span>Oletus <small>(sarjat × toistot, aika tai matka)</small></span><input name="oletus" maxlength="40" value="${esc(l?.oletus || "")}" placeholder="esim. 3 × 8"></label>
+    <label class="tk-kentta"><span>Ohje <small>(vapaaehtoinen)</small></span><input name="kuvaus" maxlength="200" value="${esc(l?.kuvaus || "")}"></label>
+    <div class="tk-napit">${l ? `<button class="btn vaara" data-poista>Poista liike</button>` : ""}<button class="btn ensisij" value="ok">Tallenna</button></div>`);
+  if (l) $("[data-poista]", f).onclick = async (e) => {
+    e.preventDefault();
+    if (!confirm("Poistetaanko liike? Ohjelmat, joissa se on, säilyvät.")) return;
+    const { error } = await sb.from("liikkeet").update({ aktiivinen: false }).eq("id", l.id);
+    if (error) return ilmoita("Poisto ei onnistunut: " + error.message, true);
+    dlg.close(); paivita();
+  };
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const x = f.elements, rivi = { nimi: x.nimi.value.trim(), kategoria: x.kategoria.value, oletus: x.oletus.value.trim() || null, kuvaus: x.kuvaus.value.trim() || null };
+    const r = l ? await sb.from("liikkeet").update(rivi).eq("id", l.id) : await sb.from("liikkeet").insert({ ...rivi, pelaaja_id: D.oma ? D.pid : null, jarjestys: 500 });
+    if (r.error) return ilmoita("Tallennus ei onnistunut: " + r.error.message, true);
+    if (!l && D.oma) kategoria = "Omat liikkeet";
+    ilmoita("Liike tallennettu"); dlg.close(); paivita();
+  };
+}
+
+// ---------- Suunnittele viikot: ohjelmat viikonpäiville voimassaoloajaksi ----------
+const lueVk = () => { try { return JSON.parse(sessionStorage.getItem(VK_AVAIN + D.pid)) || []; } catch { return []; } };
+const tallennaVk = (k) => { try { sessionStorage.setItem(VK_AVAIN + D.pid, JSON.stringify(k)); } catch { /* ohitetaan */ } };
+let vkKategoria = null;
+
+function suunnittele(el, paivita) {
+  const kori = lueVk(), t = tanaan(), ma = lisaaPv(maanantai(t), 7);
+  const ryhmat = [...new Set(D.valittavat.map((o) => (o.pelaaja_id ? "Omat ohjelmat" : o.ryhma)))].sort((a, b) => (a === "Omat ohjelmat" ? -1 : b === "Omat ohjelmat" ? 1 : 0));
+  if (!ryhmat.includes(vkKategoria)) vkKategoria = ryhmat[0];
+  const lista = D.valittavat.filter((o) => (o.pelaaja_id ? "Omat ohjelmat" : o.ryhma) === vkKategoria);
+  const voiMuokata = (p) => !D.oma || p.tekija === "pelaaja";
+  const tila_ = (p) => (p.loppu < t ? "päättynyt" : p.alku > t ? "tuleva" : "voimassa");
+  const minivk = (p) => `<div class="tk-minivk">${VKP.map((v, i) => { const r = (p.rivit || []).filter((x) => +x.vp === i + 1); return `<div><small>${v}</small>${r.map((x) => `<i style="background:${tyyppiVari(x.koodi)}" title="${esc(D.ohjelmat[x.koodi]?.nimi || x.koodi)}"></i>`).join("")}</div>`; }).join("")}</div>`;
+  el.innerHTML = `
+    <p class="pieni">Valitse ohjelmat viikonpäiville ja anna voimassaoloaika – viikot täyttyvät automaattisesti. Yksittäisen päivän voit muuttaa Viikko-välilehdellä.</p>
+    <div class="tk-kauppa">
+      <div class="tk-hylly">
+        <article class="tk-tuote tk-yhteinen"><div><b>Yhteinen viikko-ohjelma (MSU)</b><small>Treenaatko Kouvolassa valmennuksen yhteisen ohjelman mukaan? Valitse jakso alhaalta.</small></div></article>
+        <label class="tk-kentta tk-kategoria"><span>Kategoria</span><select id="tk-vkat">${ryhmat.map((r) => `<option${r === vkKategoria ? " selected" : ""}>${esc(r)}</option>`).join("")}</select></label>
+        <div class="tk-tuotteet">${lista.map((o) => `<article class="tk-tuote" style="--v:${T[o.tyyppi]?.vari || "#888"}"><div><b>${esc(lyhyt(o.nimi))}</b><small>${esc(T[o.tyyppi]?.nimi || "")}${o.kesto_min ? ` · ${minStr(o.kesto_min)}` : ""}</small></div>
+          ${rpePallo(o.rpe)}<button class="btn pieni-nappi" data-koriin="${esc(o.koodi)}" aria-label="Lisää viikolle: ${esc(lyhyt(o.nimi))}">+ Lisää</button></article>`).join("") || `<p class="tyhja">${vkKategoria === "Omat ohjelmat" ? "Rakenna ensin ohjelma Rakenna ohjelma -välilehdellä." : "Ei ohjelmia."}</p>`}</div>
+      </div>
+      <aside class="tk-kori" aria-label="Viikkosuunnitelma">
+        <h2>Viikkosuunnitelma <span class="num">(${kori.length})</span></h2>
         ${kori.length ? `<ol>${kori.map((k, i) => { const o = D.ohjelmat[k.koodi]; return `<li style="--v:${T[o?.tyyppi]?.vari || "#888"}">
           <b>${esc(lyhyt(o?.nimi || k.koodi))}</b>
           <div class="tk-kori-rivi"><select data-i="${i}" data-k="vp" aria-label="Viikonpäivä">${VKP.map((v, j) => `<option value="${j + 1}"${+k.vp === j + 1 ? " selected" : ""}>${v}</option>`).join("")}</select>
           <input type="number" data-i="${i}" data-k="kesto_min" value="${k.kesto_min}" min="5" max="600" step="5" aria-label="Kesto minuutteina"><span class="pieni">min</span>
-          <select data-i="${i}" data-k="rpe" aria-label="Rasitus">${Array.from({ length: D.asetukset.asteikko }, (_, j) => j + 1).map((r) => `<option value="${tallennusRpe(r, D.asetukset.asteikko)}"${naytaRpe(k.rpe, D.asetukset.asteikko) === r ? " selected" : ""}>R ${r}</option>`).join("")}</select>
-          <button class="linkkinappi" data-pois="${i}" aria-label="Poista ohjelmasta">✕</button></div></li>`; }).join("")}</ol>
+          <select data-i="${i}" data-k="rpe" aria-label="Rasitus">${Array.from({ length: D.asetukset.asteikko }, (_, j) => j + 1).map((r) => `<option value="${tallennusRpe(r, D.asetukset.asteikko)}"${naytaRpe(k.rpe, D.asetukset.asteikko) === r ? " selected" : ""}>Rasitus ${r}</option>`).join("")}</select>
+          <button class="linkkinappi" data-pois="${i}" aria-label="Poista suunnitelmasta">✕</button></div></li>`; }).join("")}</ol>
           <form class="tk-kassa">
-            <label class="tk-kentta"><span>Ohjelman nimi</span><input name="nimi" required maxlength="80" placeholder="esim. Talvijakso 1"></label>
+            <label class="tk-kentta"><span>Suunnitelman nimi</span><input name="nimi" required maxlength="80" placeholder="esim. Talvijakso 1"></label>
             <div class="tk-kentta-rivi"><label class="tk-kentta"><span>Alkaa</span><input type="date" name="alku" value="${ma}" required></label>
             <label class="tk-kentta"><span>Päättyy</span><input type="date" name="loppu" value="${lisaaPv(ma, 27)}" required></label></div>
-            <button class="btn ensisij">Tallenna ohjelma${D.oma ? "" : " pelaajalle"}</button>
+            <button class="btn ensisij">Tallenna viikoille${D.oma ? "" : " (pelaajalle)"}</button>
             <button type="button" class="linkkinappi" data-tyhjenna>Aloita alusta</button>
           </form>`
-        : `<p class="tyhja">Lisää treenejä vasemmalta. Valitse jokaiselle viikonpäivä, kesto ja rasitus, anna ohjelmalle nimi ja voimassaoloaika – ohjelma täyttää viikot automaattisesti.</p>`}
+        : `<p class="tyhja">Lisää ohjelmia vasemmalta ja valitse jokaiselle viikonpäivä.</p>`}
       </aside>
-    </div>`;
+    </div>
+    <section class="tk-osio"><h2>Suunnitelmat</h2>
+      ${D.paketit.length ? `<div class="tk-paketit">${D.paketit.map((p) => `<article class="tk-paketti ${tila_(p).replace("ä", "a")}">
+        <header><b>${esc(p.nimi)}</b><span class="tk-tagi">${tila_(p)}</span>${p.yhteinen ? `<span class="tk-tagi yhteinen">yhteinen</span>` : ""}${p.tekija === "valmennus" ? `<span class="tk-tagi">valmennus</span>` : ""}</header>
+        <p class="pieni">${pvLyh(p.alku)}${p.alku.slice(0, 4)}–${pvLyh(p.loppu)}${p.loppu.slice(0, 4)}${p.yhteinen ? " · valmennuksen yhteinen ohjelma" : ` · ${(p.rivit || []).length} treeniä viikossa`}</p>
+        ${p.yhteinen ? "" : minivk(p)}
+        ${voiMuokata(p) ? `<form class="tk-voimassa" data-p="${p.id}"><label><span class="pieni">Alkaa</span><input type="date" name="alku" value="${p.alku}"></label><label><span class="pieni">Päättyy</span><input type="date" name="loppu" value="${p.loppu}"></label>
+          <button class="btn pieni-nappi">Muuta</button><button type="button" class="linkkinappi vaara" data-poista-p="${p.id}">Poista</button></form>` : ""}
+      </article>`).join("")}</div>` : `<p class="tyhja">Ei vielä suunnitelmia.</p>`}
+    </section>
+    <section class="tk-osio"><h2>Seuraan yhteistä viikko-ohjelmaa</h2>
+      <p class="pieni">Valitse jakso, jolloin treenaat valmennuksen yhteisen ohjelman mukaan. Yhteiset treenit näkyvät viikollasi, ja voit lisätä niiden rinnalle omia.</p>
+      <form class="tk-voimassa" id="tk-yhteinen"><label><span class="pieni">Alkaa</span><input type="date" name="alku" value="${maanantai(t)}" required></label><label><span class="pieni">Päättyy</span><input type="date" name="loppu" value="${lisaaPv(maanantai(t), 27)}" required></label><button class="btn pieni-nappi">Seuraa jaksolla</button></form>
+    </section>`;
+  const uudelleen = () => suunnittele(el, paivita);
+  $("#tk-vkat", el).onchange = (e) => { vkKategoria = e.target.value; uudelleen(); };
   $$("[data-koriin]", el).forEach((b) => (b.onclick = () => {
-    const o = D.ohjelmat[b.dataset.koriin];
-    const vp = kori.length ? Math.min(7, +kori[kori.length - 1].vp + 1) : 1;
+    const o = D.ohjelmat[b.dataset.koriin], vp = kori.length ? Math.min(7, +kori[kori.length - 1].vp + 1) : 1;
     kori.push({ koodi: o.koodi, vp, kesto_min: o.kesto_min || 60, rpe: o.rpe || T[o.tyyppi]?.rpe || 5 });
-    tallennaKori(kori); ilmoita(`Lisätty: ${lyhyt(o.nimi)}`); kauppa(el, paivita);
+    tallennaVk(kori); ilmoita(`Lisätty: ${lyhyt(o.nimi)}`); uudelleen();
   }));
-  $$("[data-i]", el).forEach((i) => (i.onchange = () => { kori[+i.dataset.i][i.dataset.k] = +i.value; tallennaKori(kori); }));
-  $$("[data-pois]", el).forEach((b) => (b.onclick = () => { kori.splice(+b.dataset.pois, 1); tallennaKori(kori); kauppa(el, paivita); }));
-  $("[data-tyhjenna]", el)?.addEventListener("click", () => { tallennaKori([]); kauppa(el, paivita); });
-  $("[data-vl-yhteinen]", el).onclick = () => { valilehti = "ohjelmat"; paivita(); };
-  $("[data-uusi-tuote]", el)?.addEventListener("click", () => tuoteLomake($("#tk-dialogi"), null, paivita));
+  $$("[data-i]", el).forEach((i) => (i.onchange = () => { kori[+i.dataset.i][i.dataset.k] = +i.value; tallennaVk(kori); }));
+  $$("[data-pois]", el).forEach((b) => (b.onclick = () => { kori.splice(+b.dataset.pois, 1); tallennaVk(kori); uudelleen(); }));
+  $("[data-tyhjenna]", el)?.addEventListener("click", () => { tallennaVk([]); uudelleen(); });
   const kassa = $(".tk-kassa", el);
   if (kassa) kassa.onsubmit = async (e) => {
     e.preventDefault();
@@ -378,9 +538,39 @@ function kauppa(el, paivita) {
     const r = await sb.from("treenipaketit").insert({ pelaaja_id: D.pid, nimi: n.value.trim(), alku: alku.value, loppu: loppu.value, rivit, tekija: D.oma ? "pelaaja" : "valmennus" }).select().single();
     if (r.error) return ilmoita("Tallennus ei onnistunut: " + r.error.message, true);
     const lkm = await kirjoitaPaivat(r.data, tanaan());
-    tallennaKori([]);
-    ilmoita(`Ohjelma tallennettu: ${lkm} treeniä viikoille`);
+    tallennaVk([]);
+    ilmoita(`Tallennettu: ${lkm} treeniä viikoille`);
     viikko = maanantai(alku.value > tanaan() ? alku.value : tanaan()); valilehti = "viikko"; paivita();
+  };
+  $$("form.tk-voimassa[data-p]", el).forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    const p = D.paketit.find((x) => x.id === f.dataset.p), { alku, loppu } = f.elements;
+    if (!alku.value || loppu.value < alku.value) return ilmoita("Tarkista päivät", true);
+    try {
+      const ohita = await poistaTulevat(p);
+      const u = await sb.from("treenipaketit").update({ alku: alku.value, loppu: loppu.value, muokattu: new Date().toISOString() }).eq("id", p.id).select().single();
+      if (u.error) throw u.error;
+      if (!u.data.yhteinen) await kirjoitaPaivat(u.data, tanaan(), ohita);
+      ilmoita("Voimassaolo päivitetty"); paivita();
+    } catch (err) { ilmoita("Muutos ei onnistunut: " + err.message, true); }
+  }));
+  $$("[data-poista-p]", el).forEach((b) => (b.onclick = async () => {
+    const p = D.paketit.find((x) => x.id === b.dataset.poistaP);
+    if (!confirm(`Poistetaanko "${p.nimi}"? Tulevat suunnitellut treenit poistuvat, tehdyt kirjaukset jäävät.`)) return;
+    try {
+      await poistaTulevat(p);
+      const { error } = await sb.from("treenipaketit").delete().eq("id", p.id);
+      if (error) throw error;
+      ilmoita("Poistettu"); paivita();
+    } catch (err) { ilmoita("Poisto ei onnistunut: " + err.message, true); }
+  }));
+  $("#tk-yhteinen", el).onsubmit = async (e) => {
+    e.preventDefault();
+    const { alku, loppu } = e.target.elements;
+    if (loppu.value < alku.value) return ilmoita("Tarkista päivät", true);
+    const { error } = await sb.from("treenipaketit").insert({ pelaaja_id: D.pid, nimi: "Yhteinen viikko-ohjelma (MSU)", alku: alku.value, loppu: loppu.value, yhteinen: true, rivit: [], tekija: D.oma ? "pelaaja" : "valmennus" });
+    if (error) return ilmoita("Tallennus ei onnistunut: " + error.message, true);
+    ilmoita("Yhteinen ohjelma näkyy viikoillasi"); paivita();
   };
 }
 
@@ -407,83 +597,12 @@ async function poistaTulevat(paketti) {
   return new Set((data || []).filter((r) => kirjatut.has(r.id)).map((r) => r.paiva + "|" + r.treeniohjelma));
 }
 
-// ---------- Ohjelmani ----------
-function ohjelmatVl(el, paivita) {
-  const t = tanaan();
-  const voiMuokata = (p) => !D.oma || p.tekija === "pelaaja";
-  const tila_ = (p) => (p.loppu < t ? "päättynyt" : p.alku > t ? "tuleva" : "voimassa");
-  const minivk = (p) => `<div class="tk-minivk">${VKP.map((v, i) => { const r = (p.rivit || []).filter((x) => +x.vp === i + 1); return `<div><small>${v}</small>${r.map((x) => `<i style="background:${tyyppiVari(x.koodi)}" title="${esc(D.ohjelmat[x.koodi]?.nimi || x.koodi)}"></i>`).join("")}</div>`; }).join("")}</div>`;
-  el.innerHTML = `
-    <section class="tk-osio"><h2>Ohjelmat</h2>
-      ${D.paketit.length ? `<div class="tk-paketit">${D.paketit.map((p) => `<article class="tk-paketti ${tila_(p).replace("ä", "a")}">
-        <header><b>${esc(p.nimi)}</b><span class="tk-tagi">${tila_(p)}</span>${p.yhteinen ? `<span class="tk-tagi yhteinen">yhteinen</span>` : ""}${p.tekija === "valmennus" ? `<span class="tk-tagi">valmennus</span>` : ""}</header>
-        <p class="pieni">${pvLyh(p.alku)}${p.alku.slice(0, 4)}–${pvLyh(p.loppu)}${p.loppu.slice(0, 4)}${p.yhteinen ? " · treenit valmennuksen yhteisestä ohjelmasta" : ` · ${(p.rivit || []).length} treeniä viikossa`}</p>
-        ${p.yhteinen ? "" : minivk(p)}
-        ${voiMuokata(p) ? `<form class="tk-voimassa" data-p="${p.id}"><label><span class="pieni">Alkaa</span><input type="date" name="alku" value="${p.alku}"></label><label><span class="pieni">Päättyy</span><input type="date" name="loppu" value="${p.loppu}"></label>
-          <button class="btn pieni-nappi">Muuta voimassaoloa</button><button type="button" class="linkkinappi vaara" data-poista-p="${p.id}">Poista ohjelma</button></form>` : ""}
-      </article>`).join("")}</div>` : `<p class="tyhja">Ei vielä ohjelmia. Rakenna ohjelma tai valitse jakso yhteiselle ohjelmalle.</p>`}
-    </section>
-    <section class="tk-osio"><h2>Seuraan yhteistä viikko-ohjelmaa</h2>
-      <p class="pieni">Kun asut Kouvolassa ja treenaat valmennuksen yhteisen ohjelman mukaan, valitse jakso. Yhteiset treenit näkyvät viikollasi, ja voit lisätä niiden rinnalle omia.</p>
-      <form class="tk-voimassa" id="tk-yhteinen"><label><span class="pieni">Alkaa</span><input type="date" name="alku" value="${maanantai(t)}" required></label><label><span class="pieni">Päättyy</span><input type="date" name="loppu" value="${lisaaPv(maanantai(t), 27)}" required></label><button class="btn pieni-nappi">Seuraa jaksolla</button></form>
-    </section>
-    <section class="tk-osio"><h2>Ohjelmatiedostot</h2>
-      <p class="pieni">${D.oma ? "Onko ohjelmasi Wordissa, Excelissä tai PDF:nä? Lataa se tänne. Tiedosto tallentuu valmennuksen Driveen nimelläsi – vain sinä ja valmennus näette sen. Jarvis voi rakentaa siitä sinulle valmiin ohjelman." : "Pelaajan lataamat ohjelmatiedostot (valmennuksen Drive)."}</p>
-      ${D.tiedostot.length ? `<ul class="tk-tiedostot">${D.tiedostot.map((x) => `<li>${D.oma ? `<span>📄 ${esc(x.nimi)}</span>` : `<a href="https://drive.google.com/file/d/${encodeURIComponent(x.drive_id)}/view" target="_blank" rel="noopener">${esc(x.nimi)} ↗</a>`}<small>${pvLyh(x.luotu.slice(0, 10))}</small></li>`).join("")}</ul>` : ""}
-      ${D.oma ? `<label class="btn"><input type="file" id="tk-tiedosto" accept=".doc,.docx,.xls,.xlsx,.pdf,.png,.jpg,.jpeg,.txt" hidden>Lataa ohjelmatiedosto</label>` : ""}
-    </section>`;
-  $$("form.tk-voimassa[data-p]", el).forEach((f) => (f.onsubmit = async (e) => {
-    e.preventDefault();
-    const p = D.paketit.find((x) => x.id === f.dataset.p), { alku, loppu } = f.elements;
-    if (!alku.value || loppu.value < alku.value) return ilmoita("Tarkista päivät", true);
-    try {
-      const ohita = await poistaTulevat(p);
-      const u = await sb.from("treenipaketit").update({ alku: alku.value, loppu: loppu.value, muokattu: new Date().toISOString() }).eq("id", p.id).select().single();
-      if (u.error) throw u.error;
-      if (!u.data.yhteinen) await kirjoitaPaivat(u.data, tanaan(), ohita);
-      ilmoita("Voimassaolo päivitetty"); paivita();
-    } catch (err) { ilmoita("Muutos ei onnistunut: " + err.message, true); }
-  }));
-  $$("[data-poista-p]", el).forEach((b) => (b.onclick = async () => {
-    const p = D.paketit.find((x) => x.id === b.dataset.poistaP);
-    if (!confirm(`Poistetaanko ohjelma "${p.nimi}"? Tulevat suunnitellut treenit poistuvat, tehdyt kirjaukset jäävät.`)) return;
-    try {
-      await poistaTulevat(p);
-      const { error } = await sb.from("treenipaketit").delete().eq("id", p.id);
-      if (error) throw error;
-      ilmoita("Ohjelma poistettu"); paivita();
-    } catch (err) { ilmoita("Poisto ei onnistunut: " + err.message, true); }
-  }));
-  $("#tk-yhteinen", el).onsubmit = async (e) => {
-    e.preventDefault();
-    const { alku, loppu } = e.target.elements;
-    if (loppu.value < alku.value) return ilmoita("Tarkista päivät", true);
-    const { error } = await sb.from("treenipaketit").insert({ pelaaja_id: D.pid, nimi: "Yhteinen viikko-ohjelma (MSU)", alku: alku.value, loppu: loppu.value, yhteinen: true, rivit: [], tekija: D.oma ? "pelaaja" : "valmennus" });
-    if (error) return ilmoita("Tallennus ei onnistunut: " + error.message, true);
-    ilmoita("Yhteinen ohjelma näkyy viikoillasi"); paivita();
-  };
-  const tied = $("#tk-tiedosto", el);
-  if (tied) tied.onchange = async () => {
-    const file = tied.files[0];
-    if (!file) return;
-    if (file.size > 15 * 1024 * 1024) return ilmoita("Tiedosto on yli 15 Mt", true);
-    ilmoita("Ladataan tiedostoa…");
-    const { data: { session } } = await sb.auth.getSession();
-    const fd = new FormData(); fd.append("tiedosto", file);
-    try {
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/ohjelmatiedosto`, { method: "POST", headers: { Authorization: `Bearer ${session.access_token}` }, body: fd });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.virhe || `HTTP ${r.status}`);
-      ilmoita("Tiedosto ladattu valmennuksen Driveen"); paivita();
-    } catch (err) { ilmoita("Lataus ei onnistunut: " + err.message, true); }
-  };
-}
-
 // ---------- Asetukset ----------
 function asetukset(el, paivita) {
   const a = D.asetukset.asteikko;
   const varit = D.asetukset.varit?.length === a ? D.asetukset.varit : OLETUSVARIT[a];
-  const omat = Object.values(D.ohjelmat).filter((o) => o.oma);
+  const omat = D.liikkeet.filter((l) => l.pelaaja_id);
+  const kategoriat = [...new Set(D.liikkeet.filter((l) => !l.pelaaja_id).map((l) => l.kategoria))];
   el.innerHTML = `
     <section class="tk-osio"><h2>Rasitusasteikko ja värit</h2>
       <p class="pieni">Käytä omaa asteikkoasi. Valmennukselle ja kuormalaskentaan arvo muunnetaan taustalla 1–10-asteikolle (1–5: 1 → 2, 3 → 6, 5 → 10).</p>
@@ -493,10 +612,10 @@ function asetukset(el, paivita) {
         <button class="btn ensisij">Tallenna</button> <button type="button" class="linkkinappi" data-oletus>Palauta oletusvärit</button>
       </form>
     </section>
-    <section class="tk-osio"><h2>Omat treenit</h2>
-      <p class="pieni">Omat treenisi ohjelmien rakennusosiksi, esim. "Mäkivedot". Näkyvät vain sinulle ja valmennukselle.</p>
-      ${omat.length ? `<ul class="tk-omat">${omat.map((o) => `<li style="--v:${T[o.tyyppi]?.vari}"><b>${esc(o.nimi)}</b><small>${esc(T[o.tyyppi]?.nimi || "")} · ${minStr(o.kesto_min || 0)}</small>${rpePallo(o.rpe)}<button class="linkkinappi" data-muokkaa-t="${esc(o.koodi)}">Muokkaa</button></li>`).join("")}</ul>` : ""}
-      <button class="btn" data-uusi-tuote>+ Luo oma treeni</button>
+    <section class="tk-osio"><h2>Omat liikkeet</h2>
+      <p class="pieni">Liikkeet, joita olet itse luonut ohjelmiesi rakennusosiksi. Näkyvät vain sinulle ja valmennukselle.</p>
+      ${omat.length ? `<ul class="tk-omat">${omat.map((l) => `<li style="--v:var(--cyan)"><b>${esc(l.nimi)}</b><small>${esc(l.kategoria)}${l.oletus ? ` · ${esc(l.oletus)}` : ""}</small><button class="linkkinappi" data-muokkaa-l="${l.id}">Muokkaa</button></li>`).join("")}</ul>` : ""}
+      <button class="btn" data-uusi-liike>+ Luo oma liike</button>
     </section>`;
   const f = $("#tk-asteikko", el);
   [...f.elements.asteikko].forEach((r) => (r.onchange = () => { D.asetukset = { ...D.asetukset, asteikko: +r.value, varit: null }; asetukset(el, paivita); }));
@@ -509,33 +628,27 @@ function asetukset(el, paivita) {
     if (error) return ilmoita("Tallennus ei onnistunut: " + error.message, true);
     ilmoita("Asetukset tallennettu"); paivita();
   };
-  $("[data-uusi-tuote]", el).onclick = () => tuoteLomake($("#tk-dialogi"), null, paivita);
-  $$("[data-muokkaa-t]", el).forEach((b) => (b.onclick = () => tuoteLomake($("#tk-dialogi"), D.ohjelmat[b.dataset.muokkaaT], paivita)));
+  $("[data-uusi-liike]", el).onclick = () => liikeLomake($("#tk-dialogi"), null, kategoriat, paivita);
+  $$("[data-muokkaa-l]", el).forEach((b) => (b.onclick = () => liikeLomake($("#tk-dialogi"), D.liikkeet.find((x) => x.id === b.dataset.muokkaaL), kategoriat, paivita)));
 }
 
-function tuoteLomake(dlg, o, paivita) {
-  const f = avaaDialogi(dlg, `
-    <header><h2>${o ? "Muokkaa treeniä" : "Uusi oma treeni"}</h2><button class="tr-sulje" data-sulje aria-label="Sulje">✕</button></header>
-    <label class="tk-kentta"><span>Nimi</span><input name="nimi" required maxlength="60" value="${esc(o?.nimi || "")}" placeholder="esim. Mäkivedot"></label>
-    <label class="tk-kentta"><span>Perusryhmä <small>(kuormalaskentaan)</small></span><select name="tyyppi">${TYYPIT.filter((t) => t.k !== "testi").map((t) => `<option value="${t.k}"${t.k === (o?.tyyppi || "fysiikka") ? " selected" : ""}>${t.nimi}</option>`).join("")}</select></label>
-    <label class="tk-kentta"><span>Oletuskesto, min</span><input type="number" name="kesto" min="5" max="600" step="5" value="${o?.kesto_min || 45}"></label>
-    <div class="tk-kentta"><span>Oletusrasitus</span>${rpeValinta(o?.rpe || 5)}</div>
-    <label class="tk-kentta"><span>Sisältö <small>(rivi per liike, vapaaehtoinen)</small></span><textarea name="kuvaus" rows="4">${esc(o?.kuvaus || "")}</textarea></label>
-    <div class="tk-napit">${o ? `<button class="btn vaara" data-poista>Poista treeni</button>` : ""}<button class="btn ensisij" value="ok">Tallenna</button></div>`);
-  if (o) $("[data-poista]", f).onclick = async (e) => {
-    e.preventDefault();
-    if (!confirm("Poistetaanko oma treeni? Jo kirjatut treenit säilyvät.")) return;
-    const { error } = await sb.from("treeniohjelmat").update({ aktiivinen: false }).eq("koodi", o.koodi);
-    if (error) return ilmoita("Poisto ei onnistunut: " + error.message, true);
-    dlg.close(); paivita();
+// ---------- Oma Keskus: tämä ja ensi viikko yhdellä silmäyksellä (26.11.2026, Jugi) ----------
+export async function piirraViikkokortti(el, pid) {
+  if (!el) return;
+  const ma = maanantai(tanaan()), t = tanaan();
+  let d;
+  try { d = await lataa(pid, ma, lisaaPv(ma, 13)); } catch (e) { el.innerHTML = `<p class="pieni">Treenikeskusta ei saatu ladattua: ${esc(e.message)}</p>`; return; }
+  const vanha = D; D = { ...d, pid, oma: pid === tila.omaPelaaja };
+  const vkt = [ma, lisaaPv(ma, 7)].map((m) => viikonPaivat(m, D));
+  const merkki = (s, menn) => (s.toteuma || (s.tapahtuma && D.msu && menn && !D.poissa.has(s.id)) ? "✓" : "");
+  const paiva = (x, i) => {
+    const menn = x.pvm <= t, rivit = [...x.suunnitellut.map((s) => ({ nimi: s.treeniohjelma ? lyhyt(D.ohjelmat[s.treeniohjelma]?.nimi || s.otsikko) : s.otsikko, vari: s.tapahtuma ? "var(--cyan)" : tyyppiVari(s.treeniohjelma), ok: merkki(s, menn), poissa: s.tapahtuma && D.poissa.has(s.id) })),
+      ...x.ylimaaraiset.map((y) => ({ nimi: lyhyt(D.ohjelmat[y.ohjelma]?.nimi || T[y.tyyppi]?.nimi || "Treeni"), vari: tyyppiVari(y.ohjelma), ok: "✓" }))];
+    return `<div class="tkk-pv${x.pvm === t ? " tanaan" : ""}${x.sairas ? " sairas" : ""}"><b>${VKP[i]}<small>${pvLyh(x.pvm)}</small></b>
+      ${x.sairas ? `<span class="tkk-r">🤒 sairas</span>` : ""}${rivit.map((r) => `<span class="tkk-r${r.poissa ? " poissa" : ""}" style="--v:${r.vari}">${esc(r.nimi)}${r.ok ? ` <em>${r.ok}</em>` : ""}</span>`).join("") || (x.sairas ? "" : `<span class="tkk-lepo">–</span>`)}</div>`;
   };
-  f.onsubmit = async (e) => {
-    e.preventDefault();
-    const x = f.elements, oma = +([...x.rpe].find((r) => r.checked)?.value || 5);
-    const rivi = { nimi: x.nimi.value.trim(), tyyppi: x.tyyppi.value, kesto_min: +x.kesto.value || 45, rpe: tallennusRpe(oma, D.asetukset.asteikko), kuvaus: x.kuvaus.value.trim() || null, paivitetty: new Date().toISOString() };
-    const r = o ? await sb.from("treeniohjelmat").update(rivi).eq("koodi", o.koodi)
-      : await sb.from("treeniohjelmat").insert({ ...rivi, koodi: `oma_${crypto.randomUUID().slice(0, 8)}`, ryhma: "Omat treenit", pelaaja_id: D.pid, oma: true, aktiivinen: true, jarjestys: 900 });
-    if (r.error) return ilmoita("Tallennus ei onnistunut: " + r.error.message, true);
-    ilmoita("Oma treeni tallennettu"); dlg.close(); paivita();
-  };
+  el.innerHTML = `<div class="oma-osa-paa"><h2 id="tkk-otsikko">Treenikeskus</h2><a class="btn pieni-nappi" href="#/treenikeskus">Avaa Treenikeskus →</a></div>
+    ${vkt.map((vk, n) => `<div class="tkk-vk"><span class="tkk-vk-nimi">${n ? "Ensi viikko" : "Tämä viikko"} <small>vk ${viikkoNumero(vk[0].pvm)}</small></span><div class="tkk-paivat">${vk.map(paiva).join("")}</div></div>`).join("")}
+    ${!vkt.flat().some((x) => x.suunnitellut.length || x.toteutuneet.length) && D.oma ? `<p class="pieni">Ei vielä suunnitelmaa. <a href="#/treenikeskus">Rakenna ohjelma ja suunnittele viikot →</a></p>` : ""}`;
+  D = vanha;
 }

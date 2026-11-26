@@ -3013,3 +3013,42 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .linkkinappi.vaara { color: var(--red); }
 .tk-s.poissa { opacity: .55; }
 .tk-poissa { color: var(--ink-3); font-weight: 600; font-size: 12px; }
+/* Oma Keskus: Treenikeskuksen kaksi viikkoa (26.11.2026) */
+.tkk .oma-osa-paa { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tkk .oma-osa-paa h2 { margin: 0; }
+.tkk-vk { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: stretch; margin-top: 8px; }
+.tkk-vk-nimi { font: 700 16px/1.2 var(--num); letter-spacing: .03em; color: var(--ink-2); padding-top: 6px; }
+.tkk-vk-nimi small { display: block; font-weight: 500; color: var(--ink-3); }
+.tkk-paivat { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.tkk-pv { background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; min-height: 64px; }
+.tkk-pv.tanaan { border-color: var(--cyan); }
+.tkk-pv.sairas { background: rgba(167,139,250,.10); }
+.tkk-pv > b { font: 700 13px/1 var(--num); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); display: flex; justify-content: space-between; }
+.tkk-pv > b small { font-weight: 500; color: var(--ink-3); text-transform: none; }
+.tkk-r { position: relative; font-size: 12px; line-height: 1.25; padding-left: 7px; overflow-wrap: anywhere; }
+.tkk-r::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--v, #888); }
+.tkk-r em { font-style: normal; color: var(--green); font-weight: 700; }
+.tkk-r.poissa { opacity: .5; text-decoration: line-through; }
+.tkk-lepo { color: var(--ink-3); font-size: 12px; }
+@media (max-width: 860px) {
+  .tkk .oma-osa-paa { flex-wrap: wrap; }
+  .tkk-vk { grid-template-columns: 1fr; gap: 4px; }
+  .tkk-paivat { grid-template-columns: 1fr; gap: 4px; }
+  .tkk-pv { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 0; padding: 6px 8px; }
+  .tkk-pv > b { width: 72px; flex: none; justify-content: flex-start; gap: 6px; }
+  .tkk-r { font-size: 13px; }
+}
+.tk-kategoria { max-width: 340px; margin: 4px 0 12px; }
+.tk-kategoria select { font-weight: 600; }
+.tk-ohjelmat { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.tk-ohjelma { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 10px 16px; display: flex; flex-direction: column; gap: 4px; }
+.tk-ohjelma::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 4px; background: var(--v); }
+.tk-ohjelma header { display: flex; gap: 6px; align-items: center; }
+.tk-ohjelma small { color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+.tk-ohjelma ul { margin: 4px 0; padding-left: 16px; font-size: 13px; color: var(--ink-2); }
+.tk-ohjelma footer { display: flex; gap: 12px; margin-top: auto; }
+.tk-kori-liikkeet { list-style: decimal inside; }
+.tk-kori-liikkeet li::before { display: none; }
+.tk-kori-liikkeet .tk-kori-rivi input:first-child { width: 90px; }
+.tk-kori-liikkeet .tk-kori-rivi input:nth-child(2) { flex: 1; min-width: 90px; width: auto; }
+.tk-liike b { font-weight: 600; }

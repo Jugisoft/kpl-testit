@@ -8,6 +8,7 @@ import { piirraMinunPeli } from "../minunpeli.js";
 import { piirraMinunPeliTilastot } from "../minunpeli_tilastot.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraTalvisuper } from "../talvisuper.js";
+import { kayttaaTreenikeskusta, piirraViikkokortti } from "./treenikeskus.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
 import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, valmentajaltaKortti, merkitseNahdyiksi } from "../huomiointi.js";
@@ -137,6 +138,8 @@ async function piirra(main) {
 
     ${oma ? viestiBanneri(kaikkiViestit, lukemattomatIdt) : ""}
 
+    ${kayttaaTreenikeskusta(p) ? `<section id="tk-kortti" class="paneeli tkk" aria-labelledby="tkk-otsikko"><p class="lataa">Ladataan viikkoja…</p></section>` : ""}
+
     ${tilanne({ p, oma, joukkue, valmiit, tulevat, ohjelma, nh, poissa: eiMukana, tavRivit: tav.data || [], omat, missiot: missiot.data || [], kirjaukset: kirjaukset.data || [], normaalit })}
 
     ${hmOsio}
@@ -220,6 +223,7 @@ async function piirra(main) {
     `;
 
   if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); piirraTalvisuper($("#talvisuper", main)); }
+  if (kayttaaTreenikeskusta(p)) piirraViikkokortti($("#tk-kortti", main), pid);   // 26.11.2026: Treenikeskuksen tämä ja ensi viikko
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));

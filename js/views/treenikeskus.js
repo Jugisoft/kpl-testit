@@ -105,10 +105,17 @@ async function piirra(main, pid, oma) {
   const el = $("#tk-vl", main);
   const paivita = () => piirra(main, pid, oma);
   if (!VALILEHDET.some(([k]) => k === valilehti)) valilehti = "viikko";
-  if (valilehti === "rakenna") return rakenna(el, paivita);
-  if (valilehti === "suunnittele") return suunnittele(el, paivita);
-  if (valilehti === "asetukset") return asetukset(el, paivita);
-  return viikkoVl(el, paivita, main);
+  try {
+    if (valilehti === "rakenna") return rakenna(el, paivita);
+    if (valilehti === "suunnittele") return suunnittele(el, paivita);
+    if (valilehti === "asetukset") return asetukset(el, paivita);
+    return viikkoVl(el, paivita, main);
+  } catch (e) {
+    console.error(e);
+    try { sessionStorage.removeItem(KORI_AVAIN + "2" + pid); sessionStorage.removeItem(VK_AVAIN + pid); } catch { /* ohitetaan */ }
+    el.innerHTML = `<p class="ingressi">Sivua ei saatu näytettyä (${esc(e.message)}). <button class="btn" data-uudelleen>Yritä uudelleen</button></p>`;
+    $("[data-uudelleen]", el).onclick = paivita;
+  }
 }
 
 const rpePallo = (rpe) => (rpe ? `<i class="tk-rpe" style="background:${rpeVari(rpe, D.asetukset)}" title="Rasitus ${naytaRpe(rpe, D.asetukset.asteikko)}/${D.asetukset.asteikko}">${naytaRpe(rpe, D.asetukset.asteikko)}</i>` : "");
@@ -328,8 +335,9 @@ function huomioLomake(dlg, kohde, otsikko, paivita) {
 }
 
 // ---------- Rakenna ohjelma: liikkeet → kori → oma ohjelma ----------
-const lueKori = () => { try { return JSON.parse(sessionStorage.getItem(KORI_AVAIN + D.pid)) || { rivit: [] }; } catch { return { rivit: [] }; } };
-const tallennaKori = (k) => { try { sessionStorage.setItem(KORI_AVAIN + D.pid, JSON.stringify(k)); } catch { /* ohitetaan */ } };
+// v2-kori (liikkeet); vanhan version kori (taulukko) ohitetaan
+const lueKori = () => { try { const k = JSON.parse(sessionStorage.getItem(KORI_AVAIN + "2" + D.pid)); return k && Array.isArray(k.rivit) ? k : { rivit: [] }; } catch { return { rivit: [] }; } };
+const tallennaKori = (k) => { try { sessionStorage.setItem(KORI_AVAIN + "2" + D.pid, JSON.stringify(k)); } catch { /* ohitetaan */ } };
 let kategoria = null;
 const omatOhjelmat = () => Object.values(D.ohjelmat).filter((o) => o.pelaaja_id === D.pid);
 const valmiit = () => Object.values(D.ohjelmat).filter((o) => !o.pelaaja_id && o.kuvaus && !PERUSRYHMAT.includes(o.ryhma));
@@ -467,7 +475,7 @@ function liikeLomake(dlg, l, kategoriat, paivita) {
 }
 
 // ---------- Suunnittele viikot: ohjelmat viikonpäiville voimassaoloajaksi ----------
-const lueVk = () => { try { return JSON.parse(sessionStorage.getItem(VK_AVAIN + D.pid)) || []; } catch { return []; } };
+const lueVk = () => { try { const k = JSON.parse(sessionStorage.getItem(VK_AVAIN + D.pid)); return Array.isArray(k) ? k.filter((x) => D.ohjelmat[x.koodi]) : []; } catch { return []; } };
 const tallennaVk = (k) => { try { sessionStorage.setItem(VK_AVAIN + D.pid, JSON.stringify(k)); } catch { /* ohitetaan */ } };
 let vkKategoria = null;
 

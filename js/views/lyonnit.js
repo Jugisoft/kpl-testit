@@ -18,7 +18,8 @@ const onPieni = (laji) => PIENET.has(laji.trim().toLowerCase());
 // viikkopylväissä (pieni = Pienet + PIENET_TARKEMMAT, kaikki muu = kova). Muut missiot: sama laji.
 function kuuluuMissioon(mLaji, kLaji) {
   if (sama(mLaji, KAIKKI)) return true;
-  if (sama(mLaji, PIENET_LAJI)) return onPieni(kLaji);
+  // 26.11.2026 (Jugi): pienet ovat myös näpyjä → Näpy-missioon lasketaan kaikki pienet kuten Pienet-missioon
+  if (sama(mLaji, PIENET_LAJI) || sama(mLaji, "Näpy")) return onPieni(kLaji);
   if (sama(mLaji, KOVAT_LAJI)) return !onPieni(kLaji);
   return sama(kLaji, mLaji);
 }

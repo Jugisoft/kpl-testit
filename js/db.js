@@ -63,6 +63,19 @@ export async function lataaPerus() {
   tila.kerta = Object.fromEntries(tila.kerrat.map((x) => [x.id, x]));
 }
 
+export const KATSO_AVAIN = "kpl-katso";
+// Katselutila: kaikki tallennukset estetään selaimessa (insert/update/upsert/delete ja kirjoittavat rpc:t)
+let tallennusEstetty = false;
+function estaTallennus() {
+  if (tallennusEstetty) return;
+  tallennusEstetty = true;
+  const virhe = { message: "Katselutila: tallennus ei ole käytössä" };
+  const tyhja = () => { const r = { data: null, error: virhe, count: null }; const p = new Proxy(function () {}, { get: (_, k) => (k === "then" ? (ok, ei) => Promise.resolve(r).then(ok, ei) : () => p), apply: () => p }); return p; };
+  const from = sb.from.bind(sb), rpc = sb.rpc.bind(sb);
+  sb.from = (t) => { const q = from(t); for (const m of ["insert", "update", "upsert", "delete"]) q[m] = () => tyhja(); return q; };
+  sb.rpc = (f, ...a) => (/^(merkitse|tallenna|lisaa|poista|paivita|tuo)/.test(f) ? tyhja() : rpc(f, ...a));
+}
+
 export async function tarkistaRooli() {
   const { data } = await sb.auth.getSession();
   tila.istunto = data.session;
@@ -79,6 +92,23 @@ export async function tarkistaRooli() {
       const { data: oma } = await sb.from("valmentajat").select("pelaaja_id,vastustaja").eq("email", (tila.istunto.user.email || "").toLowerCase()).maybeSingle();
       tila.omaPelaaja = oma?.pelaaja_id || null;
       if (tila.rooli === "tarkkailija") tila.tarkkailijaJoukkue = oma?.vastustaja || null;
+    }
+  }
+  // 26.11.2026 (Jugi): ylläpitäjän "Katso käyttäjänä" – näkymä kuin valitulla käyttäjällä, vain katselu
+  tila.oikeaAdmin = tila.admin; tila.katselu = null;
+  let katso = null;
+  try { katso = JSON.parse(sessionStorage.getItem(KATSO_AVAIN) || "null"); } catch { /* ohitetaan */ }
+  if (tila.admin && katso?.email) {
+    const { data: u } = await sb.from("valmentajat").select("email,nimi,rooli,pelaaja_id,vastustaja").eq("email", katso.email).maybeSingle();
+    if (u) {
+      tila.katselu = { email: u.email, nimi: u.nimi || u.email, rooli: u.rooli };
+      tila.rooli = u.rooli; tila.omaPelaaja = u.pelaaja_id || null;
+      tila.tarkkailijaJoukkue = u.rooli === "tarkkailija" ? u.vastustaja || null : null;
+      tila.admin = u.rooli === "admin";
+      tila.valmennus = ["admin", "valmentaja"].includes(u.rooli);
+      tila.valmentaja = ["admin", "valmentaja", "pelaaja", "sp_juniori"].includes(u.rooli);
+      tila.istunto = { ...tila.istunto, user: { ...tila.istunto.user, email: u.email } };
+      estaTallennus();
     }
   }
   tila.juniori = tila.rooli === "juniori";

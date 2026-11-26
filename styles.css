@@ -3057,3 +3057,11 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .ly-m-muokkaa { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin: 6px 0 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
 .ly-m-muokkaa .pieni { flex-basis: 100%; margin: 0; }
 .ly-m-muokkaa input { max-width: 160px; }
+/* Katso käyttäjänä (26.11.2026) */
+.katselupalkki { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 8px 16px; background: var(--cyan); color: #181818; font-weight: 500; font-size: 14px; }
+.katselupalkki .btn { background: #181818; color: var(--ink); border-color: #181818; }
+.katselupalkki .btn.ensisij { background: #fff; color: #181818; border-color: #fff; }
+.katselutila .topbar { top: 44px; }
+.k-katso { display: inline-flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.k-katso:hover { border-color: var(--cyan); color: var(--cyan); }
+@media (max-width: 860px) { .k-katso span { display: none; } .katselutila .topbar { top: 72px; } }

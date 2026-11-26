@@ -1,4 +1,4 @@
-import { sb, tila, lataaPerus, tarkistaRooli, lataaPelaajat } from "./js/db.js";
+import { sb, tila, lataaPerus, tarkistaRooli, lataaPelaajat, KATSO_AVAIN } from "./js/db.js";
 import { $, esc, tuhoaKaaviot, ilmoita } from "./js/util.js";
 import * as kirjaudu from "./js/views/kirjaudu.js";
 import * as kerrat from "./js/views/kerrat.js";
@@ -111,7 +111,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261126-9", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261126-10", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -222,8 +222,10 @@ function piirraNav(polku, r) {
   const k = $("#kayttaja");
   if (tila.istunto) {
     const email = tila.istunto.user.email;
-    k.innerHTML = `<span class="k-nimi" title="${esc(email)}">${esc(email.split("@")[0])}</span><button id="ulos" title="Kirjaudu ulos">${ikoni("ulos")}<span>Kirjaudu ulos</span></button>`;
+    k.innerHTML = `${tila.oikeaAdmin && !tila.katselu ? `<button id="katso" class="k-katso" title="Katso Keskusta toisen käyttäjän näkymänä">👁<span>Katso käyttäjänä</span></button>` : ""}<span class="k-nimi" title="${esc(email)}">${esc(email.split("@")[0])}</span><button id="ulos" title="Kirjaudu ulos">${ikoni("ulos")}<span>Kirjaudu ulos</span></button>`;
     $("#ulos").onclick = ulosKirjaudu;
+    $("#katso")?.addEventListener("click", avaaKatsoValinta);
+    naytaKatselupalkki();
   } else {
     k.innerHTML = `<a class="btn" style="padding:4px 12px" href="#/kirjaudu">Kirjaudu</a>`;
   }
@@ -263,6 +265,42 @@ async function ulosKirjaudu() {
   try { sessionStorage.setItem("kpl-ulos", "1"); } catch {}
   location.replace(location.pathname + "#/kirjaudu");
   location.reload();
+}
+// 26.11.2026 (Jugi): ylläpitäjän "Katso käyttäjänä" – näkymä kuin valitulla käyttäjällä (vain katselu, ks. db.js)
+const ROOLI_NIMI = { admin: "Ylläpitäjä", valmentaja: "Valmennus", pelaaja: "Miesten pelaaja", sp_juniori: "Miesten pelaaja + juniori", juniori: "Juniori-pelaaja", psu: "PSU-valmennus", tarkkailija: "Tarkkailija" };
+function vaihdaKatselu(email) {
+  try { if (email) sessionStorage.setItem(KATSO_AVAIN, JSON.stringify({ email })); else sessionStorage.removeItem(KATSO_AVAIN); sessionStorage.removeItem("kpl-etusivu-ohitettu"); } catch { /* ohitetaan */ }
+  location.replace(location.pathname + "#/");
+  location.reload();
+}
+async function avaaKatsoValinta() {
+  let d = $("#katso-dialogi");
+  if (!d) { d = document.createElement("dialog"); d.id = "katso-dialogi"; d.className = "tk-dialogi"; document.body.append(d); }
+  d.innerHTML = `<div class="tk-lomake"><p class="lataa">Ladataan käyttäjiä…</p></div>`;
+  d.showModal();
+  const { data, error } = await sb.from("valmentajat").select("email,nimi,rooli,pelaaja_id").order("nimi");
+  if (error) { d.innerHTML = `<div class="tk-lomake"><p>${esc(error.message)}</p></div>`; return; }
+  const profiili = (u) => { const p = u.pelaaja_id && tila.pelaaja[u.pelaaja_id]; return p?.treeniprofiili === "msu" ? "MSU" : p?.treeniprofiili === "haastaja" ? "haastaja" : p?.treeniprofiili === "reissu" ? "asuu muualla" : ""; };
+  const ryhmat = ["pelaaja", "sp_juniori", "juniori", "valmentaja", "psu", "tarkkailija"].map((r) => [r, (data || []).filter((u) => u.rooli === r)]).filter(([, l]) => l.length);
+  d.innerHTML = `<form method="dialog" class="tk-lomake">
+    <header><h2>Katso käyttäjänä</h2><button class="tr-sulje" value="peru" aria-label="Sulje">✕</button></header>
+    <p class="pieni">Keskus näytetään kuten valittu käyttäjä sen näkee: valikko, sivut ja hänen omat näkymänsä. Vain katselu – mitään ei voi tallentaa. Tiedot haetaan sinun oikeuksillasi, joten listoissa voi näkyä enemmän kuin käyttäjällä.</p>
+    <label class="tk-kentta"><span>Käyttäjä</span><select name="email" required><option value="">Valitse…</option>
+      ${ryhmat.map(([r, l]) => `<optgroup label="${esc(ROOLI_NIMI[r] || r)}">${l.map((u) => `<option value="${esc(u.email)}">${esc(u.nimi || u.email)}${profiili(u) ? ` (${profiili(u)})` : ""}</option>`).join("")}</optgroup>`).join("")}</select></label>
+    <div class="tk-napit"><button class="btn ensisij" value="ok">Näytä</button></div></form>`;
+  const f = $("form", d);
+  f.onsubmit = (e) => { if (e.submitter?.value === "peru") return; e.preventDefault(); if (f.elements.email.value) vaihdaKatselu(f.elements.email.value); };
+}
+function naytaKatselupalkki() {
+  $("#katselupalkki")?.remove();
+  document.body.classList.toggle("katselutila", !!tila.katselu);
+  if (!tila.katselu) return;
+  const b = document.createElement("div");
+  b.id = "katselupalkki"; b.className = "katselupalkki"; b.setAttribute("role", "status");
+  b.innerHTML = `<span>👁 Katselet käyttäjänä: <b>${esc(tila.katselu.nimi)}</b> · ${esc(ROOLI_NIMI[tila.katselu.rooli] || tila.katselu.rooli)} · vain katselu</span><span><button class="btn pieni-nappi" data-vaihda>Vaihda</button> <button class="btn ensisij pieni-nappi" data-palaa>Palaa omaan näkymään</button></span>`;
+  document.body.prepend(b);
+  $("[data-vaihda]", b).onclick = avaaKatsoValinta;
+  $("[data-palaa]", b).onclick = () => vaihdaKatselu(null);
 }
 function avaaValikko(auki) {
   document.body.classList.toggle("valikko-auki", auki);

@@ -2905,3 +2905,111 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .lukko.yksityinen { background: rgba(245,168,0,.14); color: var(--kpl); border-color: var(--kpl); }
 .muistiinpano.on-yksityinen { box-shadow: inset 3px 0 0 var(--kpl); }
 @media (max-width: 700px) { .yks-info { position: fixed; left: 50%; top: auto; bottom: 84px; transform: translateX(-50%); width: calc(100vw - 24px); } }
+
+/* ===== Treenikeskus (26.11.2026) ===== */
+.tk-paa { margin-bottom: 14px; }
+.tk-valilehdet { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.tk-vk-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.tk-vk-nav > div { display: flex; flex-direction: column; min-width: 150px; text-align: center; }
+.tk-vk-nav b { font: 700 22px/1.1 var(--num); letter-spacing: .02em; }
+.tk-yht { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.tk-yht > div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; box-shadow: var(--glow); }
+.tk-yht .num { display: block; font-size: 30px; line-height: 1.1; font-weight: 700; color: var(--cyan); }
+.tk-yht small { color: var(--ink-3); font-size: 13px; }
+.tk-paivat { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.tk-paiva { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-height: 150px; }
+.tk-paiva.tanaan { border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(245,168,0,.35), var(--glow); }
+.tk-paiva.sairas { background: linear-gradient(180deg, rgba(167,139,250,.10), transparent 60%), var(--surface); }
+.tk-paiva header { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.tk-paiva header b { text-transform: uppercase; font: 700 15px/1 var(--num); letter-spacing: .06em; color: var(--ink-2); }
+.tk-paiva header .num { color: var(--ink-3); font-size: 15px; }
+.tk-paiva ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tk-paiva footer { margin-top: auto; display: flex; gap: 10px; border-top: 1px solid var(--line-2); padding-top: 6px; }
+.tk-lepo { color: var(--ink-3); font-size: 13px; margin: 0; }
+.tk-s { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 2px 6px; padding: 6px 6px 6px 10px; border-radius: 8px; background: var(--surface-2); font-size: 14px; line-height: 1.3; }
+.tk-s::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 3px; background: var(--v); }
+.tk-s.tehty { background: rgba(46,229,157,.07); }
+.tk-s.avoin { opacity: .78; }
+.tk-s.ylim { border: 1px dashed var(--line); }
+.tk-s-nimi { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.tk-s-nimi small { display: block; font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.tk-s-tila { display: flex; align-items: center; gap: 4px; color: var(--green); font-weight: 700; }
+.tk-s-tila.suunn { color: var(--ink-3); opacity: .8; }
+.tk-s-napit { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.tk-rpe { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 13px/1 var(--num); font-style: normal; color: #111; flex: none; }
+.tk-tagi { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-3); vertical-align: middle; }
+.tk-tagi.yhteinen { border-color: rgba(245,168,0,.5); color: var(--cyan); }
+.tk-tagi.sairas { border-color: rgba(167,139,250,.6); color: #C4B5FD; }
+.tk-huom { font-size: 13px; color: var(--ink-2); margin: 0; background: var(--surface-2); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; }
+.tk-selite { margin-top: 14px; }
+@media (max-width: 1100px) { .tk-paivat { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 860px) {
+  .tk-paivat { grid-template-columns: 1fr; }
+  .tk-paiva { min-height: 0; }
+  .tk-paiva ul { gap: 4px; }
+}
+/* kauppa */
+.tk-kauppa { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.tk-hylly h2 { font-size: 17px; margin: 18px 0 8px; }
+.tk-tuotteet { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.tk-tuote { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.tk-tuote::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px; border-radius: 4px; background: var(--v, var(--cyan)); }
+.tk-tuote > div { flex: 1; min-width: 0; }
+.tk-tuote b { display: block; }
+.tk-tuote small { color: var(--ink-3); font-size: 13px; }
+.tk-yhteinen { background: linear-gradient(135deg, rgba(245,168,0,.14), transparent 60%), var(--surface); border-color: rgba(245,168,0,.4); }
+.tk-kori { position: sticky; top: 76px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--glow); }
+.tk-kori h2 { margin: 0 0 10px; font-size: 18px; }
+.tk-kori ol { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.tk-kori li { position: relative; padding: 8px 8px 8px 12px; background: var(--surface-2); border-radius: 8px; }
+.tk-kori li::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--v); }
+.tk-kori-rivi { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.tk-kori-rivi select, .tk-kori-rivi input { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+.tk-kori-rivi input { width: 64px; }
+.tk-kassa { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+@media (max-width: 900px) { .tk-kauppa { grid-template-columns: 1fr; } .tk-kori { position: static; } }
+/* lomakkeet */
+.tk-kentta { display: flex; flex-direction: column; gap: 4px; }
+.tk-kentta > span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.tk-kentta small { font-weight: 400; color: var(--ink-3); }
+.tk-kentta input, .tk-kentta select, .tk-kentta textarea, .tk-lomake > textarea { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
+.tk-kentta-rivi { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tk-kentta-rivi .tk-kentta, .tk-kentta input { min-width: 0; }
+.tk-dialogi { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(480px, calc(100vw - 24px)); max-height: calc(100vh - 40px); }
+.tk-dialogi::backdrop { background: rgba(0,0,0,.6); }
+.tk-lomake { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.tk-lomake header { display: flex; align-items: center; justify-content: space-between; }
+.tk-lomake h2 { margin: 0; font-size: 20px; }
+.tk-napit { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.tk-rpe-valinta { display: flex; gap: 4px; flex-wrap: wrap; }
+.tk-rpe-valinta label { position: relative; }
+.tk-rpe-valinta input { position: absolute; opacity: 0; }
+.tk-rpe-valinta span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--rv); color: var(--ink); font: 700 17px/1 var(--num); cursor: pointer; }
+.tk-rpe-valinta input:checked + span { background: var(--rv); color: #111; }
+.tk-rpe-valinta input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* ohjelmat & asetukset */
+.tk-osio { margin-bottom: 26px; }
+.tk-osio h2 { font-size: 18px; margin: 0 0 8px; }
+.tk-paketit { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.tk-paketti { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.tk-paketti.voimassa { border-color: rgba(46,229,157,.45); }
+.tk-paketti.paattynyt { opacity: .6; }
+.tk-paketti header { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tk-paketti p { margin: 4px 0 8px; }
+.tk-minivk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+.tk-minivk > div { display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--surface-2); border-radius: 6px; padding: 4px 0 6px; min-height: 40px; }
+.tk-minivk small { color: var(--ink-3); font-size: 11px; text-transform: uppercase; }
+.tk-minivk i { width: 70%; height: 5px; border-radius: 3px; }
+.tk-voimassa { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.tk-voimassa label { display: flex; flex-direction: column; }
+.tk-voimassa input { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+.tk-tiedostot, .tk-omat { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 6px; }
+.tk-tiedostot li, .tk-omat li { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.tk-omat li { border-left: 4px solid var(--v); }
+.tk-omat small, .tk-tiedostot small { color: var(--ink-3); flex: 1; }
+.tk-varit { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.tk-varit label { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tk-varit input[type=color] { width: 40px; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 0; }
+.linkkinappi.vaara { color: var(--red); }
+.tk-s.poissa { opacity: .55; }
+.tk-poissa { color: var(--ink-3); font-weight: 600; font-size: 12px; }

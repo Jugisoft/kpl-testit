@@ -153,7 +153,7 @@ async function piirra(main) {
     <section id="viikkoni" class="paneeli ku" aria-labelledby="ku-otsikko"><p class="lataa">Ladataan viikkoa…</p></section>
 
     <div class="oma-ruudukko">
-      <section class="paneeli oma-ohjelma" id="oma-ohjelma" aria-labelledby="oh-otsikko">
+      <section class="paneeli oma-ohjelma" id="oma-ohjelma" aria-labelledby="oh-otsikko"${kayttaaTreenikeskusta(p) ? ` style="display:none"` : ""}>
         <div class="oma-osa-paa">
           <div><h2 id="oh-otsikko">Viikon ohjelma</h2><p class="pieni">Viikko ${viikkoNro(viikko)} · ${pvmLyhyt(viikko)}–${pvmLyhyt(vkLoppu)}${viikko === maanantai(tanaan()) ? " · tämä viikko" : ""}</p></div>
           <div class="rivi"><button class="btn oma-nuoli" data-vk="-7" aria-label="Edellinen viikko">‹</button><button class="btn oma-nuoli" data-vk="0" aria-label="Tämä viikko">Nyt</button><button class="btn oma-nuoli" data-vk="7" aria-label="Seuraava viikko">›</button></div>
@@ -223,7 +223,14 @@ async function piirra(main) {
     `;
 
   if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); piirraTalvisuper($("#talvisuper", main)); }
-  if (kayttaaTreenikeskusta(p)) piirraViikkokortti($("#tk-kortti", main), pid);   // 26.11.2026: Treenikeskuksen tämä ja ensi viikko
+  if (kayttaaTreenikeskusta(p)) piirraViikkokortti($("#tk-kortti", main), pid).then((y) => {   // 26.11.2026: Treenikeskuksen tämä ja ensi viikko
+    const el = $("#ti-tk", main);
+    if (!el || !y) return;
+    const { n, tehty, seur } = y;
+    el.outerHTML = kortti_({ id: "ti-tk", kohde: "tk-kortti", otsikko: "Treenikeskus · tämä viikko",
+      rengasHtml: rengas(n ? [{ ...pros1((100 * tehty) / n), vari: tehty === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${tehty}/${n}` : "–", n ? "tehty" : ""),
+      ala: n ? `${tehty === n ? "Kaikki tehty 👏" : `${n - tehty} treeniä jäljellä`}${seur ? `<br><small>Seuraavaksi ${esc(seur.paiva)}: <b class="ti-seur">${esc(seur.nimi)}</b></small>` : ""}` : "Ei suunnitelmaa tälle viikolle" });
+  });
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });
   kytkeLuokittelu(main, p.joukkue_id, nh.tapahtumat, () => piirra(main));
@@ -402,7 +409,9 @@ function tilanne({ p, oma, valmiit, tulevat = [], ohjelma, nh, poissa, tavRivit,
   const seur = nhT.filter((e) => e.pvm >= tnyt).sort((a, b) => (a.pvm + (a.alku || "")).localeCompare(b.pvm + (b.alku || "")))[0];
   const lyhyt = (t) => String(t || "").replace(/^[^:]{1,20}:\s*/, "");
   const osat = [ohjelma.length ? `${ohjelma.length - valmiit} harjoitetta jäljellä` : "", nhT.length ? `${nhT.length} yhteistä treeniä` : ""].filter(Boolean).join(" · ");
-  kortit.push(kortti_({ kohde: "oma-ohjelma", otsikko: "Viikon ohjelma",
+  // 26.11.2026 (Jugi): miehillä ja haastajilla Viikon ohjelman tilalla Treenikeskuksen viikko (täytetään piirraViikkokortin jälkeen)
+  if (kayttaaTreenikeskusta(p)) kortit.push(`<a class="ti-kortti ti-lataa" id="ti-tk" href="#tk-kortti" data-ti="tk-kortti"><span class="ti-ots">Treenikeskus · tämä viikko</span><span class="ti-runko">${rengas([], "…", "")}</span></a>`);
+  else kortit.push(kortti_({ kohde: "oma-ohjelma", otsikko: "Viikon ohjelma",
     rengasHtml: rengas(n ? [{ ...pros1((100 * tehty) / n), vari: tehty === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${tehty}/${n}` : "–", n ? "tehty" : ""),
     ala: n ? `${tehty === n ? "Kaikki tehty 👏" : esc(osat)}${seur ? `<br><small>Seuraavaksi ${esc(pvNimi(seur))}${seur.alku ? ` klo ${esc(seur.alku.slice(0, 5))}` : ""}: <b class="ti-seur">${esc(lyhyt(seur.otsikko))}</b></small>` : ""}` : "Ei ohjelmaa tälle viikolle" }));
   const tt = tavRivit.filter((g) => tila.testi[g.testi]).map((g) => ({ g, ...tavoiteTila(g, omat) }));

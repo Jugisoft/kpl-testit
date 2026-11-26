@@ -669,5 +669,13 @@ export async function piirraViikkokortti(el, pid) {
   el.innerHTML = `<div class="oma-osa-paa"><h2 id="tkk-otsikko">Treenikeskus</h2><a class="btn pieni-nappi" href="#/treenikeskus">Avaa Treenikeskus →</a></div>
     ${vkt.map((vk, n) => `<div class="tkk-vk"><span class="tkk-vk-nimi">${n ? "Ensi viikko" : "Tämä viikko"} <small>vk ${viikkoNumero(vk[0].pvm)}</small></span><div class="tkk-paivat">${vk.map(paiva).join("")}</div></div>`).join("")}
     ${!vkt.flat().some((x) => x.suunnitellut.length || x.toteutuneet.length) && D.oma ? `<p class="pieni">Ei vielä suunnitelmaa. <a href="#/treenikeskus">Rakenna ohjelma ja suunnittele viikot →</a></p>` : ""}`;
+  // yhteenveto Oma Keskuksen tilannekorttiin: tämän viikon suunnitellut, tehdyt ja seuraava
+  const VKP_NIMI = ["maanantaina", "tiistaina", "keskiviikkona", "torstaina", "perjantaina", "lauantaina", "sunnuntaina"];
+  const tama = vkt[0].flatMap((x, i) => x.suunnitellut.map((s) => ({ s, x, i })));
+  const nimiS = (s) => (s.treeniohjelma ? lyhyt(D.ohjelmat[s.treeniohjelma]?.nimi || s.otsikko) : s.otsikko);
+  const seurR = tama.find(({ s, x }) => x.pvm > t || (x.pvm === t && !merkki(s, true)));
+  const yht = { n: tama.length, tehty: tama.filter(({ s, x }) => merkki(s, x.pvm <= t)).length,
+    seur: seurR ? { paiva: seurR.x.pvm === t ? "tänään" : seurR.x.pvm === lisaaPv(t, 1) ? "huomenna" : VKP_NIMI[seurR.i], nimi: nimiS(seurR.s) } : null };
   D = vanha;
+  return yht;
 }

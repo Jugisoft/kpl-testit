@@ -111,7 +111,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261126-4", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261126-5", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -167,7 +167,8 @@ function valikko() {
   if (tila.juniori) {
     if (!kayttaaTk()) return [RYHMAT_JUNIORI, ALAPALKKI_JUNIORI];
     // haastajaryhmä (26.11.2026): Treenikeskus Harjoittelu-ryhmän ylimpänä ja alapalkissa Treenin tilalla
-    return [RYHMAT_JUNIORI.map(([o, l]) => [o, o === "Harjoittelu" ? [TREENIKESKUS, ...l] : l]), ALAPALKKI_JUNIORI.map((x) => (x[1] === "#/treenit" ? ["Treeni", "#/treenikeskus", "tk"] : x))];
+    // 26.11.2026 (Jugi): Treenikeskus korvaa Treenipäiväkirjan ja Treeniohjelmat (valmiit ohjelmat Rakenna ohjelma -sivulla)
+    return [RYHMAT_JUNIORI.map(([o, l]) => [o, o === "Harjoittelu" ? [TREENIKESKUS, ...l.filter((x) => x !== TREENIT && x !== OHJELMAT)] : l]), ALAPALKKI_JUNIORI.map((x) => (x[1] === "#/treenit" ? ["Treeni", "#/treenikeskus", "tk"] : x))];
   }
   if (tila.tarkkailija) {
     const j = tila.tarkkailijaJoukkue, osoite = `#/muistio/${j}/yleiskuva`;
@@ -180,8 +181,10 @@ function valikko() {
   if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, lyontiseurantaL, TREENIT, OHJELMAT, TREENIKESKUS]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
-  ryhmat[1][1].unshift(TREENIT, OHJELMAT);   // treenipäiväkirja kaikille: pelaaja kirjaa, valmentaja katsoo pelaajan kirjauksia
-  if (kayttaaTk() || tila.ohjaaja) ryhmat[1][1].unshift(TREENIKESKUS);   // 26.11.2026
+  // treenipäiväkirja kaikille: pelaaja kirjaa, valmentaja katsoo pelaajan kirjauksia;
+  // 26.11.2026 (Jugi): miehillä ja haastajilla vain Treenikeskus (ei rinnakkaisia kirjauspaikkoja)
+  if (!kayttaaTk()) ryhmat[1][1].unshift(TREENIT, OHJELMAT);
+  if (kayttaaTk() || tila.ohjaaja) ryhmat[1][1].unshift(TREENIKESKUS);
   if (pelaajaRooli) ryhmat[0][1].push(OMA);
   else if (tila.ohjaaja) ryhmat.find(([o]) => o === "Valmennus")[1].push(pelaajat, koosteL, seurantaL);
   ryhmat[0][1].push(TALVI);   // 25.11.2026: Talvisuper oma välisivu ennen Oma harjoittelua (miehet ja valmennus)

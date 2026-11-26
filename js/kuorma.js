@@ -82,7 +82,9 @@ export async function piirraKuorma(el, p, opt) {
     ${paivaKaista(w, maxPv)}`).join("")}
     ${a.huomiot.length ? `<ul class="ku-huomiot">${a.huomiot.map((h) => `<li class="${h.taso}"><span aria-hidden="true">${h.taso === "varoitus" ? "▲" : h.taso === "tuleva" ? "◆" : "i"}</span><span>${esc(h.teksti)}</span></li>`).join("")}</ul>` : ""}
 
-    ${opt.oma ? `<a class="ku-kirjaa" href="#/treenit"><span><b>Kirjaa omatoiminen treeni</b><small>Treenipäiväkirjassa: valitse treeni, kesto ja päivä</small></span><i aria-hidden="true">→</i></a>` : ""}
+    ${opt.oma ? (["msu", "haastaja"].includes(p.treeniprofiili)   // 26.11.2026: miehet ja haastajat kirjaavat Treenikeskuksessa
+      ? `<a class="ku-kirjaa" href="#/treenikeskus" onclick="try{sessionStorage.setItem('kpl-tk-kirjaa','1')}catch(e){}"><span><b>Kirjaa treeni</b><small>Treenikeskuksessa: valitse treeni, kesto ja rasitus</small></span><i aria-hidden="true">→</i></a>`
+      : `<a class="ku-kirjaa" href="#/treenit"><span><b>Kirjaa omatoiminen treeni</b><small>Treenipäiväkirjassa: valitse treeni, kesto ja päivä</small></span><i aria-hidden="true">→</i></a>`) : ""}
     ${omatVk.length ? `<h3>Omatoimiset tällä viikolla</h3><ul class="ku-omat">${omatVk.map((o) => { const ohj = ohjelmat[o.ohjelma]; const ty = T[o.tyyppi] || T.laji; const lisa = maaratTeksti(o); return `<li><i style="background:${ty.vari}"></i><span><b>${pvLyh(o.pvm)}</b> ${esc(ohj?.nimi || ty.nimi)} · ${o.kesto_min} min${lisa ? ` · ${esc(lisa)}` : ""}${o.rpe ? ` · rasitus ${o.rpe}/10` : ""}${o.huomio ? ` <small>· ${esc(o.huomio)}</small>` : ""}</span>${opt.oma ? `<button class="linkkinappi" data-poista-oma="${o.id}">Poista</button>` : ""}${opt.hm ? hmLohko(opt.hm, p.id, "treeni", o.id) : ""}</li>`; }).join("")}</ul>` : ""}
     <details class="ku-lisaa"><summary>Ensi viikko, kuusi viikkoa ja kuukausi</summary>
     ${[[a2, opt.viikko === maanantai(tanaan()) ? "Ensi viikko" : "Seuraava viikko"]].map(([w, otsikko]) => `

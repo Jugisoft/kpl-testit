@@ -3052,3 +3052,5 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .tk-kori-liikkeet .tk-kori-rivi input:first-child { width: 90px; }
 .tk-kori-liikkeet .tk-kori-rivi input:nth-child(2) { flex: 1; min-width: 90px; width: auto; }
 .tk-liike b { font-weight: 600; }
+.tk-kirjaa-iso { float: right; font-size: 16px; padding: 10px 18px; }
+@media (max-width: 860px) { .tk-kirjaa-iso { float: none; width: 100%; justify-content: center; margin-bottom: 12px; } }

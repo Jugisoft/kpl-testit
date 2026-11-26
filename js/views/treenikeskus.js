@@ -160,6 +160,7 @@ function viikkoVl(el, paivita, main) {
   const ylim = (x) => `<li class="tk-s tehty ylim" style="--v:${tyyppiVari(x.ohjelma)}"><span class="tk-s-nimi">${esc(lyhyt(D.ohjelmat[x.ohjelma]?.nimi || T[x.tyyppi]?.nimi || "Treeni"))} <span class="tk-tagi">lisätty</span><small>${minStr(x.kesto_min || 0)}</small></span>
       <span class="tk-s-tila">✓ ${rpePallo(x.rpe)}</span>${D.oma ? `<span class="tk-s-napit"><button class="linkkinappi" data-muokkaa="${x.id}">Muokkaa</button></span>` : ""}</li>`;
   el.innerHTML = `
+    ${D.oma ? `<button class="btn ensisij tk-kirjaa-iso" data-kirjaa-uusi>+ Kirjaa treeni</button>` : ""}
     <div class="tk-vk-nav"><button class="btn" data-vk="-7" aria-label="Edellinen viikko">◀</button>
       <div><b>Viikko ${viikkoNumero(viikko)}</b><span class="pieni">${pvLyh(viikko)}–${pvLyh(lisaaPv(viikko, 6))}${viikko === maanantai(t) ? " · tämä viikko" : viikko > t ? " · tuleva" : ""}</span></div>
       <button class="btn" data-vk="7" aria-label="Seuraava viikko">▶</button>${viikko !== maanantai(t) ? `<button class="linkkinappi" data-vk="0">Tähän viikkoon</button>` : ""}</div>
@@ -187,6 +188,10 @@ function viikkoVl(el, paivita, main) {
   $$("[data-ras]", el).forEach((b) => (b.onclick = () => rasitusLomake(dlg, D.ohjelma.find((x) => x.id === b.dataset.ras), paivita)));
   $$("[data-muokkaa]", el).forEach((b) => (b.onclick = () => { const x = D.toteumat.find((y) => y.id === b.dataset.muokkaa); kirjausLomake(dlg, { toteuma: x, pvm: x.pvm }, paivita); }));
   $$("[data-lisaa]", el).forEach((b) => (b.onclick = () => lisaaLomake(dlg, b.dataset.lisaa, paivita)));
+  // nopea kirjaus (myös Oma Keskuksen "Kirjaa treeni" -linkistä)
+  const kirjaaUusi = () => kirjausLomake(dlg, { pvm: t }, paivita);
+  $("[data-kirjaa-uusi]", el).onclick = kirjaaUusi;
+  try { if (sessionStorage.getItem("kpl-tk-kirjaa")) { sessionStorage.removeItem("kpl-tk-kirjaa"); kirjaaUusi(); } } catch { /* ohitetaan */ }
   $$("[data-sairas]", el).forEach((b) => (b.onclick = () => sairasLomake(dlg, b.dataset.sairas, paivita)));
   $$("[data-huom]", el).forEach((b) => (b.onclick = () => huomioLomake(dlg, "paiva:" + b.dataset.huom, `Oma huomio ${pvLyh(b.dataset.huom)}`, paivita)));
   $$("[data-poista-s]", el).forEach((b) => (b.onclick = async () => {
@@ -222,7 +227,7 @@ function kirjausLomake(dlg, { suunniteltu, toteuma, pvm }, paivita) {
   const huom = toteuma ? D.muistiot["treeni:" + toteuma.id]?.teksti || "" : "";
   const f = avaaDialogi(dlg, `
     <header><h2>${toteuma ? "Muokkaa treeniä" : "Kirjaa treeni"}</h2><button class="tr-sulje" data-sulje aria-label="Sulje">✕</button></header>
-    <p class="pieni">${pvLyh(pvm)}${suunniteltu ? ` · suunniteltu: ${esc(o ? lyhyt(o.nimi) : suunniteltu.otsikko)}` : ""}. Jos teit jotain muuta, vaihda treeni.</p>
+    <p class="pieni">${suunniteltu ? `Suunniteltu: ${esc(o ? lyhyt(o.nimi) : suunniteltu.otsikko || "")}. Jos teit jotain muuta, vaihda treeni.` : toteuma ? "Voit muuttaa treeniä, kestoa ja rasitusta jälkikäteen." : "Valitse tehty treeni, päivä, kesto ja rasitus."}</p>
     <label class="tk-kentta"><span>Treeni</span>${ohjelmaValinta(koodi)}</label>
     <label class="tk-kentta"><span>Päivä</span><input type="date" name="pvm" value="${pvm}" max="${tanaan()}"></label>
     <label class="tk-kentta"><span>Kesto, min</span><input type="number" name="kesto" min="5" max="600" step="5" value="${kesto}" inputmode="numeric"></label>

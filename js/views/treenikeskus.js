@@ -54,7 +54,7 @@ export async function nayta(main, id) {
 async function lataa(pid, alku = viikko, vkLoppu = lisaaPv(viikko, 6)) {
   const p = tila.pelaaja[pid];
   const msu = p.treeniprofiili === "msu";
-  const [oh, pak, ohj, tot, sai, mui, ase, tie, tap, poi, ras, lii] = await Promise.all([
+  const [oh, pak, ohj, tot, sai, mui, ase, tie, tap, poi, ras, ilm, lii] = await Promise.all([
     sb.from("treeniohjelmat").select("*").eq("aktiivinen", true).order("jarjestys"),
     sb.from("treenipaketit").select("*").eq("pelaaja_id", pid).order("alku", { ascending: false }),
     sb.from("ohjelma").select("*").gte("paiva", alku).lte("paiva", vkLoppu).eq("pelaaja_id", pid),
@@ -66,8 +66,10 @@ async function lataa(pid, alku = viikko, vkLoppu = lisaaPv(viikko, 6)) {
     // yhteinen MSU-ohjelma = miesten tapahtumat (valmennuksen viikko-ohjelma, tuotu tapahtumat-tauluun); RLS antaa haastajalle
     // myös oman B-ryhmän Nimenhuudon tapahtumat, jotka suodatetaan pois alla
     sb.from("tapahtumat").select("joukkue_id,uid,pvm,alku,otsikko,paikka,peruttu").gte("pvm", alku).lte("pvm", vkLoppu).order("alku"),
-    msu ? sb.from("poissaolot").select("uid").eq("pelaaja_id", pid) : Promise.resolve({ data: [] }),
-    msu ? sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid) : Promise.resolve({ data: [] }),
+    sb.from("poissaolot").select("uid").eq("pelaaja_id", pid),
+    sb.from("rasitusarviot").select("uid,rpe").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
+    // 26.11.2026 (Viljami Lammila, korjaamo): haastajalle oman ryhmän Nimenhuudon IN-treenit viikolle
+    msu ? Promise.resolve({ data: [] }) : sb.from("ilmoittautumiset").select("uid,tila").eq("pelaaja_id", pid).then((r) => r, () => ({ data: [] })),
     sb.from("liikkeet").select("*").eq("aktiivinen", true).or(`pelaaja_id.is.null,pelaaja_id.eq.${pid}`).order("jarjestys").order("nimi"),
   ]);
   const virhe = [oh, pak, ohj, tot, sai].find((r) => r.error);
@@ -79,7 +81,11 @@ async function lataa(pid, alku = viikko, vkLoppu = lisaaPv(viikko, 6)) {
     p, ohjelmat, valittavat, liikkeet: lii.data || [], paketit: pak.data || [],
     ohjelma: [...(ohj.data || []), ...(tap.data || [])
       .filter((e) => !e.peruttu && (msu ? e.joukkue_id === p.joukkue_id : e.joukkue_id !== p.joukkue_id && !tila.joukkueet.some((j) => j.id === e.joukkue_id && j.alue === "psu")))
-      .map((e, i) => ({ id: e.uid, tapahtuma: true, joukkue_id: e.joukkue_id, pelaaja_id: null, paiva: e.pvm, otsikko: e.otsikko, kuvaus: [e.alku?.slice(0, 5).replace(":", "."), e.paikka].filter(Boolean).join(" "), jarjestys: i }))],
+      .map((e, i) => ({ id: e.uid, tapahtuma: true, joukkue_id: e.joukkue_id, pelaaja_id: null, paiva: e.pvm, otsikko: e.otsikko, kuvaus: [e.alku?.slice(0, 5).replace(":", "."), e.paikka].filter(Boolean).join(" "), jarjestys: i })),
+      // haastaja: oman ryhmän Nimenhuuto-treenit, joihin IN (näkyvät aina, lasketaan kuormaan kuten Oma Keskuksessa)
+      ...(() => { const inn = new Set((ilm.data || []).filter((x) => x.tila === "IN").map((x) => x.uid)), nahty = new Set();
+        return (tap.data || []).filter((e) => !msu && !e.peruttu && e.joukkue_id === p.joukkue_id && inn.has(e.uid) && !nahty.has(e.uid) && nahty.add(e.uid))
+          .map((e, i) => ({ id: e.uid, tapahtuma: true, nh: true, joukkue_id: e.joukkue_id, pelaaja_id: pid, paiva: e.pvm, otsikko: e.otsikko.replace(/^KPL B:\s*/, ""), kuvaus: e.alku?.slice(0, 5).replace(":", ".") || "", jarjestys: i })); })()],
     msu, poissa: new Set((poi.data || []).map((x) => x.uid)), rasitus: new Map((ras.data || []).map((x) => [x.uid, x.rpe])),
     toteumat: tot.data || [], sairaudet: sai.data || [],
     muistiot: Object.fromEntries((mui.data || []).map((m) => [m.kohde, m])),
@@ -126,7 +132,7 @@ function viikkoVl(el, paivita, main) {
   const paivat = viikonPaivat(viikko, D);
   const t = tanaan();
   // miehillä yhteinen treeni lasketaan tehdyksi, ellei pelaaja merkitse Olin poissa (sama kuin Oma Keskuksen kuormassa)
-  const mukana = (s) => s.tapahtuma && D.msu && s.paiva <= t && !D.poissa.has(s.id);
+  const mukana = (s) => s.tapahtuma && (D.msu || s.nh) && s.paiva <= t && !D.poissa.has(s.id);
   const suunn = paivat.flatMap((d) => d.suunnitellut), tehty = suunn.filter((s) => s.toteuma || mukana(s)).length;
   const min = paivat.flatMap((d) => d.toteutuneet).reduce((s, x) => s + (x.kesto_min || 0), 0);
   const rpet = paivat.flatMap((d) => d.toteutuneet).map((x) => x.rpe).filter(Boolean);
@@ -134,7 +140,7 @@ function viikkoVl(el, paivita, main) {
   const sairaat = paivat.filter((d) => d.sairas).length;
   const kohde = (s) => D.ohjelmat[s.treeniohjelma];
   const rivi = (s, d) => {
-    if (s.tapahtuma && D.msu) return yhteinenRivi(s, d.pvm <= t);
+    if (s.tapahtuma && (D.msu || s.nh)) return yhteinenRivi(s, d.pvm <= t);
     const o = kohde(s), tot = s.toteuma, menn = d.pvm <= t;
     const nimiT = o ? lyhyt(o.nimi) : s.otsikko;
     const lahde = !s.pelaaja_id ? `<span class="tk-tagi yhteinen">yhteinen</span>` : s.luoja && s.luoja !== omaEmail() && D.oma ? `<span class="tk-tagi">valmennus</span>` : "";
@@ -147,7 +153,7 @@ function viikkoVl(el, paivita, main) {
   const yhteinenRivi = (s, menn) => {
     const poissa = D.poissa.has(s.id), rpe = D.rasitus.get(s.id);
     return `<li class="tk-s${menn ? (poissa ? " poissa" : " tehty") : ""}" style="--v:var(--cyan)">
-      <span class="tk-s-nimi">${esc(s.otsikko)} <span class="tk-tagi yhteinen">yhteinen</span><small>${esc(s.kuvaus || "")}</small></span>
+      <span class="tk-s-nimi">${esc(s.otsikko)} <span class="tk-tagi yhteinen">${s.nh ? "Nimenhuuto" : "yhteinen"}</span><small>${esc(s.kuvaus || "")}</small></span>
       ${menn ? `<span class="tk-s-tila">${poissa ? `<span class="tk-poissa">poissa</span>` : `✓ ${rpePallo(rpe)}`}</span>` : ""}
       ${D.oma && menn ? `<span class="tk-s-napit"><button class="linkkinappi" data-poissa="${esc(s.id)}" data-j="${s.joukkue_id}">${poissa ? "Olin mukana" : "Olin poissa"}</button>${poissa ? "" : `<button class="linkkinappi" data-ras="${esc(s.id)}">Rasitus</button>`}</span>` : ""}</li>`;
   };
@@ -648,7 +654,7 @@ export async function piirraViikkokortti(el, pid) {
   try { d = await lataa(pid, ma, lisaaPv(ma, 13)); } catch (e) { el.innerHTML = `<p class="pieni">Treenikeskusta ei saatu ladattua: ${esc(e.message)}</p>`; return; }
   const vanha = D; D = { ...d, pid, oma: pid === tila.omaPelaaja };
   const vkt = [ma, lisaaPv(ma, 7)].map((m) => viikonPaivat(m, D));
-  const merkki = (s, menn) => (s.toteuma || (s.tapahtuma && D.msu && menn && !D.poissa.has(s.id)) ? "✓" : "");
+  const merkki = (s, menn) => (s.toteuma || (s.tapahtuma && (D.msu || s.nh) && menn && !D.poissa.has(s.id)) ? "✓" : "");
   const paiva = (x, i) => {
     const menn = x.pvm <= t, rivit = [...x.suunnitellut.map((s) => ({ nimi: s.treeniohjelma ? lyhyt(D.ohjelmat[s.treeniohjelma]?.nimi || s.otsikko) : s.otsikko, vari: s.tapahtuma ? "var(--cyan)" : tyyppiVari(s.treeniohjelma), ok: merkki(s, menn), poissa: s.tapahtuma && D.poissa.has(s.id) })),
       ...x.ylimaaraiset.map((y) => ({ nimi: lyhyt(D.ohjelmat[y.ohjelma]?.nimi || T[y.tyyppi]?.nimi || "Treeni"), vari: tyyppiVari(y.ohjelma), ok: "✓" }))];

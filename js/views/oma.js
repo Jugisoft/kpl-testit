@@ -229,7 +229,7 @@ async function piirra(main) {
     const { n, tehty, seur } = y;
     el.outerHTML = kortti_({ id: "ti-tk", kohde: "tk-kortti", otsikko: "Treenikeskus · tämä viikko",
       rengasHtml: rengas(n ? [{ ...pros1((100 * tehty) / n), vari: tehty === n ? "var(--green)" : "var(--cyan)", hehku: true }] : [], n ? `${tehty}/${n}` : "–", n ? "tehty" : ""),
-      ala: n ? `${tehty === n ? "Kaikki tehty 👏" : `${n - tehty} treeniä jäljellä`}${seur ? `<br><small>Seuraavaksi ${esc(seur.paiva)}: <b class="ti-seur">${esc(seur.nimi)}</b></small>` : ""}` : "Ei suunnitelmaa tälle viikolle" });
+      ala: n ? `${tehty === n ? "Kaikki tehty 👏" : `${tehty} tehty · ${n - tehty} jäljellä`}${seur ? `<br><small>Seuraavaksi ${esc(seur.paiva)}: <b class="ti-seur">${esc(seur.nimi)}</b></small>` : ""}` : "Ei suunnitelmaa tälle viikolle" });
   });
   piirraKuorma($("#viikkoni", main), p, { viikko, nh: nhKaikki, testipaivat: [...new Set(omat.map((x) => x.pvm))], oma, hm: HM, paivita: () => piirra(main) })
     .then((r) => { const el = $("#ti-treeni", main); if (el && r?.a) el.outerHTML = treeniKortti(r.a, viikko === maanantai(tanaan())); });

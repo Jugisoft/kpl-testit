@@ -674,7 +674,9 @@ export async function piirraViikkokortti(el, pid) {
   const tama = vkt[0].flatMap((x, i) => x.suunnitellut.map((s) => ({ s, x, i })));
   const nimiS = (s) => (s.treeniohjelma ? lyhyt(D.ohjelmat[s.treeniohjelma]?.nimi || s.otsikko) : s.otsikko);
   const seurR = tama.find(({ s, x }) => x.pvm > t || (x.pvm === t && !merkki(s, true)));
-  const yht = { n: tama.length, tehty: tama.filter(({ s, x }) => merkki(s, x.pvm <= t)).length,
+  // tehty = suunnitellut tehdyt + suunnitelman ulkopuolella kirjatut; n = tehty + suunnitellut tekemättömät
+  const tehtySuunn = tama.filter(({ s, x }) => merkki(s, x.pvm <= t)).length, lisatyt = vkt[0].reduce((a, x) => a + x.ylimaaraiset.length, 0);
+  const yht = { n: tama.length + lisatyt, tehty: tehtySuunn + lisatyt,
     seur: seurR ? { paiva: seurR.x.pvm === t ? "tänään" : seurR.x.pvm === lisaaPv(t, 1) ? "huomenna" : VKP_NIMI[seurR.i], nimi: nimiS(seurR.s) } : null };
   D = vanha;
   return yht;

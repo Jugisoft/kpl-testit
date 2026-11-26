@@ -87,8 +87,14 @@ function missioKortti(m, s, muokattava) {
   return `<article class="ly-missio paneeli">
     <div class="ly-m-paa">
       <div><h3>${esc(m.nimi || `${luku(m.tavoite)} × ${m.laji}`)}</h3><p class="pieni">${esc(m.laji)} · ${pvm(m.alku)}–${pvm(m.loppu)}</p></div>
-      ${muokattava ? `<button class="btn ly-pieni" data-arkistoi="${m.id}" title="Siirrä päättyneisiin">Arkistoi</button>` : ""}
+      ${muokattava ? `<div class="rivi"><button class="btn ly-pieni" data-muokkaa-m="${m.id}" aria-expanded="false" title="Muuta aikaväliä tai tavoitetta">Muokkaa</button><button class="btn ly-pieni" data-arkistoi="${m.id}" title="Siirrä päättyneisiin">Arkistoi</button></div>` : ""}
     </div>
+    ${muokattava ? `<form class="ly-m-muokkaa" data-mm="${m.id}" hidden>
+      <label class="ly-kentta">Alkaa <input type="date" name="alku" value="${m.alku}" required></label>
+      <label class="ly-kentta">Päättyy <input type="date" name="loppu" value="${m.loppu}" required></label>
+      <label class="ly-kentta">Tavoite <input type="number" name="tavoite" min="1" value="${m.tavoite}" required inputmode="numeric"></label>
+      <button class="btn ensisij ly-pieni">Tallenna</button>
+      <p class="pieni">Aikaisempi alkupäivä ottaa mukaan jo kirjatut lyönnit siitä päivästä alkaen.</p></form>` : ""}
     <div class="ly-m-luvut">
       <div><span class="ly-iso num">${luku(s.tehty)}</span><span class="ly-yks">/ ${luku(m.tavoite)}</span></div>
       <div class="ly-pct num">${Math.floor(s.pct)} %</div>
@@ -302,6 +308,19 @@ async function paivakirja(main, email, muokattava) {
     ilmoita("Missio luotu"); valittuLaji = x.laji.value.trim();
     paivakirja(main, email, true);
   };
+  // 26.11.2026 (Jugi): mission aikavälin ja tavoitteen muokkaus (esim. aiemmin kirjatut lyönnit mukaan)
+  $$("[data-muokkaa-m]").forEach((b) => (b.onclick = () => {
+    const f = $(`[data-mm="${b.dataset.muokkaaM}"]`); f.hidden = !f.hidden; b.setAttribute("aria-expanded", !f.hidden);
+  }));
+  $$("[data-mm]").forEach((f) => (f.onsubmit = async (e) => {
+    e.preventDefault();
+    const x = f.elements;
+    if (x.loppu.value < x.alku.value) return ilmoita("Päättymispäivä on ennen alkua.", true);
+    const { error } = await sb.from("lyonti_missiot").update({ alku: x.alku.value, loppu: x.loppu.value, tavoite: +x.tavoite.value }).eq("id", f.dataset.mm);
+    if (error) return ilmoita("Tallennus epäonnistui: " + error.message, true);
+    ilmoita("Missio päivitetty");
+    paivakirja(main, email, true);
+  }));
   $$("[data-arkistoi]").forEach((b) => (b.onclick = async () => {
     if (b.dataset.vahvista !== "1") { b.dataset.vahvista = "1"; b.textContent = "Arkistoidaanko?"; b.classList.add("vaara"); return; }
     const { error } = await sb.from("lyonti_missiot").update({ arkistoitu: true }).eq("id", b.dataset.arkistoi);

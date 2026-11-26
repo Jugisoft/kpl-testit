@@ -3054,3 +3054,6 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .tk-liike b { font-weight: 600; }
 .tk-kirjaa-iso { float: right; font-size: 16px; padding: 10px 18px; }
 @media (max-width: 860px) { .tk-kirjaa-iso { float: none; width: 100%; justify-content: center; margin-bottom: 12px; } }
+.ly-m-muokkaa { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; margin: 6px 0 10px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.ly-m-muokkaa .pieni { flex-basis: 100%; margin: 0; }
+.ly-m-muokkaa input { max-width: 160px; }

@@ -3069,3 +3069,4 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .oma-sop:empty { display: none; }
 .pp-sopimus { margin: 2px 0 6px; color: var(--cyan); font-weight: 600; }
 .pp-sopimus:empty { display: none; }
+.yk-sop { color: var(--cyan); }

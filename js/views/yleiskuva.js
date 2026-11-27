@@ -2,7 +2,7 @@
 // Oma pelissä (KPL) ja jokaisella vastustajalla. Tilastodata YDINin julkisesta reposta (joukkueet_keskus.json,
 // päivittyy iltaajossa), kokoonpano, pelinjohto ja siirrot Jarvisin siirtomarkkinoista.
 import { esc } from "../util.js";
-import { haeSiirtomarkkinat } from "../keskus.js";
+import { haeSiirtomarkkinat, sopimusHakemisto } from "../keskus.js";
 
 const LAHDE = "https://raw.githubusercontent.com/Jugisoft/ydin-2027/main/data/out/joukkueet_keskus.json";
 const MITALI = { Mestari: "🥇", Hopea: "🥈", Pronssi: "🥉" };
@@ -48,7 +48,7 @@ export async function piirraYleiskuva(el, T, pelaajat) {
     <div class="yk-sarakkeet">
       <div class="yk-sarake">
         <section class="yk-kortti"><div class="yk-otsa"><h3>Kehitys</h3><span class="pieni">Palkki = runkosarjan pisteet, viiva = sijoitus</span></div>${kehitys(hist.filter((r) => r.sija != null), D.kausi)}</section>
-        <section class="yk-kortti"><div class="yk-otsa"><h3>Pelaajat 2026</h3><span class="pieni">Runkosarja, YHT-järjestys</span></div>${pelaajalista(D, T, pelaajat)}</section>
+        <section class="yk-kortti"><div class="yk-otsa"><h3>Pelaajat 2026</h3><span class="pieni">Runkosarja, YHT-järjestys</span></div>${pelaajalista(D, T, pelaajat, sm)}</section>
       </div>
       <div class="yk-sarake">
         <section class="yk-kortti"><div class="yk-otsa"><h3>Pesäväleittäin 2026</h3><span class="chipit pieni-chipit" role="group" aria-label="Sisä- vai ulkopeli"><button type="button" class="chip" data-yk="sisa" aria-pressed="${tila === "sisa"}">Sisäpeli</button><button type="button" class="chip" data-yk="ulko" aria-pressed="${tila === "ulko"}">Ulkopeli</button></span></div><div id="yk-kentta"></div></section>
@@ -132,7 +132,8 @@ function kehitys(h, kausi) {
     <tbody>${[...h].reverse().map((r) => `<tr${r.kausi === kausi ? ' class="nyt"' : ""}><td class="l">${r.kausi}</td><td>${r.sija}.</td><td>${r.P}</td><td>${r.V}–${r.H}</td><td>${r.juoksut}–${r.paastetyt}</td><td>${fi(r.kotiutus)}</td><td>${fi(r.torjunta)}</td><td class="l"><span class="yk-pp${MITALI[r.pudotus] ? " kulta" : ""}">${esc(r.pudotus || "–")}</span></td></tr>`).join("")}</tbody></table></div>`;
 }
 
-function pelaajalista(D, T, pelaajat) {
+function pelaajalista(D, T, pelaajat, sm) {
+  const sop = sopimusHakemisto(sm);   // 27.11.2026: sopimustieto listaan
   const P = D.pelaajat.filter((p) => p.jk === T).sort((a, b) => b.YHT - a.YHT);
   if (!P.length) return `<p class="tyhja">Ei Superpesis-pelaajia 2026: joukkue pelasi kauden Ykköspesiksessä.</p>`;
   const keskus = new Map([...(pelaajat?.values() || [])].map((p) => [norm(p.nimi), p]));
@@ -140,9 +141,17 @@ function pelaajalista(D, T, pelaajat) {
     const k = D.kuvat?.[String(p.id)], ini = esc(p.nimi.split(" ").map((x) => x[0]).slice(0, 2).join(""));
     const kp = keskus.get(norm(p.nimi)), tag = kp ? "a" : "div";
     return `<${tag} class="yk-p"${kp ? ` href="#/vp/${kp.id}" title="Avaa pelaajasivu (${esc(kp.joukkue)} 2027)"` : ""}>${k ? `<img src="${esc(k)}" alt="" loading="lazy">` : `<span class="av">${ini}</span>`}
-      <span class="n">${esc(p.nimi)}<small>${p.O} ottelua${kp && kp.joukkue !== T ? ` · nyt ${esc(kp.joukkue)}` : ""}</small></span>
+      <span class="n">${esc(p.nimi)}<small>${p.O} ottelua${kp && kp.joukkue !== T ? ` · nyt ${esc(kp.joukkue)}` : ""}${sopLyhyt(sop.get(p.nimi.toLowerCase().replace(/\s+/g, " ").trim()), T)}</small></span>
       <span class="c hs"><small>K+L</small>${p.K}+${p.L}</span><span class="c hs"><small>T</small>${p.T}</span><span class="c"><small>YHT</small>${p.YHT}</span><span class="c"><small>KL%</small>${fi(p["KL%"])}</span></${tag}>`;
   }).join("")}</div>`;
+}
+
+// "· sopimus 2028" / "· sopimus 2027 + optio" / "· optio" / "· ei sopimusta 2027"; toisen joukkueen sopimus näkyy jo "nyt X" -merkinnässä
+function sopLyhyt(so, T) {
+  if (!so) return "";
+  if (so.ilman) return so.joukkue === T ? " · ei sopimusta 2027" : "";
+  const t = so.optio ? "optio" : `sopimus ${so.asti}${/optio/.test(so.lisa) ? " + optio" : ""}`;
+  return ` · <span class="yk-sop">${t}${so.joukkue !== T ? ` (${esc(so.joukkue)})` : ""}</span>`;
 }
 
 function sijoitukset(A, t) {

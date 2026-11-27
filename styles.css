@@ -3070,3 +3070,4 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .pp-sopimus { margin: 2px 0 6px; color: var(--cyan); font-weight: 600; }
 .pp-sopimus:empty { display: none; }
 .yk-sop { color: var(--cyan); }
+.tk-muokkaustila { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: rgba(245,168,0,.14); border: 1px solid rgba(245,168,0,.5); font-size: 13px; line-height: 1.4; }

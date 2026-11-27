@@ -385,6 +385,7 @@ function rakenna(el, paivita) {
         <p><button class="btn" data-uusi-liike>+ Luo oma liike</button></p>
       </div>
       <aside class="tk-kori" aria-label="Ohjelma rakenteilla">
+        ${muokattava ? `<p class="tk-muokkaustila" role="status">✎ Muokkaat ohjelmaa <b>${esc(lyhyt(muokattava.nimi))}</b>. Tallenna muutokset korvaa sen. Jos teet uutta ohjelmaa, valitse Tallenna uutena tai Peru muokkaus.</p>` : ""}
         <h2>${muokattava ? `Muokkaa: ${esc(lyhyt(muokattava.nimi))}` : "Uusi ohjelma"} <span class="num">(${kori.rivit.length})</span></h2>
         ${kori.rivit.length ? `<ol class="tk-kori-liikkeet">${kori.rivit.map((r, i) => `<li><b>${esc(r.nimi)}</b>
             <div class="tk-kori-rivi"><input data-i="${i}" data-k="maara" value="${esc(r.maara || "")}" placeholder="esim. 3 × 8" aria-label="Sarjat ja toistot: ${esc(r.nimi)}">
@@ -395,7 +396,8 @@ function rakenna(el, paivita) {
           <div class="tk-kentta-rivi"><label class="tk-kentta"><span>Tyyppi <small>(kuormaan)</small></span><select name="tyyppi">${TYYPIT.filter((t) => t.k !== "testi").map((t) => `<option value="${t.k}"${t.k === (kori.tyyppi || "fysiikka") ? " selected" : ""}>${t.nimi}</option>`).join("")}</select></label>
           <label class="tk-kentta"><span>Kesto, min</span><input type="number" name="kesto" min="5" max="600" step="5" value="${kori.kesto || 60}"></label></div>
           <div class="tk-kentta"><span>Rasitus</span>${rpeValinta(kori.rpe || 6)}</div>
-          <button class="btn ensisij"${kori.rivit.length ? "" : " disabled"}>${muokattava ? "Tallenna muutokset" : `Tallenna ohjelma${D.oma ? "" : " pelaajalle"}`}</button>
+          <button class="btn ensisij" value="tallenna"${kori.rivit.length ? "" : " disabled"}>${muokattava ? "Tallenna muutokset" : `Tallenna ohjelma${D.oma ? "" : " pelaajalle"}`}</button>
+          ${muokattava ? `<button class="btn" value="uutena"${kori.rivit.length ? "" : " disabled"}>Tallenna uutena ohjelmana</button>` : ""}
           ${muokattava ? `<button type="button" class="linkkinappi" data-peru>Peru muokkaus</button><button type="button" class="linkkinappi vaara" data-poista-o>Poista ohjelma</button>` : kori.rivit.length ? `<button type="button" class="linkkinappi" data-tyhjenna>Aloita alusta</button>` : ""}
         </form>
       </aside>
@@ -414,7 +416,8 @@ function rakenna(el, paivita) {
     o.kuvaus.split("\n").map((r) => r.trim()).filter(Boolean).forEach((r) => kori.rivit.push({ liike_id: null, nimi: r, maara: "" }));
     Object.assign(kori, { nimi: kori.nimi || `Oma ${lyhyt(o.nimi)}`, tyyppi: o.tyyppi, kesto: o.kesto_min, rpe: o.rpe }); tallennaKori(kori); uudelleen(); }));
   $$("[data-i]", el).forEach((i) => (i.onchange = () => { kori.rivit[+i.dataset.i][i.dataset.k] = i.value.trim(); tallennaKori(kori); }));
-  $$("[data-pois]", el).forEach((b) => (b.onclick = () => { muistaLomake(); kori.rivit.splice(+b.dataset.pois, 1); tallennaKori(kori); uudelleen(); }));
+  // kun muokattavasta poistetaan kaikki liikkeet, jatketaan uutena ohjelmana (ei korvata vahingossa)
+  $$("[data-pois]", el).forEach((b) => (b.onclick = () => { muistaLomake(); kori.rivit.splice(+b.dataset.pois, 1); if (!kori.rivit.length) delete kori.koodi; tallennaKori(kori); uudelleen(); }));
   $$("[data-ylos]", el).forEach((b) => (b.onclick = () => { const i = +b.dataset.ylos; if (!i) return; muistaLomake(); [kori.rivit[i - 1], kori.rivit[i]] = [kori.rivit[i], kori.rivit[i - 1]]; tallennaKori(kori); uudelleen(); }));
   $$("[data-muokkaa-o]", el).forEach((b) => (b.onclick = () => { const o = D.ohjelmat[b.dataset.muokkaaO];
     tallennaKori({ koodi: o.koodi, nimi: lyhyt(o.nimi), tyyppi: o.tyyppi, kesto: o.kesto_min, rpe: o.rpe,
@@ -436,7 +439,11 @@ function rakenna(el, paivita) {
     const liikkeet = kori.rivit.map((r) => ({ liike_id: r.liike_id || null, nimi: r.nimi, maara: r.maara || "", huomio: r.huomio || "" }));
     const rivi = { nimi: kori.nimi.trim(), tyyppi: kori.tyyppi, kesto_min: kori.kesto || 60, rpe: kori.rpe, liikkeet, paivitetty: new Date().toISOString(),
       kuvaus: liikkeet.map((l) => [l.nimi, l.maara, l.huomio && `(${l.huomio})`].filter(Boolean).join(" ")).join("\n") };
-    const r = muokattava ? await sb.from("treeniohjelmat").update(rivi).eq("koodi", muokattava.koodi)
+    // 27.11.2026: vahinkokorvauksen esto – uutena tallennus, ja nimen vaihtuessa varmistus ennen korvaamista
+    const uutena = e.submitter?.value === "uutena";
+    if (muokattava && !uutena && rivi.nimi !== lyhyt(muokattava.nimi)
+      && !confirm(`Korvataanko ohjelma "${lyhyt(muokattava.nimi)}" ohjelmalla "${rivi.nimi}"?\n\nJos teet uutta ohjelmaa, valitse Peruuta ja paina Tallenna uutena ohjelmana.`)) return;
+    const r = muokattava && !uutena ? await sb.from("treeniohjelmat").update(rivi).eq("koodi", muokattava.koodi)
       : await sb.from("treeniohjelmat").insert({ ...rivi, koodi: `oma_${crypto.randomUUID().slice(0, 8)}`, ryhma: D.oma ? "Omat ohjelmat" : `Henkilökohtainen: ${nimi(D.p)}`, pelaaja_id: D.pid, oma: D.oma, aktiivinen: true, jarjestys: 900 });
     if (r.error) return ilmoita("Tallennus ei onnistunut: " + r.error.message, true);
     tallennaKori({ rivit: [] }); ilmoita(`Ohjelma tallennettu: ${rivi.nimi}. Lisää se viikolle Suunnittele viikot -välilehdellä tai päivän + Treeni -napilla.`); paivita();

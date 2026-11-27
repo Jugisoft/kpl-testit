@@ -77,6 +77,35 @@ export async function haeKoosteet() {
 }
 
 let smValimuisti = null;
+// 27.11.2026 (Jugi): pelaajien sopimustieto (kaikki Superpesis-joukkueet) siirtomarkkinoiden kokoonpanoista
+const normNimi = (n) => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
+// Muodot: "Nimi 2028", "Nimi 2028 (optio 2030)", "Nimi 2027+2028" (kaksi kautta → 2028), "Nimi 2027+1" (+1 optiovuosi)
+export function sopimusHakemisto(sm) {
+  const h = new Map();
+  for (const [joukkue, k] of Object.entries(sm?.kokoonpanot || {})) {
+    const osat = (t) => (t || "").split(";").map((x) => x.trim().replace(/^\*/, "")).filter(Boolean);
+    for (const r of osat(k.sopimus)) {
+      const m = r.match(/^(.*?)\s+((?:19|20)\d\d)(?:\+((?:19|20)\d\d|\d))?(?:\s*\((.*)\))?\s*$/);
+      if (!m) continue;
+      const pitka = m[3] && m[3].length === 4, plus = m[3] && !pitka ? `+${m[3]} v optio` : "";
+      h.set(normNimi(m[1]), { joukkue, asti: pitka ? m[3] : m[2], lisa: [plus, m[4]].filter(Boolean).join(", ") });
+    }
+    for (const r of osat(k.optio)) { const n = r.replace(/\s*\(.*\)\s*$/, ""); if (!h.has(normNimi(n))) h.set(normNimi(n), { joukkue, optio: true, lisa: (r.match(/\((.*)\)/) || [])[1] || "" }); }
+    for (const r of osat(k.ilman)) { const n = r.replace(/\s*\(.*\)\s*$/, ""); if (!h.has(normNimi(n))) h.set(normNimi(n), { joukkue, ilman: true, lisa: (r.match(/\((.*)\)/) || [])[1] || "" }); }
+  }
+  return h;
+}
+export async function haeSopimus(nimi) {
+  const sm = await haeSiirtomarkkinat().catch(() => null);
+  return sm ? sopimusHakemisto(sm).get(normNimi(nimi)) || null : null;
+}
+export function sopimusTeksti(s) {
+  if (!s) return "";
+  if (s.ilman) return `Ei sopimusta kaudelle 2027${s.lisa ? ` · ${s.lisa}` : ""}`;
+  if (s.optio) return `Optiosopimus${s.lisa ? ` · ${s.lisa}` : ""}`;
+  return `Sopimus ${s.asti} asti${s.lisa ? ` · ${s.lisa}` : ""}`;
+}
+
 export async function haeSiirtomarkkinat(pakota = false) {
   if (smValimuisti && !pakota) return smValimuisti;
   const { data, error } = await sb.from("siirtomarkkinat").select("data,paivitetty").eq("id", "nykyinen").maybeSingle();

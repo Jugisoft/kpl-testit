@@ -1,7 +1,7 @@
 // Pelaajasivu: lyönnit tilanteittain kentälle, ulkopelin liikkeet ja muistiinpanot.
 import { sb, tila } from "../db.js";
 import { $, $$, esc, ilmoita } from "../util.js";
-import { haePelaajat, lataaNimet, kommenttimaarat, kirjoittajanNimi, aikaSitten, omaEmail, tallennaMuistiinpano, osioNimi } from "../keskus.js";
+import { haePelaajat, lataaNimet, kommenttimaarat, kirjoittajanNimi, aikaSitten, omaEmail, tallennaMuistiinpano, osioNimi, haeSopimus, sopimusTeksti } from "../keskus.js";
 import { kenttaSvg, kenttaPiste, TILANTEET, LYONTITYYPIT, TULOKSET, ROOLIT, PAINOT, tyyppiTieto } from "../kentta.js";
 import { kortti, kytkeKortit, asetaKonteksti, kontekstinHuomiot } from "./muistio.js";
 import { haeLiitteet, lataaTiedostot, tiedostoValitsin } from "../liitteet.js";
@@ -47,7 +47,7 @@ export async function nayta(main, id, valilehti) {
     <p class="murupolku"><a href="#/muistio/${esc(p.joukkue)}/${p.joukkue === "KPL" ? "pelaajat" : "sisapeli"}">${esc(osioNimi(p.joukkue))}: ${p.joukkue === "KPL" ? "pelaajat" : "sisäpeli"}</a></p>
     <div class="pelaaja-paa">
       <div class="pp-kuva">${kuvaKehys(p, { iso: false })}</div>
-      <div class="pp-tekstit"><h1>${esc(p.nimi)}</h1>
+      <div class="pp-tekstit"><h1>${esc(p.nimi)}</h1><p class="pieni pp-sopimus" id="pp-sopimus"></p>
       <div class="pelaaja-tiedot">
         <label class="pieni">Numero <input type="number" id="numero" min="0" max="99" value="${p.numero ?? ""}" style="width:72px"></label>
         <label class="pieni laaja">Kuvaus <input type="text" id="kuvaus" maxlength="300" placeholder="Esim. vasenkätinen kärkilyöjä, nopea etenijä, ulkona 3-koppari" value="${esc(p.kuvaus || "")}"></label>
@@ -59,6 +59,8 @@ export async function nayta(main, id, valilehti) {
         .map(([k, n, l]) => `<a role="tab" class="valilehti" href="#/vp/${id}/${k}" aria-selected="${valilehti === k}">${n}${l ? ` <span class="lkm">${l}</span>` : ""}</a>`).join("")}
     </div>
     <div id="vp-sisalto"></div>`;
+  // 27.11.2026: sopimustieto siirtomarkkinoiden kokoonpanoista
+  haeSopimus(p.nimi).then((so) => { const el = $("#pp-sopimus", main); if (el && so) el.textContent = sopimusTeksti(so) + (so.joukkue && so.joukkue !== p.joukkue ? ` (${so.joukkue})` : ""); });
 
   const tallennaPelaaja = async (muutos) => {
     const { error } = await sb.from("vastustajapelaajat").update(muutos).eq("id", id);

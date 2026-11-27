@@ -9,6 +9,7 @@ import { piirraMinunPeliTilastot } from "../minunpeli_tilastot.js";
 import { piirraLyontianalyysi } from "../lyontianalyysi.js";
 import { piirraTalvisuper } from "../talvisuper.js";
 import { kayttaaTreenikeskusta, piirraViikkokortti } from "./treenikeskus.js";
+import { haeSopimus, sopimusTeksti, haeSiirtomarkkinat, sopimusHakemisto } from "../keskus.js";
 import { piirraKuorma, luokitteluTagi, kytkeLuokittelu, poissaNappi, kytkePoissaolot, rasitusValinta, kytkeRasitus, haeOhjelmat } from "../kuorma.js";
 import { osat as tapOsat, lyhytOtsikko, oletusRpe } from "../kuormaydin.js";
 import { hae as haeHm, lataaNimet, lohko as hmLohko, kytke as hmKytke, valmentajaltaKortti, merkitseNahdyiksi } from "../huomiointi.js";
@@ -44,7 +45,10 @@ function valitsePelaaja(main) {
   const ryhmat = tila.joukkueet.map((j) => [j, tila.pelaajat.filter((p) => p.joukkue_id === j.id && p.aktiivinen)]).filter(([, ps]) => ps.length);
   main.innerHTML = `<h1>Pelaajien oma Keskus</h1>
     <p class="ingressi">Valitse pelaaja, niin näet hänen sivunsa: viikon ohjelman, tavoitteet ja testit. Voit antaa ohjelmaa ja asettaa tavoitteita.</p>
-    ${ryhmat.map(([j, ps]) => `<h2>${esc(j.nimi)}</h2><div class="oma-pelaajat">${ps.map((p) => `<a class="oma-pelaajalinkki" href="#/oma/${p.id}">${kuva(p)}<span>${esc(nimi(p))}</span></a>`).join("")}</div>`).join("")}`;
+    ${ryhmat.map(([j, ps]) => `<h2>${esc(j.nimi)}</h2><div class="oma-pelaajat">${ps.map((p) => `<a class="oma-pelaajalinkki" href="#/oma/${p.id}">${kuva(p)}<span>${esc(nimi(p))}<small class="oma-sop" data-sop="${esc(nimi(p))}"></small></span></a>`).join("")}</div>`).join("")}`;
+  // 27.11.2026: sopimusvuosi pelaajan nimen alle (siirtomarkkinoiden kokoonpanot)
+  haeSiirtomarkkinat().then((sm) => { const h = sopimusHakemisto(sm);
+    $$("[data-sop]", main).forEach((el) => { const so = h.get(el.dataset.sop.toLowerCase().replace(/\s+/g, " ").trim()); if (so) el.textContent = so.ilman ? "ei sopimusta 2027" : so.optio ? "optio" : `sopimus ${so.asti}${/optio/.test(so.lisa) ? " + optio" : ""}`; }); }).catch(() => {});
 }
 
 async function piirra(main) {
@@ -126,7 +130,7 @@ async function piirra(main) {
       <div style="flex:1;min-width:0">
         <p class="oma-yla">${oma ? "Oma Keskus" : "Pelaajan oma Keskus"}</p>
         <h1>${otsikko}</h1>
-        <p class="pieni oma-ala">${joukkue ? `${esc(joukkue.nimi)} · ` : ""}viikko ${viikkoNro(viikko)}${viikko === maanantai(tanaan()) ? "" : ` (${pvmLyhyt(viikko)}–${pvmLyhyt(vkLoppu)})`}</p>
+        <p class="pieni oma-ala">${joukkue ? `${esc(joukkue.nimi)} · ` : ""}<span id="oma-sopimus"></span>viikko ${viikkoNro(viikko)}${viikko === maanantai(tanaan()) ? "" : ` (${pvmLyhyt(viikko)}–${pvmLyhyt(vkLoppu)})`}</p>
       </div>
       <div class="oma-linkit">
         ${!oma && tila.ohjaaja ? `<a class="btn" href="#/oma">Vaihda pelaajaa</a>` : ""}
@@ -223,6 +227,8 @@ async function piirra(main) {
     `;
 
   if (peliEnsin) { piirraMinunPeli($("#minun-peli", main), p); piirraLyontianalyysi($("#lyontianalyysi", main), p); piirraTalvisuper($("#talvisuper", main)); }
+  // 27.11.2026: sopimustieto (siirtomarkkinoiden kokoonpanot)
+  haeSopimus(nimi(p)).then((so) => { const el = $("#oma-sopimus", main); if (el && so && !so.ilman) el.textContent = `${sopimusTeksti(so).split(" · ")[0].replace(/^S/, "s").replace(/^O/, "o")} · `; });
   if (kayttaaTreenikeskusta(p)) piirraViikkokortti($("#tk-kortti", main), pid).then((y) => {   // 26.11.2026: Treenikeskuksen tämä ja ensi viikko
     const el = $("#ti-tk", main);
     if (!el || !y) return;

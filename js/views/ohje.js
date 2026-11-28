@@ -130,7 +130,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261128-6",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261128-7",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],
@@ -204,6 +204,7 @@ const SIVUT = [
       ["Tehtävät", "Välilehdellä Minun, Kaikki avoimet ja Tehdyt (luku kertoo määrän). Rasti merkitsee tehdyksi – kuka tahansa alueen valmentaja voi kuitata; poistamalla rastin tehtävä palaa avoimeksi. Tehtävän voi lisätä myös ilman palaveria (teksti, vastuu, määräpäivä, alue). Vastuuhenkilöksi tarjotaan vain valmentajia, jotka näkevät alueen. Avoimet tehtäväsi näkyvät myös Keskuksen etusivulla."],
       ["Haku ja kommentit", "Muistiinpanot- ja Palaverit-välilehtien haku etsii otsikosta, tekstistä, agendasta, päätöksistä, tunnisteista ja pelaajien nimistä. Muistion alle voi kirjoittaa kommentteja muille valmentajille; oman kommentin voi poistaa."],
       ["Katso käyttäjänä", "Ylläpitäjä voi tarkistaa, miltä huone näyttää valitulle valmentajalle: näkyvät vain hänen alueidensa muistiot eikä mitään voi tallentaa."],
+      ["Kokonaisvertailu", "Analyysi-välilehdellä. Pelaajan kaikki testit T-pisteinä: valitun vertailuryhmän keskiarvo on 50 ja 10 pistettä yksi keskihajonta (60 = selvästi ryhmää parempi, 40 = selvästi heikompi; juoksuissa nopeampi aika = isompi T). Vertailuryhmä: oma joukkue, MSU, juniorit, Vanhat, PSU, oma ikäluokka, oma treeniryhmä tai kaikki. Lisäksi verkkoon voi ottaa toisen pelaajan, ryhmän parhaan (kärkikolmikon keskiarvo) tai pelaajan oman aiemman kauden. Tulos: viimeisin tai paras. Hämähäkkiverkossa ominaisuudet (testien keskiarvo), kokonaisindeksi = ominaisuuksien keskiarvo, jotta monta lyöntitestiä ei ratkaise yksin. Testiprofiilissa jokainen testi palkkina keskiviivasta. Mukana tulokset 24 kk ajalta; yli 12 kk vanha tulos himmeänä, ≈ = vertailuryhmässä alle 8 tulosta, alle 3 tulosta = ei vertailukelpoinen. Vain ryhmän yhteiset testit vertautuvat (esim. junioria MSU:hun)."],
       ["Tulossa", "Analyysi-välilehti: vaihe 2 Pelaaja-analyysi – \"Kuka tarvitsee huomiota\" -yleiskuva (läsnäolo, kuorma, kirjausten aktiivisuus, tavoitteiden ja lyöntimissioiden aikataulu, testikehitys liikennevaloina) ja pelaajan syväsukellus kehityskäyrineen ja vertailuineen. Vaihe 3 Pelillinen analyysi yhteen paikkaan. Siihen asti välilehdellä on linkit nykyisiin sivuihin."],
     ] },
   { id: "treenikeskus", nimi: "Treenikeskus", linkki: "#/treenikeskus",

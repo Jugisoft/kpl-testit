@@ -3143,7 +3143,7 @@ button.linkki:hover { color: var(--red); }
 .kv-runko { display: grid; grid-template-columns: minmax(320px, 5fr) minmax(360px, 6fr); gap: 16px; align-items: start; }
 @media (max-width: 980px) { .kv-runko { grid-template-columns: 1fr; } }
 .kv-indeksi { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
-.kv-luku { font: 700 56px/1 var(--display, inherit); color: var(--kpl); text-shadow: 0 0 18px rgba(245,168,0,.35); }
+.kv-luku { font-size: 60px; font-weight: 700; line-height: 1; font-family: "Barlow Condensed", system-ui, sans-serif; color: var(--kpl); text-shadow: 0 0 18px rgba(245,168,0,.35); }
 .kv-luku.kv-lisa { font-size: 36px; color: #7DD3FC; text-shadow: none; margin-left: 12px; }
 .kv-sel { font-size: 14px; color: var(--ink-2); line-height: 1.25; }
 .kv-sel small { color: var(--ink-3); }

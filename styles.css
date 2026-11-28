@@ -3135,3 +3135,38 @@ button.linkki:hover { color: var(--red); }
 .vh-mini li { padding-left: 10px; border-left: 3px solid var(--line); }
 .vh-mini li.vh-t-myohassa { border-left-color: var(--red); }
 .vh-mini li.vh-t-tanaan { border-left-color: var(--kpl); }
+
+/* Kokonaisvertailu (28.11.2026) */
+.kv-valinnat { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 16px; }
+.kv-valinnat .tk-kentta { min-width: 170px; }
+.kv-valinnat select { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--ink); }
+.kv-runko { display: grid; grid-template-columns: minmax(320px, 5fr) minmax(360px, 6fr); gap: 16px; align-items: start; }
+@media (max-width: 980px) { .kv-runko { grid-template-columns: 1fr; } }
+.kv-indeksi { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.kv-luku { font: 700 56px/1 var(--display, inherit); color: var(--kpl); text-shadow: 0 0 18px rgba(245,168,0,.35); }
+.kv-luku.kv-lisa { font-size: 36px; color: #7DD3FC; text-shadow: none; margin-left: 12px; }
+.kv-sel { font-size: 14px; color: var(--ink-2); line-height: 1.25; }
+.kv-sel small { color: var(--ink-3); }
+.kv-teksti { margin: 12px 0 4px; color: var(--ink-2); }
+.kv-verkko { position: relative; height: 380px; margin-top: 8px; }
+.kv-selite { margin-top: 10px; }
+.kv-testit h2 { font-size: 18px; margin-bottom: 4px; }
+.kv-ryhma { margin-top: 14px; }
+.kv-ryhma h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 6px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.kv-ryhma h3 .num { color: var(--kpl); }
+.kv-rivi { display: grid; grid-template-columns: minmax(120px, 1.6fr) 74px minmax(90px, 1.4fr) 30px minmax(60px, .9fr); gap: 8px; align-items: center; padding: 5px 0; font-size: 14px; }
+.kv-rivi.vanha { opacity: .5; }
+.kv-nimi { color: var(--ink); }
+.kv-pieni { color: var(--yellow, #F5A800); cursor: help; font-weight: 700; }
+.kv-tulos { text-align: right; }
+.kv-tulos small { display: block; font-size: 11px; color: var(--ink-3); }
+.kv-palkki { position: relative; height: 14px; border-radius: 3px; background: var(--surface-2); }
+.kv-palkki::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--ink-3); }
+.kv-palkki i { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.kv-palkki i.yli { left: 50%; background: var(--kpl); box-shadow: 0 0 8px rgba(245,168,0,.4); }
+.kv-palkki i.ali { right: 50%; background: #FF3B4E; opacity: .85; }
+.kv-merkki { position: absolute; top: -4px; width: 3px; height: 22px; margin-left: -1px; background: #7DD3FC; border-radius: 2px; box-shadow: 0 0 6px rgba(125,211,252,.6); }
+.kv-t { text-align: right; font-weight: 700; }
+.kv-ryhmaka { text-align: right; font-size: 12px; color: var(--ink-3); }
+.kv-sin { color: #7DD3FC; }
+.kv-ei { grid-column: 3 / span 2; font-size: 12px; color: var(--ink-3); font-style: italic; }

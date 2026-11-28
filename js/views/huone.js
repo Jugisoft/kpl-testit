@@ -7,7 +7,8 @@ import { md, aikaSitten, pvmFi } from "../keskus.js";
 import { piirraKokonaisvertailu } from "./kokonaisvertailu.js";
 import { alueNimi, omatAlueet, nakyyko, tehtavanTila, jarjestaTehtavat, lueTehtavarivi, etsiJasen } from "../huoneydin.js";
 
-const VALILEHDET = [["yleiskuva", "Yleiskuva"], ["muistiot", "Muistiinpanot"], ["palaverit", "Palaverit"], ["tehtavat", "Tehtävät"], ["analyysi", "Analyysi"]];
+const VALILEHDET = [["yleiskuva", "Yleiskuva"], ["muistiot", "Muistiinpanot"], ["palaverit", "Palaverit"], ["tehtavat", "Tehtävät"]];
+const ERILLISET = { pelaaja: "Pelaaja-analyysi" };   // työkaluista avattavat sivut (ei välilehteä)
 const ALUE_AVAIN = "kpl-huone-alue";
 const TILA_NIMI = { myohassa: "myöhässä", tanaan: "tänään", pian: "pian", myohemmin: "", avoin: "", tehty: "tehty" };
 let D = null;   // { jasenet, mina, muistiot, tehtavat }
@@ -48,11 +49,12 @@ export async function nayta(main, vl = "yleiskuva", id) {
     return;
   }
   if (vl === "m" && id) return naytaMuistio(main, id);
-  if (!VALILEHDET.some(([k]) => k === vl)) vl = "yleiskuva";
+  if (vl === "analyysi") vl = "pelaaja";   // vanha osoite
+  if (!VALILEHDET.some(([k]) => k === vl) && !ERILLISET[vl]) vl = "yleiskuva";
   const valinnat = alueet.filter((a) => a !== "yhteinen").length > 1 ? ["kaikki", ...alueet] : [];
   main.innerHTML = `
     <header class="vh-paa">
-      <div><h1>Valmentajien huone</h1>
+      <div>${ERILLISET[vl] ? `<p class="vh-murupolku"><a href="#/huone">← Valmentajien huone</a></p><h1>${ERILLISET[vl]}</h1>` : "<h1>Valmentajien huone</h1>"}
       <p class="ingressi">Vain valmennukselle. Pelaajat eivät näe tätä osiota. ${alueet.filter((a) => a !== "yhteinen").map(alueMerkki).join(" ")}</p></div>
       ${valinnat.length ? `<div class="vh-aluevalinta pieni-chipit" role="group" aria-label="Alue">${valinnat.map((a) => `<button type="button" class="chip" data-alue="${a}" aria-pressed="${st.alue === a}">${a === "kaikki" ? "Kaikki" : esc(alueNimi(a))}</button>`).join("")}</div>` : ""}
     </header>
@@ -60,7 +62,7 @@ export async function nayta(main, vl = "yleiskuva", id) {
     <div id="vh-sisalto"></div>`;
   $$("[data-alue]", main).forEach((b) => (b.onclick = () => { st.alue = b.dataset.alue; sessionStorage.setItem(ALUE_AVAIN, st.alue); nayta(main, vl); }));
   const s = $("#vh-sisalto", main);
-  ({ yleiskuva, muistiot: () => lista(s, "muistiinpano"), palaverit: () => lista(s, "palaveri"), tehtavat, analyysi })[vl](s, main);
+  ({ yleiskuva, muistiot: () => lista(s, "muistiinpano"), palaverit: () => lista(s, "palaveri"), tehtavat, pelaaja: pelaajaAnalyysi })[vl](s, main);
 }
 
 const omatAvoimet = () => D.tehtavat.filter((t) => !t.tehty && t.vastuu === D.mina.email);
@@ -73,13 +75,14 @@ function yleiskuva(s) {
   const omat2 = omatAlueet(D.mina);
   const sp = omat2.includes("sp") && (!alue || alue === "sp"), psu = omat2.includes("psu") && (!alue || alue === "psu");
   const tyokalut = [
+    ["Pelaaja-analyysi", "#/huone/pelaaja", "kokonaisvertailu: pelaajan kaikki testit vs. ryhmä, toinen pelaaja tai oma aiempi"],
+    ...(tila.valmennus && sp ? [["Pelianalyysi", "#/analyysi", "joukkueen pelillinen analyysi"]] : []),
     ["Pelaajien Keskus", "#/oma", "pelaajien omat sivut, viestit ja huomioinnit"],
     ["Viikkokooste", "#/kooste", "viikon treenit, kuorma ja omatoimiset"],
     ["Tavoiteseuranta", "#/seuranta", "pelaajien tavoitteet ja niiden tila"],
     ["Lyöntiseuranta", "#/lyonnit/seuranta", "lyöntipäiväkirjat ja missiot"],
     ...(tila.valmennus && sp ? [["Treenikeskus", "#/treenikeskus", "MSU:n ja haastajien omat ohjelmat"]] : []),
     ["Kehittyneet", "#/kehittyneet", "testeissä eniten parantaneet"],
-    ...(tila.valmennus && sp ? [["Analyysi", "#/analyysi", "joukkueen pelillinen analyysi"]] : []),
     ...(psu ? [["Junioreiden testit", "#/testit/juniorit", "tulokset ja vertailu"]] : []),
   ];
   s.innerHTML = `
@@ -319,20 +322,16 @@ function tehtavat(s) {
 }
 
 // ---------- Analyysi (vaiheet 2–3) ----------
-function analyysi(s) {
+// ---------- Pelaaja-analyysi (työkaluista) ----------
+function pelaajaAnalyysi(s) {
   const alueet = st.alue === "kaikki" || st.alue === "yhteinen" ? omatAlueet(D.mina) : [st.alue];
   s.innerHTML = `
     <h2 class="vh-vali" style="margin-top:0">Kokonaisvertailu</h2>
     <p class="pieni">Pelaajan kaikki testit yhdellä silmäyksellä verrattuna valittuun ryhmään, toiseen pelaajaan, ryhmän parhaisiin tai omaan aiempaan kauteen.</p>
     <div id="vh-kv"></div>
-    <div class="vh-ruudukko" style="margin-top:24px">
-      <section class="paneeli"><h2>Pelaaja-analyysi <span class="vh-tulossa">tulossa</span></h2>
-        <p>Joukkueen yleiskuva "Kuka tarvitsee huomiota": läsnäolo, kuorma, kirjausten aktiivisuus, tavoitteiden ja lyöntimissioiden aikataulu sekä testikehitys liikennevaloina. Pelaajan syväsukellus kehityskäyrineen ja vertailuineen.</p>
-        <p class="pieni">Siihen asti: <a href="#/kooste">Viikkokooste</a> · <a href="#/seuranta">Tavoiteseuranta</a> · <a href="#/lyonnit/seuranta">Lyöntiseuranta</a> · <a href="#/kehittyneet">Kehittyneet</a></p></section>
-      <section class="paneeli"><h2>Pelillinen analyysi <span class="vh-tulossa">tulossa</span></h2>
-        <p>MSU:n pelillinen analyysi yhteen paikkaan: joukkue, pelaajat ja vertailu, vastustajat, ottelut (Superpesis ja Talvisuper erikseen) ja Pelikirja.</p>
-        <p class="pieni">Siihen asti: <a href="#/analyysi">Analyysi</a> · <a href="#/juoksuodotus">Juoksuodotus</a> · <a href="#/vertailu">Vertailu</a> · <a href="#/muistio/vastustajat">Vastustajat</a></p></section>
-    </div>`;
+    <section class="paneeli" style="margin-top:24px"><h2>Kuka tarvitsee huomiota <span class="vh-tulossa">tulossa</span></h2>
+      <p>Joukkueen yleiskuva: läsnäolo, kuorma, kirjausten aktiivisuus, tavoitteiden ja lyöntimissioiden aikataulu sekä testikehitys liikennevaloina, ja pelaajan syväsukellus kehityskäyrineen.</p>
+      <p class="pieni">Siihen asti: <a href="#/kooste">Viikkokooste</a> · <a href="#/seuranta">Tavoiteseuranta</a> · <a href="#/lyonnit/seuranta">Lyöntiseuranta</a> · <a href="#/kehittyneet">Kehittyneet</a></p></section>`;
   piirraKokonaisvertailu($("#vh-kv", s), alueet).catch((e) => { $("#vh-kv", s).innerHTML = `<p class="pieni">Kokonaisvertailua ei voitu ladata: ${esc(e.message)}</p>`; });
 }
 

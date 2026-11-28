@@ -119,7 +119,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261128-7", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261128-8", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -187,7 +187,8 @@ function valikko() {
   // 28.11.2026 (Jugi): Valmennus on ylätason ryhmä, Valmentajien huone sen alla; valmentajan työkalut huoneen alasivuina
   const omaPolku = !(tila.omaPelaaja || tila.spPelaaja);   // #/oma = Pelaajien Keskus vain, jos tunnukseen ei ole liitetty pelaajaa
   const HUONE = ["Valmentajien huone", "#/huone", "huone", (p) => /^\/(huone|kooste|seuranta|lyonnit\/seuranta)/.test(p) || (omaPolku && /^\/oma/.test(p)), [
-    ["Huone", "#/huone", (p) => /^\/huone/.test(p)],
+    ["Huone", "#/huone", (p) => /^\/huone/.test(p) && !/^\/huone\/(pelaaja|analyysi)/.test(p)],
+    ["Pelaaja-analyysi", "#/huone/pelaaja", (p) => /^\/huone\/(pelaaja|analyysi)/.test(p)],
     ["Pelaajien Keskus", "#/oma", (p) => /^\/oma/.test(p)],
     ["Viikkokooste", "#/kooste", (p) => /^\/kooste/.test(p)],
     ["Tavoiteseuranta", "#/seuranta", (p) => /^\/seuranta/.test(p)],

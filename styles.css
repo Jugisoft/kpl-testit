@@ -3176,3 +3176,40 @@ button.linkki:hover { color: var(--red); }
 .tiedote-teksti { max-height: 60vh; overflow: auto; line-height: 1.5; }
 .tiedote-teksti h4 { font-size: 15px; margin: 14px 0 4px; color: var(--kpl); }
 .tiedote-dialogi .tk-napit { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Kuka tarvitsee huomiota (28.11.2026) */
+.hu-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.hu-kpi > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; }
+.hu-kpi b { font: 700 30px/1 "Barlow Condensed", system-ui, sans-serif; color: var(--kpl); }
+.hu-kpi span { font-size: 13px; color: var(--ink-2); }
+.hu-taulu { border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; background: var(--surface); }
+.hu-rivi { display: grid; grid-template-columns: minmax(170px, 1.4fr) repeat(6, minmax(120px, 1fr)) 84px; gap: 8px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); min-width: 1040px; cursor: pointer; }
+.hu-rivi:hover, .hu-rivi.auki { background: rgba(245,168,0,.05); }
+.hu-otsikot { border-top: 0; cursor: default; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); background: var(--surface-2); }
+.hu-otsikot:hover { background: var(--surface-2); }
+.hu-nimi { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.hu-lippu { width: 8px; height: 8px; border-radius: 50%; background: #FF3B4E; box-shadow: 0 0 8px #FF3B4E; flex: none; }
+.hu-solu { font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 7px; line-height: 1.25; }
+.hu-solu i { width: 11px; height: 11px; border-radius: 50%; flex: none; background: var(--line); }
+.hu-pun i { background: #FF3B4E; box-shadow: 0 0 6px rgba(255,59,78,.7); }
+.hu-kelt i { background: #F5C400; box-shadow: 0 0 6px rgba(245,196,0,.6); }
+.hu-vihr i { background: #2EE59D; }
+.hu-odottaa i { background: transparent; border: 2px solid var(--ink-3); width: 9px; height: 9px; }
+.hu-ei { color: var(--ink-3); }
+.hu-syva { border-top: 1px solid var(--line); background: var(--surface-2); padding: 14px 16px; min-width: 1040px; }
+.hu-syva-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px; }
+.hu-syva h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 6px; }
+.hu-syva h3:not(:first-child) { margin-top: 14px; }
+.hu-analyysi p { margin: 0 0 8px; line-height: 1.45; }
+.hu-linkit { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.hu-viikot { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 86px; align-items: end; }
+.hu-viikot span { position: relative; height: 70px; display: flex; align-items: flex-end; }
+.hu-viikot i { display: block; width: 100%; background: linear-gradient(180deg, var(--kpl), rgba(245,168,0,.35)); border-radius: 2px 2px 0 0; }
+.hu-viikot small { position: absolute; bottom: -16px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--ink-3); }
+.hu-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.hu-lista li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding-bottom: 3px; }
+.hu-lista li.ylos small { color: #2EE59D; } .hu-lista li.alas small { color: #FF3B4E; }
+.kv-sanallinen { margin: 10px 0; padding: 10px 12px; border-left: 3px solid var(--kpl); background: rgba(245,168,0,.05); border-radius: 0 8px 8px 0; }
+.kv-sanallinen h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 6px; }
+.kv-sanallinen p { margin: 0 0 6px; line-height: 1.45; }
+@media (max-width: 900px) { .hu-syva-grid { grid-template-columns: 1fr; } .hu-syva { min-width: 0; } }

@@ -4,7 +4,8 @@
 import { sb, tila, nimi } from "../db.js";
 import { $, $$, esc, ilmoita } from "../util.js";
 import { md, aikaSitten, pvmFi } from "../keskus.js";
-import { piirraKokonaisvertailu } from "./kokonaisvertailu.js";
+import { piirraKokonaisvertailu, asetaPelaaja } from "./kokonaisvertailu.js";
+import { piirraHuomio } from "./huomio.js";
 import { alueNimi, omatAlueet, nakyyko, tehtavanTila, jarjestaTehtavat, lueTehtavarivi, etsiJasen } from "../huoneydin.js";
 
 const VALILEHDET = [["yleiskuva", "Yleiskuva"], ["muistiot", "Muistiinpanot"], ["palaverit", "Palaverit"], ["tehtavat", "Tehtävät"]];
@@ -326,13 +327,15 @@ function tehtavat(s) {
 function pelaajaAnalyysi(s) {
   const alueet = st.alue === "kaikki" || st.alue === "yhteinen" ? omatAlueet(D.mina) : [st.alue];
   s.innerHTML = `
-    <h2 class="vh-vali" style="margin-top:0">Kokonaisvertailu</h2>
+    <h2 class="vh-vali" style="margin-top:0">Kuka tarvitsee huomiota</h2>
+    <p class="pieni">Joukkueen pelaajat liikennevaloin: eniten huomiota tarvitsevat ylimpänä. Avaa pelaaja nähdäksesi sanallisen analyysin, kuorman 12 viikolta, tavoitteet, missiot ja testikehityksen.</p>
+    <div id="vh-hu"></div>
+    <h2 class="vh-vali" id="vh-kv-otsikko">Kokonaisvertailu</h2>
     <p class="pieni">Pelaajan kaikki testit yhdellä silmäyksellä verrattuna valittuun ryhmään, toiseen pelaajaan, ryhmän parhaisiin tai omaan aiempaan kauteen.</p>
-    <div id="vh-kv"></div>
-    <section class="paneeli" style="margin-top:24px"><h2>Kuka tarvitsee huomiota <span class="vh-tulossa">tulossa</span></h2>
-      <p>Joukkueen yleiskuva: läsnäolo, kuorma, kirjausten aktiivisuus, tavoitteiden ja lyöntimissioiden aikataulu sekä testikehitys liikennevaloina, ja pelaajan syväsukellus kehityskäyrineen.</p>
-      <p class="pieni">Siihen asti: <a href="#/kooste">Viikkokooste</a> · <a href="#/seuranta">Tavoiteseuranta</a> · <a href="#/lyonnit/seuranta">Lyöntiseuranta</a> · <a href="#/kehittyneet">Kehittyneet</a></p></section>`;
-  piirraKokonaisvertailu($("#vh-kv", s), alueet).catch((e) => { $("#vh-kv", s).innerHTML = `<p class="pieni">Kokonaisvertailua ei voitu ladata: ${esc(e.message)}</p>`; });
+    <div id="vh-kv"></div>`;
+  const kv = () => piirraKokonaisvertailu($("#vh-kv", s), alueet).catch((e) => { $("#vh-kv", s).innerHTML = `<p class="pieni">Kokonaisvertailua ei voitu ladata: ${esc(e.message)}</p>`; });
+  piirraHuomio($("#vh-hu", s), alueet, async (pid) => { asetaPelaaja(pid); await kv(); $("#vh-kv-otsikko", s).scrollIntoView({ behavior: "smooth" }); });
+  kv();
 }
 
 // Keskuksen etusivulle (28.11.2026): valmentajan avoimet tehtävät ja uusin muistio

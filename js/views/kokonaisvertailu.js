@@ -3,11 +3,13 @@
 // Laskenta js/kokonaisydin.js. Tulokset viimeisen 24 kk ajalta (oma aiempi kausi: koko kausi).
 import { tila, nimi, lataaTulokset } from "../db.js";
 import { $, $$, esc, muotoile, testiParhaat, kausi, piirra, vari, pvmLyhyt } from "../util.js";
+import { sanallinen } from "../huomioydin.js";
 import { OMINAISUUDET, pelaajanTulokset, ryhmanNormit, profiili, aariarvot, rajaa, kuukausiaSitten } from "../kokonaisydin.js";
 
 const IKKUNA_KK = 24;
 const KULTA = "#F5A800", SININEN = "#7DD3FC";
 let S = { pid: null, asteikko: "joukkue", lisa: "ei", toinen: null, kausi: null, tapa: "viimeisin" };
+export const asetaPelaaja = (pid) => { S.pid = pid; };
 
 const tanaan = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Helsinki" });
 const tNimi = (t) => (t === "nok_30m" ? "Nopeuskestävyys 9×30 m (ka)" : (tila.testi[t]?.nimi || t).replace(/^Edustuksen lyöntitesti: /, "LT: ").replace(/^Lyöntitesti: /, "Lyöntitesti: "));
@@ -82,6 +84,7 @@ export async function piirraKokonaisvertailu(el, alueet) {
             ${lisa ? `<span class="kv-luku kv-lisa num">${T1(lisa.prof.indeksi)}</span><span class="kv-sel">${esc(lisa.nimi)}</span>` : ""}</div>
           <p class="kv-teksti">${esc(nimi(p))} verrattuna ryhmään <b>${esc(astNimi)}</b> (${ryhma.length} pelaajaa, tulokset ${IKKUNA_KK} kk ajalta, ${S.tapa === "paras" ? "paras tulos" : "viimeisin tulos"}).
             ${ar ? `Vahvin ominaisuus <b>${esc(ar.vahvin.nimi)}</b> (${T1(ar.vahvin.T)}), heikoin <b>${esc(ar.heikoin.nimi)}</b> (${T1(ar.heikoin.T)}).` : ""}</p>
+          <div class="kv-sanallinen"><h3>Sanallinen analyysi</h3>${sanallinen({ etunimi: p.etunimi, indeksi: prof.indeksi, testit: prof.testit, luokat: Object.fromEntries(tila.testit.map((t) => [t.koodi, t.luokka])), nimet: Object.fromEntries(tila.testit.map((t) => [t.koodi, tNimi(t.koodi)])), ryhmaNimi: astNimi }).map((l) => `<p>${esc(l)}</p>`).join("")}</div>
           <div class="kv-verkko">${omMukana.length >= 3 ? `<canvas id="kv-verkko" aria-label="Ominaisuusprofiili hämähäkkiverkkona"></canvas>` : `<p class="pieni">Verkko tarvitsee vähintään kolme ominaisuutta. Testiprofiili alla.</p>`}</div>
           <p class="pieni kv-selite">T-piste: ryhmän keskiarvo 50, 10 pistettä = yksi keskihajonta. 60 = selvästi ryhmää parempi, 40 = selvästi heikompi. Juoksuissa nopeampi aika antaa isomman T:n. Ominaisuus = sen testien keskiarvo; kokonaisindeksi = ominaisuuksien keskiarvo.</p>
         </section>

@@ -106,7 +106,7 @@ const KEHITTYNEET = ["Kehittyneet", "#/kehittyneet", (p) => /^\/kehittyneet/.tes
 const RYHMAT = [
   [null, [["Keskus", "#/", "koti", (p) => p === "/"]]],
   ["Oma harjoittelu", [
-    ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p)],
+    ["Lyöntipäiväkirja", "#/lyonnit", "lyonnit", (p) => /^\/lyonnit/.test(p) && !/^\/lyonnit\/seuranta/.test(p)],
     ["Testit", "#/testit", "testit", (p, r) => r?.osio === "testit", [
       ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
       ["Juoksutestit", "#/juoksu", (p) => /^\/juoksu/.test(p)],
@@ -119,7 +119,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261128-3", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261128-4", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -183,14 +183,16 @@ function valikko() {
     const j = tila.tarkkailijaJoukkue, osoite = `#/muistio/${j}/yleiskuva`;
     return [[[`Vastustaja`, [[j, osoite, "vastustajat", (p) => /^\/(muistio|vp|kortti|huomio)/.test(p)]]]], [[j, osoite, "vastustajat"], ["Ohje", "#/ohje", "ohje"]]];
   }
-  const pelaajat = ["Pelaajien Keskus", "#/oma", "oma", (p) => /^\/oma/.test(p)];
-  const koosteL = ["Viikkokooste", "#/kooste", "kooste", (p) => /^\/kooste/.test(p)];
-  const seurantaL = ["Tavoiteseuranta", "#/seuranta", "ohjelma", (p) => /^\/seuranta/.test(p)];   // 6.11.2026; 12.11.2026 nimi Tavoiteseuranta (omatoimiset Viikkokoosteessa)
-  const lyontiseurantaL = ["Lyöntiseuranta", "#/lyonnit/seuranta", "lyonnit", (p) => /^\/lyonnit/.test(p)];   // 17.11.2026: PSU näkee junioreiden lyöntipäiväkirjat
   // 28.11.2026: Valmentajien huone – valmennuksen oma osio (muistiot, palaverit, tehtävät) ja valmentajan työkalut
-  const HUONE = ["Valmentajien huone", "#/huone", "huone", (p) => /^\/huone/.test(p)];
-  const huoneRyhma = ["Valmentajien huone", [HUONE, pelaajat, koosteL, seurantaL, lyontiseurantaL]];
-  if (tila.psu) return [[...RYHMAT_PSU.map(([o, l]) => [o, [...l, TREENIT, OHJELMAT, TREENIKESKUS]]), huoneRyhma], [ALAPALKKI_PSU[0], ["Huone", "#/huone", "huone"], ...ALAPALKKI_PSU.slice(1, 3)]];
+  // 28.11.2026 (Jugi): Valmennus on ylätason ryhmä, Valmentajien huone sen alla; valmentajan työkalut huoneen alasivuina
+  const omaPolku = !(tila.omaPelaaja || tila.spPelaaja);   // #/oma = Pelaajien Keskus vain, jos tunnukseen ei ole liitetty pelaajaa
+  const HUONE = ["Valmentajien huone", "#/huone", "huone", (p) => /^\/(huone|kooste|seuranta|lyonnit\/seuranta)/.test(p) || (omaPolku && /^\/oma/.test(p)), [
+    ["Huone", "#/huone", (p) => /^\/huone/.test(p)],
+    ["Pelaajien Keskus", "#/oma", (p) => /^\/oma/.test(p)],
+    ["Viikkokooste", "#/kooste", (p) => /^\/kooste/.test(p)],
+    ["Tavoiteseuranta", "#/seuranta", (p) => /^\/seuranta/.test(p)],
+    ["Lyöntiseuranta", "#/lyonnit/seuranta", (p) => /^\/lyonnit\/seuranta/.test(p)]]];
+  if (tila.psu) return [[...RYHMAT_PSU.map(([o, l]) => [o, [...l, TREENIT, OHJELMAT, TREENIKESKUS]]), ["Valmennus", [HUONE]]], [ALAPALKKI_PSU[0], ["Huone", "#/huone", "huone"], ...ALAPALKKI_PSU.slice(1, 3)]];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
   if (!(tila.valmennus || tila.admin)) ryhmat.forEach((r) => (r[1] = r[1].map((x) => (Array.isArray(x[4]) ? [...x.slice(0, 4), x[4].filter((y) => y !== KEHITTYNEET)] : x))));
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
@@ -201,7 +203,12 @@ function valikko() {
   if (pelaajaRooli) ryhmat[0][1].push(OMA);
   ryhmat[0][1].push(TALVI);   // 25.11.2026: Talvisuper oma välisivu ennen Oma harjoittelua (miehet ja valmennus)
   // 28.11.2026: valmentajan työkalut aina Valmentajien huoneessa (aiemmin katosivat, jos tunnukseen oli liitetty pelaaja)
-  if (tila.ohjaaja) ryhmat.splice(1, 0, huoneRyhma);
+  if (tila.ohjaaja) {
+    const i = ryhmat.findIndex(([o]) => o === "Valmennus");
+    const [valmennus] = ryhmat.splice(i, 1);
+    valmennus[1].unshift(HUONE);
+    ryhmat.splice(1, 0, valmennus);   // valmennukselle Valmennus heti Keskuksen jälkeen
+  }
   // pelaajalla puhelimen alapalkissa Oma, Treeni ja Lyönnit (1.11.2026); Testit ja Oma peli Valikossa
   const ala = pelaajaRooli ? [["Oma", "#/oma", "oma"], ALAPALKKI[0], kayttaaTk() ? ["Treeni", "#/treenikeskus", "tk"] : ["Treeni", "#/treenit", "treeni"], ALAPALKKI[1]] : tila.ohjaaja ? [ALAPALKKI[0], ["Huone", "#/huone", "huone"], ALAPALKKI[2], ALAPALKKI[3]] : ALAPALKKI;
   return [ryhmat, ala];

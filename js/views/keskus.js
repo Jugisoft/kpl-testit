@@ -2,6 +2,7 @@
 import { sb, tila } from "../db.js";
 import { $, $$, esc, pvm, ilmoita } from "../util.js";
 import { piirraTalvisuper } from "../talvisuper.js";
+import { piirraHuonekortti } from "./huone.js";
 import { yksityinenValinta, kytkeYksityinen } from "../yksityinen.js";
 import { haeHuomiot, haeSiirtomarkkinat, lataaNimet, md, AIHEOSIOT, JOUKKUEET, osioNimi, huomionOsio, tallennaMuistiinpano, kirjoittajanNimi, aikaSitten, omaEmail } from "../keskus.js";
 
@@ -59,7 +60,7 @@ export async function nayta(main) {
 
     <nav class="pikalinkit" aria-label="Pääosiot">
       <a href="#/muistio"><span class="pl-nimi">Muistio</span><span class="pl-luku num">${huomiot.length}</span><span class="pl-ala">muistiinpanoa ja ottelumuistiota</span></a>
-      <a href="pelikirja.html?v=20261128-2"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
+      <a href="pelikirja.html?v=20261128-3"><span class="pl-nimi">Pelikirja</span><span class="pl-luku num">${kuvioita ?? "–"}</span><span class="pl-ala">ulkopelin kuviota</span></a>
       <a href="#/muistio/vastustajat"><span class="pl-nimi">Vastustajat</span><span class="pl-luku num">${pelaajia ?? "–"}</span><span class="pl-ala">pelaajaa ${vastustajat.length} joukkueesta</span></a>
       <a href="#/siirtomarkkinat"><span class="pl-nimi">Siirtomarkkinat</span><span class="pl-luku num">${sm?.siirrot?.length ?? "–"}</span><span class="pl-ala">siirtoa ja lähtöä kaudelle 2027</span></a>
       <a href="#/testit/superpesis"><span class="pl-nimi">Testit</span><span class="pl-luku num">${spPidetyt.length}</span><span class="pl-ala">${spPidetyt.length ? `edustuksen testikertaa, viimeisin ${pvm(spPidetyt[0].pvm)}` : "edustuksen testikertaa"}${spTulevat.length ? `, seuraava ${pvm(spTulevat[0].pvm)}` : ""}</span></a>
@@ -72,6 +73,7 @@ export async function nayta(main) {
       </section>
 
       <aside class="k-sivu">
+        ${tila.ohjaaja ? `<section class="paneeli" id="vh-kortti" aria-label="Valmentajien huone"></section>` : ""}
         <section id="talvisuper" aria-label="Talvisuper"></section>
         <section class="paneeli">
           <div class="osio-paa"><h2>Siirtomarkkinoilla</h2><a href="#/siirtomarkkinat">Kaikki</a></div>
@@ -83,6 +85,7 @@ export async function nayta(main) {
     </div>`;
 
   piirraTalvisuper($("#talvisuper"));
+  if ($("#vh-kortti")) piirraHuonekortti($("#vh-kortti")).catch(() => $("#vh-kortti")?.remove());
   const form = $("#pika"), ta = form.querySelector("textarea");
   kytkeYksityinen(form);
   $$(".chip[data-osio]", form).forEach((b) => (b.onclick = () => {

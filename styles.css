@@ -3071,3 +3071,67 @@ body:has(.tr-lomake:not([hidden])) .tr-loppu { height: 60vh; }
 .pp-sopimus:empty { display: none; }
 .yk-sop { color: var(--cyan); }
 .tk-muokkaustila { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: rgba(245,168,0,.14); border: 1px solid rgba(245,168,0,.5); font-size: 13px; line-height: 1.4; }
+
+/* Valmentajien huone (28.11.2026) */
+.vh-paa { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.vh-paa .ingressi { margin-bottom: 0; }
+.vh-valilehdet { margin: 18px 0 20px; display: flex; gap: 6px; flex-wrap: wrap; }
+.vh-valilehdet a.chip { text-decoration: none; }
+.vh-luku { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--kpl); color: var(--musta); font-size: 12px; }
+.vh-alue { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: .03em; border: 1px solid var(--line); color: var(--ink-2); vertical-align: 1px; }
+.vh-alue-sp { color: var(--kpl); border-color: rgba(245,168,0,.45); background: rgba(245,168,0,.08); }
+.vh-alue-psu { color: #7DD3FC; border-color: rgba(125,211,252,.45); background: rgba(125,211,252,.08); }
+.vh-alue-yhteinen { color: #A78BFA; border-color: rgba(167,139,250,.45); background: rgba(167,139,250,.08); }
+.vh-ruudukko { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.vh-ruudukko h2 { font-size: 18px; }
+.vh-vali { margin: 28px 0 10px; font-size: 18px; }
+.vh-tyokalut a { min-height: 0; }
+.vh-lista, .vh-tehtavat, .vh-kommentit ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.vh-muistio { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: inherit; text-decoration: none; }
+.vh-muistio:hover { border-color: var(--kpl); }
+.vh-muistio strong { font-size: 16px; }
+.vh-meta { font-size: 13px; color: var(--ink-3); }
+.vh-meta b { color: var(--ink-2); }
+.vh-merkit { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
+.vh-merkit > * { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); text-decoration: none; }
+.vh-tyokalurivi { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.vh-haku { flex: 1; min-width: 200px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--ink); }
+.vh-tehtava { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 8px; background: var(--surface); }
+.vh-tehtava label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.vh-tehtava input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--kpl); flex: none; }
+.vh-tehtava .vh-meta { grid-column: 1; padding-left: 28px; }
+.vh-tehtava > button { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.vh-t-myohassa { border-left-color: var(--red); }
+.vh-t-tanaan { border-left-color: var(--kpl); }
+.vh-t-pian { border-left-color: #7DD3FC; }
+.vh-t-tehty { opacity: .6; }
+.vh-t-tehty label span { text-decoration: line-through; }
+.vh-tehtava-lomake { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.vh-tehtava-lomake input, .vh-tehtava-lomake select { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; color: var(--ink); }
+.vh-tehtava-lomake input[name=teksti] { flex: 1; min-width: 180px; }
+.vh-artikkeli { max-width: 820px; }
+.vh-artikkeli h1 { margin: 6px 0 8px; }
+.vh-lohko { margin-top: 22px; }
+.vh-lohko h2 { font-size: 17px; margin-bottom: 6px; color: var(--ink-2); }
+.vh-napit { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+.vh-kommentit { max-width: 820px; margin-top: 32px; border-top: 1px solid var(--line); padding-top: 16px; }
+.vh-kommentit li { padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+.vh-kommentti { display: flex; gap: 8px; margin-top: 12px; align-items: flex-end; }
+.vh-kommentti textarea { flex: 1; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--ink); }
+.vh-dialogi { width: min(640px, calc(100vw - 24px)); }
+.vh-osallistujat { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.vh-osallistujat legend { font-size: 13px; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
+.vh-osallistujat .chip { position: relative; font-size: 14px; padding: 4px 10px; }
+.vh-valitut { display: flex; flex-wrap: wrap; gap: 6px; }
+.vh-valitut:empty { display: none; }
+.vh-pelaaja { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); font-size: 14px; }
+.vh-pelaaja button { border: 0; background: none; color: var(--ink-3); cursor: pointer; padding: 0 4px; }
+.vh-yks { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.vh-yks small { color: var(--ink-3); }
+.vh-tulossa { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); color: var(--ink-3); vertical-align: 3px; margin-left: 6px; }
+button.linkki { background: none; border: 0; color: var(--ink-3); cursor: pointer; padding: 2px 4px; font: inherit; }
+button.linkki:hover { color: var(--red); }
+.vh-mini { list-style: none; margin: 6px 0 10px; padding: 0; display: grid; gap: 6px; }
+.vh-mini li { padding-left: 10px; border-left: 3px solid var(--line); }
+.vh-mini li.vh-t-myohassa { border-left-color: var(--red); }
+.vh-mini li.vh-t-tanaan { border-left-color: var(--kpl); }

@@ -104,6 +104,16 @@ const SIVUT = [
       ["Tarkkuus", "Riippuu kuvaustaajuudesta: 240 fps ±8 ms, 120 fps ±17 ms aikavälissä. 30 fps ei riitä vertailuun."],
       ["Videot", "Videot eivät koskaan lähde puhelimelta. Keskukseen siirtyvät vain merkinnät ja ajat."],
     ] },
+  { id: "kehittyneet", nimi: "Kehittyneet", linkki: "#/kehittyneet",
+    mita: "Valmennukselle: testi kerrallaan pelaajat järjestyksessä sen mukaan, kuinka paljon tulos muuttui edelliseen testiin verrattuna. Eniten parantanut ylimpänä. Löytyy valikosta Testit → Kehittyneet.",
+    kohdat: [
+      ["Vertailu", "Pelaajan viimeisin testipäivä verrattuna hänen edelliseen testipäiväänsä samassa testissä. Saman päivän useista testikerroista lasketaan paras."],
+      ["Tulos", "Kerran paras samalla tavalla kuin Testit-sivulla. 30 m:ssä mukana myös piikkiajat ja 9×30 m:n yksittäiset juoksut."],
+      ["Muutos", "+ = parani. Juoksuissa ja muissa pienempi parempi -testeissä parannus tarkoittaa pienempää aikaa. Prosentti on muutos edellisestä tuloksesta."],
+      ["Rajaus", "Viimeisin testipäivä (oletus: esim. tänään testatut), Tämä testijakso (syksy elo–joulu, kevät tammi–heinä) tai Kaikki."],
+      ["⚠", "Edellisestä testistä on yli 12 kuukautta, joten muutos ei ole suoraan vertailukelpoinen."],
+      ["Ei vertailukohtaa", "Pelaajat, joilla on testissä vasta yksi testipäivä."],
+    ] },
   { id: "juoksutestit", nimi: "Juoksutestit", linkki: "#/juoksu",
     mita: "30 m (10 m lähtö, lentävä 20 m), nopeuskestävyys 9×30 m ja Cooper yhdessä näkymässä. Ryhmät: Juniorit, Superpesis ja Kaikki testatut. Tulostaulu, kaikki samalla janalla, testikohtainen analyysi, kehitys kausittain ja pelaajan juoksuprofiili.",
     kohdat: [
@@ -120,7 +130,7 @@ const SIVUT = [
       ["Cooper", "12 min juoksu, kierros 261 m. Syötössä voi kirjoittaa 11+110 (= 11 kierrosta + 110 m). Hapenottokyvyn arvio (ml/kg/min) = (matka − 504,9) ÷ 44,73."],
       ["Parempi kuin %", "Kuinka monta prosenttia vertailuryhmästä pelaaja on ohittanut kauden parhaalla tuloksellaan."],
     ] },
-  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261127-3",
+  { id: "pelikirja", nimi: "Pelikirja", linkki: "pelikirja.html?v=20261128-1",
     mita: "KPL:n omat ulkopelin kuviot. Kirjasto tilannekansioittain (0-tilanne, 1-tilanne, 2-tilanne, Takatilanne), variaatiot vapaasti nimettäviä kansion sisällä.",
     kohdat: [
       ["Pikavalinta (puhelin)", "Puhelimella sivun ylälaidassa pomppuvalikot Tilanne ja Variaatio, joista kirjaston kuvion saa auki rullaamatta alas. ‹ › selaa saman tilanteen variaatioita. Koneella kirjasto on vasemmalla, joten valikkoa ei näytetä."],

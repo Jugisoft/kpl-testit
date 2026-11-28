@@ -26,6 +26,7 @@ import * as oma from "./js/views/oma.js";
 import * as minunpelisivu from "./js/views/minunpelisivu.js";
 import * as minunkehityssivu from "./js/views/minunkehityssivu.js";
 import * as kooste from "./js/views/kooste.js";
+import * as kehittyneet from "./js/views/kehittyneet.js";
 import * as seuranta from "./js/views/seuranta.js";
 import * as talvisuper from "./js/views/talvisuper.js";
 import * as treenikeskus from "./js/views/treenikeskus.js";
@@ -38,6 +39,7 @@ const reitit = [
   { polku: /^\/?$/, nakyma: etusivu },
   { polku: /^\/testit(?:\/([a-z]+))?(?:\/([a-z]+))?(?:\/([\w-]+))?$/, nakyma: testit, osio: "testit" },
   { polku: /^\/juoksu(?:\/([a-z0-9]+))?(?:\/([\w-]+))?$/, nakyma: juoksu, osio: "testit" },
+  { polku: /^\/kehittyneet(?:\/([a-z]+))?(?:\/([\w-]+))?$/, nakyma: kehittyneet, osio: "testit" },
   { polku: /^\/vertailu(?:\/([\w-]+))?(?:\/([\w-]+))?$/, nakyma: vertailu, osio: "testit" },
   // vanhat osoitteet
   { polku: /^\/(superpesis|ryhma|tilastot)$/, nakyma: { nayta: (m, x) => location.replace(x === "superpesis" ? "#/testit/superpesis" : "#/testit/juniorit") } },
@@ -95,6 +97,8 @@ const IK = {
 };
 const ikoni = (n) => `<svg class="ikoni" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IK[n]}</svg>`;
 const onVastustaja = (p) => /^\/(vp\/|kortti)/.test(p) || /^\/muistio\/(vastustajat|IPV|JoMa|KeKi|KiPa|Manse|PattU|PuMu|SoJy|Tahko|Ura|ViVe)\b/.test(p);
+// 28.11.2026: Kehittyneet (eniten parantaneet) vain valmennukselle; pelaajien valikosta poistetaan valikko()-funktiossa
+const KEHITTYNEET = ["Kehittyneet", "#/kehittyneet", (p) => /^\/kehittyneet/.test(p)];
 // [teksti, osoite, kuvake, aktiivinen]
 const RYHMAT = [
   [null, [["Keskus", "#/", "koti", (p) => p === "/"]]],
@@ -103,6 +107,7 @@ const RYHMAT = [
     ["Testit", "#/testit", "testit", (p, r) => r?.osio === "testit", [
       ["Tulokset", "#/testit", (p) => /^\/testit/.test(p)],
       ["Juoksutestit", "#/juoksu", (p) => /^\/juoksu/.test(p)],
+      KEHITTYNEET,
       ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
       ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
       ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)],
@@ -111,7 +116,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261127-3", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261128-1", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -127,6 +132,7 @@ const RYHMAT_PSU = [
     ["Testit", "#/testit/juniorit", "testit", (p, r) => r?.osio === "testit", [
       ["Tulokset", "#/testit/juniorit", (p) => /^\/testit/.test(p)],
       ["Juoksutestit", "#/juoksu/30m/juniorit", (p) => /^\/juoksu/.test(p)],
+      KEHITTYNEET,
       ["Testikerrat", "#/kerrat", (p) => /^\/(kerrat|syota|kerta)/.test(p)],
       ["Pelaajat", "#/pelaajat", (p) => /^\/pelaaja/.test(p)],
       ["Vertailu", "#/vertailu", (p) => /^\/vertailu/.test(p)],
@@ -180,6 +186,7 @@ function valikko() {
   const lyontiseurantaL = ["Lyöntiseuranta", "#/lyonnit/seuranta", "lyonnit", (p) => /^\/lyonnit/.test(p)];   // 17.11.2026: PSU näkee junioreiden lyöntipäiväkirjat
   if (tila.psu) return [RYHMAT_PSU.map(([o, l]) => [o, [...l, pelaajat, koosteL, seurantaL, lyontiseurantaL, TREENIT, OHJELMAT, TREENIKESKUS]]), ALAPALKKI_PSU];
   const ryhmat = RYHMAT.map(([o, l]) => [o, [...l]]);
+  if (!(tila.valmennus || tila.admin)) ryhmat.forEach((r) => (r[1] = r[1].map((x) => (Array.isArray(x[4]) ? [...x.slice(0, 4), x[4].filter((y) => y !== KEHITTYNEET)] : x))));
   const pelaajaRooli = tila.omaPelaaja || tila.spPelaaja;   // pelaajatunnus näkee Oma Keskuksen aina (liittämätön saa ohjeen)
   // treenipäiväkirja kaikille: pelaaja kirjaa, valmentaja katsoo pelaajan kirjauksia;
   // 26.11.2026 (Jugi): miehillä ja haastajilla vain Treenikeskus (ei rinnakkaisia kirjauspaikkoja)

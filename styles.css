@@ -3213,3 +3213,11 @@ button.linkki:hover { color: var(--red); }
 .kv-sanallinen h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 6px; }
 .kv-sanallinen p { margin: 0 0 6px; line-height: 1.45; }
 @media (max-width: 900px) { .hu-syva-grid { grid-template-columns: 1fr; } .hu-syva { min-width: 0; } }
+.vh-avattava { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin-bottom: 24px; }
+.vh-avattava > summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
+.vh-avattava > summary::-webkit-details-marker { display: none; }
+.vh-avattava > summary::before { content: "▸"; color: var(--kpl); transition: transform .15s; display: inline-block; }
+.vh-avattava[open] > summary::before { transform: rotate(90deg); }
+.vh-av-otsikko { font: 700 20px/1.1 "Barlow Condensed", system-ui, sans-serif; }
+.vh-avattava > summary:hover .vh-av-otsikko { color: var(--kpl); }
+.vh-avattava > #vh-hu { padding: 0 16px 16px; }

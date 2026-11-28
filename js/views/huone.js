@@ -327,14 +327,20 @@ function tehtavat(s) {
 function pelaajaAnalyysi(s) {
   const alueet = st.alue === "kaikki" || st.alue === "yhteinen" ? omatAlueet(D.mina) : [st.alue];
   s.innerHTML = `
-    <h2 class="vh-vali" style="margin-top:0">Kuka tarvitsee huomiota</h2>
-    <p class="pieni">Joukkueen pelaajat liikennevaloin: eniten huomiota tarvitsevat ylimpänä. Avaa pelaaja nähdäksesi sanallisen analyysin, kuorman 12 viikolta, tavoitteet, missiot ja testikehityksen.</p>
-    <div id="vh-hu"></div>
-    <h2 class="vh-vali" id="vh-kv-otsikko">Kokonaisvertailu</h2>
+    <details class="vh-avattava" id="vh-hu-auki"${sessionStorage.getItem("kpl-hu-auki") ? " open" : ""}>
+      <summary><span class="vh-av-otsikko">Kuka tarvitsee huomiota</span><span class="pieni">Joukkueen pelaajat liikennevaloin, pelaajan syväsukellus ja sanallinen analyysi – avaa klikkaamalla</span></summary>
+      <div id="vh-hu"></div>
+    </details>
+    <h2 class="vh-vali" id="vh-kv-otsikko" style="margin-top:0">Kokonaisvertailu</h2>
     <p class="pieni">Pelaajan kaikki testit yhdellä silmäyksellä verrattuna valittuun ryhmään, toiseen pelaajaan, ryhmän parhaisiin tai omaan aiempaan kauteen.</p>
     <div id="vh-kv"></div>`;
   const kv = () => piirraKokonaisvertailu($("#vh-kv", s), alueet).catch((e) => { $("#vh-kv", s).innerHTML = `<p class="pieni">Kokonaisvertailua ei voitu ladata: ${esc(e.message)}</p>`; });
-  piirraHuomio($("#vh-hu", s), alueet, async (pid) => { asetaPelaaja(pid); await kv(); $("#vh-kv-otsikko", s).scrollIntoView({ behavior: "smooth" }); });
+  // 28.11.2026 (Jugi): pomppuvalikko – ladataan vasta, kun avataan
+  const av = $("#vh-hu-auki", s);
+  let ladattu = false;
+  const lataaHu = () => { if (ladattu || !av.open) return; ladattu = true; piirraHuomio($("#vh-hu", s), alueet, async (pid) => { asetaPelaaja(pid); await kv(); $("#vh-kv-otsikko", s).scrollIntoView({ behavior: "smooth" }); }); };
+  av.addEventListener("toggle", () => { try { if (av.open) sessionStorage.setItem("kpl-hu-auki", "1"); else sessionStorage.removeItem("kpl-hu-auki"); } catch { /* ohitetaan */ } lataaHu(); });
+  lataaHu();
   kv();
 }
 

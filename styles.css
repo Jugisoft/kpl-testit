@@ -3202,7 +3202,7 @@ button.linkki:hover { color: var(--red); }
 .hu-syva h3:not(:first-child) { margin-top: 14px; }
 .hu-analyysi p { margin: 0 0 8px; line-height: 1.45; }
 .hu-linkit { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-.hu-viikot { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 86px; align-items: end; }
+.hu-viikot { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 86px; align-items: end; margin-bottom: 22px; }
 .hu-viikot span { position: relative; height: 70px; display: flex; align-items: flex-end; }
 .hu-viikot i { display: block; width: 100%; background: linear-gradient(180deg, var(--kpl), rgba(245,168,0,.35)); border-radius: 2px 2px 0 0; }
 .hu-viikot small { position: absolute; bottom: -16px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--ink-3); }

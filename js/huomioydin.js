@@ -55,7 +55,7 @@ export function tavoitteet(lista, tanaan) {
 export function missio(lista) {
   const akt = lista.filter((s) => !s.paattynyt || s.valmis);
   if (!akt.length) return { tila: "ei", teksti: "ei aktiivista missiota" };
-  const arvio = (s) => (s.valmis || s.tehty >= s.odotettu ? "vihr" : s.tehty >= 0.8 * s.odotettu ? "kelt" : "pun");
+  const arvio = (s) => (s.valmis || s.tehty >= 0.9 * s.odotettu ? "vihr" : s.tehty >= 0.6 * s.odotettu ? "kelt" : "pun");
   const a = akt.map(arvio), t = a.includes("pun") ? "pun" : a.includes("kelt") ? "kelt" : "vihr";
   const pct = Math.round(akt.reduce((x, s) => x + Math.min(1.5, s.odotettu ? s.tehty / s.odotettu : 1), 0) / akt.length * 100);
   return { tila: t, teksti: `${pct} % aikataulusta${akt.length > 1 ? ` (${akt.length} missiota)` : ""}` };
@@ -66,11 +66,13 @@ export const SWC = 0.2;
 export function testikehitys(muutokset) {
   if (!muutokset.length) return { tila: "ei", teksti: "ei verrattavia testejä", parani: [], heikkeni: [] };
   const parani = muutokset.filter((m) => m.z >= SWC), heikkeni = muutokset.filter((m) => m.z <= -SWC);
-  const t = heikkeni.length >= 2 && heikkeni.length > parani.length ? "pun" : heikkeni.length > parani.length ? "kelt" : "vihr";
+  const t = heikkeni.length >= 3 && heikkeni.length >= 2 * parani.length ? "pun" : heikkeni.length > parani.length ? "kelt" : "vihr";
   return { tila: t, teksti: `↑ ${parani.length} · ↓ ${heikkeni.length} · ≈ ${muutokset.length - parani.length - heikkeni.length}`, parani, heikkeni };
 }
 
 export const pisteet = (signaalit) => Object.values(signaalit).reduce((s, x) => s + (PISTEET[x?.tila] || 0), 0);
+// Huomio nyt: vähintään kaksi punaista signaalia tai punainen kuorma (yksittäinen punainen = seuraa)
+export const tarvitseeHuomiota = (signaalit) => Object.values(signaalit).filter((x) => x?.tila === "pun").length >= 2 || signaalit.kuorma?.tila === "pun";
 
 // ---------- Sanallinen analyysi ----------
 // Testiluokat ominaisuusryhmiksi (testit.luokka): nopeus, fysiikka, voima (heitto- ja lyöntivoima), lajitaito
@@ -104,7 +106,7 @@ export function sanallinen({ etunimi, indeksi, testit, luokat, nimet, ryhmaNimi,
       const [vk, v] = lista[0], [hk, h] = lista.at(-1);
       if (v.T - h.T >= 8) {
         lauseet.push(`Profiili on epätasainen: vahvuus on ${RYHMAT[vk].toLowerCase()} (${Math.round(v.T)}), mutta ${RYHMAT[hk].toLowerCase()} jää selvästi jälkeen (${Math.round(h.T)}).`);
-        lauseet.push(`Harjoittelun painopisteeksi kannattaa nostaa ${RYHMAT[hk].toLowerCase()}: ${VINKIT[hk]}. Vahvuutta ${RYHMAT[vk].toLowerCase()} riittää ylläpitää.`);
+        lauseet.push(`Harjoittelun painopisteeksi kannattaa nostaa ${RYHMAT[hk].toLowerCase()}: ${VINKIT[hk]}. Vahvuuden (${RYHMAT[vk].toLowerCase()}) ylläpitoon riittää normaali harjoittelu.`);
       } else lauseet.push(`Profiili on tasainen: ominaisuusryhmien ero on pieni (${lista.map(([k, x]) => `${RYHMAT[k].toLowerCase()} ${Math.round(x.T)}`).join(", ")}).`);
     }
     const heikot = testit.filter((x) => x.T != null && x.T < 42).sort((a, b) => a.T - b.T).slice(0, 3);

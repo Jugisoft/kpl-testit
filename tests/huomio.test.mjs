@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { laasnaolo, suunnitelma, kuorma, kirjaukset, tavoitteet, missio, testikehitys, pisteet, sanallinen, ryhmaT } from "../js/huomioydin.js";
+import { tarvitseeHuomiota, laasnaolo, suunnitelma, kuorma, kirjaukset, tavoitteet, missio, testikehitys, pisteet, sanallinen, ryhmaT } from "../js/huomioydin.js";
 
 const T = "2026-11-28";
 test("läsnäolo ja suunnitelma", () => {
@@ -22,10 +22,14 @@ test("tavoitteet: odottaa testiä ei ole punainen", () => {
 test("missio ja testikehitys", () => {
   assert.equal(missio([]).tila, "ei");
   assert.equal(missio([{ tehty: 500, odotettu: 400 }]).tila, "vihr");
-  assert.equal(missio([{ tehty: 350, odotettu: 400 }]).tila, "kelt");
+  assert.equal(missio([{ tehty: 300, odotettu: 400 }]).tila, "kelt");
   assert.equal(missio([{ tehty: 100, odotettu: 400 }]).tila, "pun");
   assert.equal(testikehitys([{ z: 0.5 }, { z: -0.1 }]).tila, "vihr");
-  assert.equal(testikehitys([{ z: -0.5 }, { z: -0.3 }, { z: 0.3 }]).tila, "pun");
+  assert.equal(testikehitys([{ z: -0.5 }, { z: -0.3 }, { z: -0.4 }, { z: 0.3 }]).tila, "pun");
+  assert.equal(testikehitys([{ z: -0.5 }, { z: -0.3 }, { z: 0.3 }]).tila, "kelt");
+  assert.equal(tarvitseeHuomiota({ a: { tila: "pun" }, kuorma: { tila: "vihr" } }), false);
+  assert.equal(tarvitseeHuomiota({ a: { tila: "pun" }, b: { tila: "pun" } }), true);
+  assert.equal(tarvitseeHuomiota({ kuorma: { tila: "pun" } }), true);
   assert.equal(pisteet({ a: { tila: "pun" }, b: { tila: "kelt" }, c: { tila: "vihr" } }), 4);
 });
 test("sanallinen: lajitaito vahva, fysiikka heikko", () => {

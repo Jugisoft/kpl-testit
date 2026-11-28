@@ -10,7 +10,7 @@ import { tavoiteTila } from "./oma.js";
 import { laske as laskeMissio } from "./lyonnit.js";
 import { hae as haeHm } from "../huomiointi.js";
 import { pelaajanTulokset, ryhmanNormit, profiili, kuukausiaSitten } from "../kokonaisydin.js";
-import { laasnaolo, suunnitelma, kuorma, kirjaukset, tavoitteet, missio, testikehitys, pisteet, sanallinen, SWC } from "../huomioydin.js";
+import { laasnaolo, suunnitelma, kuorma, kirjaukset, tavoitteet, missio, testikehitys, pisteet, tarvitseeHuomiota, sanallinen, SWC } from "../huomioydin.js";
 
 const VARI = { pun: "Huomio", kelt: "Seuraa", vihr: "Kunnossa", odottaa: "Odottaa", ei: "–" };
 let valittuJ = null, auki = null;
@@ -103,7 +103,7 @@ async function piirraJoukkue(el, joukkue, avaaVertailu) {
       missio: missio((missiot[p.id] || []).map((x) => x.s)),
       testit: testikehitys(muutokset),
     };
-    return { p, sig, piste: pisteet(sig), tav, muutokset, prof, sair, hmViim, rivit: data.tulos[p.id] || [], ms: missiot[p.id] || [] };
+    return { p, sig, piste: pisteet(sig) + (tarvitseeHuomiota(sig) ? 10 : 0), huomio: tarvitseeHuomiota(sig), tav, muutokset, prof, sair, hmViim, rivit: data.tulos[p.id] || [], ms: missiot[p.id] || [] };
   }).sort((a, b) => b.piste - a.piste || nimi(a.p).localeCompare(nimi(b.p), "fi"));
 
   renderoi(el, { tulos, msu, jNimi, luokat, nimet }, avaaVertailu);
@@ -113,7 +113,7 @@ function renderoi(el, ctx, avaaVertailu) {
   const { tulos, msu, jNimi, luokat, nimet } = ctx;
   const sarakkeet = [[msu ? "suunnitelma" : "laasnaolo", msu ? "Suunnitelma" : "Läsnäolo"], ["kuorma", "Kuorma"], ["kirjaukset", "Kirjaukset"], ["tavoitteet", "Tavoitteet"], ["missio", "Lyöntimissio"], ["testit", "Testikehitys"]];
   const lkm = (avain, tila_) => tulos.filter((x) => x.sig[avain]?.tila === tila_).length;
-  const huomio = tulos.filter((x) => x.piste >= 3).length;
+  const huomio = tulos.filter((x) => x.huomio).length;
   el.innerHTML = `
     <div class="hu-kpi">
       <div><b class="num">${huomio}</b><span>tarvitsee huomiota</span></div>
@@ -126,13 +126,13 @@ function renderoi(el, ctx, avaaVertailu) {
       <div class="hu-rivi hu-otsikot" role="row"><span role="columnheader">Pelaaja</span>${sarakkeet.map(([, n]) => `<span role="columnheader">${n}</span>`).join("")}<span role="columnheader">Huomioitu</span></div>
       ${tulos.map((x) => `
       <div class="hu-rivi${auki === x.p.id ? " auki" : ""}" role="row" data-hp="${x.p.id}" tabindex="0" aria-expanded="${auki === x.p.id}">
-        <span role="cell" class="hu-nimi">${x.piste >= 3 ? '<i class="hu-lippu" title="Tarvitsee huomiota"></i>' : ""}${esc(nimi(x.p))}${x.sair ? ` <span title="Sairauspäiviä ${pvmLyhyt(x.sair.alku)}–${pvmLyhyt(x.sair.loppu)}">🤒</span>` : ""}</span>
+        <span role="cell" class="hu-nimi">${x.huomio ? '<i class="hu-lippu" title="Tarvitsee huomiota: vähintään kaksi punaista signaalia tai punainen kuorma"></i>' : ""}${esc(nimi(x.p))}${x.sair ? ` <span title="Sairauspäiviä ${pvmLyhyt(x.sair.alku)}–${pvmLyhyt(x.sair.loppu)}">🤒</span>` : ""}</span>
         ${sarakkeet.map(([a]) => { const g = x.sig[a] || { tila: "ei", teksti: "" }; return `<span role="cell" class="hu-solu hu-${g.tila}" title="${esc(VARI[g.tila])}"><i aria-hidden="true"></i>${esc(g.teksti)}</span>`; }).join("")}
         <span role="cell" class="hu-solu pieni">${x.hmViim ? pvmLyhyt(x.hmViim) : "yli 8 vk"}</span>
       </div>
       ${auki === x.p.id ? `<div class="hu-syva" role="row"><div role="cell">${syvasukellus(x, jNimi, luokat, nimet, msu)}</div></div>` : ""}`).join("")}
     </div>
-    <p class="pieni kv-selite">Punainen = huomio nyt, keltainen = seuraa, vihreä = kunnossa, harmaa = ei vielä dataa tai odottaa testiä. Eniten huomiota tarvitsevat ylimpänä. Kuorma = viimeisen 7 päivän kuorma suhteessa pelaajan omaan 4 viikon tasoon (kuten Viikkokoosteessa). ${msu ? "Suunnitelma = oman Treenikeskus-suunnitelman päivistä tehtyjä 4 viikossa." : "Läsnäolo = ryhmätreenit 4 viikossa Nimenhuudon mukaan."} Testikehitys = viimeisin tulos vs. edellinen; muutos lasketaan todelliseksi, kun se on vähintään ${String(SWC).replace(".", ",")} × ryhmän hajonta. Avaa pelaaja klikkaamalla.</p>`;
+    <p class="pieni kv-selite">Punainen = huomio nyt, keltainen = seuraa, vihreä = kunnossa, harmaa = ei vielä dataa tai odottaa testiä. Punainen pallo nimen edessä = tarvitsee huomiota (vähintään kaksi punaista signaalia tai punainen kuorma); heistä ja muista eniten huomiota tarvitsevat ylimpänä. Kuorma = viimeisen 7 päivän kuorma suhteessa pelaajan omaan 4 viikon tasoon (kuten Viikkokoosteessa). ${msu ? "Suunnitelma = oman Treenikeskus-suunnitelman päivistä tehtyjä 4 viikossa." : "Läsnäolo = ryhmätreenit 4 viikossa Nimenhuudon mukaan."} Testikehitys = viimeisin tulos vs. edellinen; muutos lasketaan todelliseksi, kun se on vähintään ${String(SWC).replace(".", ",")} × ryhmän hajonta. Avaa pelaaja klikkaamalla.</p>`;
 
   const avaa = (pid) => { auki = auki === pid ? null : pid; renderoi(el, ctx, avaaVertailu); };
   $$("[data-hp]", el).forEach((r) => { r.onclick = () => avaa(r.dataset.hp); r.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avaa(r.dataset.hp); } }; });

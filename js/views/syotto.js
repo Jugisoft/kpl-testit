@@ -267,7 +267,7 @@ function piirraOsallistujat() {
   el.innerHTML = `
     <ol class="osallistujat">${osallistujat.map((o, i) => { const p = tila.pelaaja[o.pelaaja_id]; return `<li><span class="num" style="width:22px;text-align:right">${i + 1}.</span>${kuva(p)}<span style="flex:1">${esc(nimi(p))}</span>
       <button class="nappi" data-ylos="${i}" aria-label="Siirrä ylös" ${i === 0 ? "disabled" : ""}>↑</button><button class="nappi" data-alas="${i}" aria-label="Siirrä alas" ${i === osallistujat.length - 1 ? "disabled" : ""}>↓</button><button class="nappi" data-pois="${i}" aria-label="Poista listalta">✕</button></li>`; }).join("")}</ol>
-    <div class="rivi" style="margin-top:12px"><select id="lisaa-pelaaja"><option value="">Lisää pelaaja…</option>${muut.map((p) => `<option value="${p.id}">${esc(nimi(p))}${p.aktiivinen ? "" : " (ei aktiivinen)"}</option>`).join("")}</select></div>`;
+    <div class="rivi" style="margin-top:12px">${osallistujat.length > 1 ? `<button type="button" class="btn" id="aakkosta">Aakkosjärjestys</button>` : ""}<select id="lisaa-pelaaja"><option value="">Lisää pelaaja…</option>${muut.map((p) => `<option value="${p.id}">${esc(nimi(p))}${p.aktiivinen ? "" : " (ei aktiivinen)"}</option>`).join("")}</select></div>`;
   $$("[data-ylos]", el).forEach((b) => (b.onclick = () => siirra(+b.dataset.ylos, -1)));
   $$("[data-alas]", el).forEach((b) => (b.onclick = () => siirra(+b.dataset.alas, 1)));
   $$("[data-pois]", el).forEach((b) => (b.onclick = async () => {
@@ -277,6 +277,12 @@ function piirraOsallistujat() {
     await sb.from("osallistujat").delete().match({ testikerta_id: k.id, pelaaja_id: o.pelaaja_id });
     tallennaJarjestys();
   }));
+  // 28.11.2026 (korjaamo, Anssi): järjestys yhdellä napilla aakkosiin (sukunimi, etunimi)
+  if ($("#aakkosta")) $("#aakkosta").onclick = () => {
+    const avain = (o) => { const p = tila.pelaaja[o.pelaaja_id] || {}; return `${p.sukunimi || ""} ${p.etunimi || ""}`; };
+    osallistujat.sort((a, b) => avain(a).localeCompare(avain(b), "fi"));
+    tallennaJarjestys();
+  };
   $("#lisaa-pelaaja").onchange = async (e) => {
     if (!e.target.value) return;
     osallistujat.push({ testikerta_id: k.id, pelaaja_id: e.target.value, jarjestys: osallistujat.length + 1 });

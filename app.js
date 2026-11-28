@@ -32,6 +32,7 @@ import * as talvisuper from "./js/views/talvisuper.js";
 import * as treenikeskus from "./js/views/treenikeskus.js";
 import * as huone from "./js/views/huone.js";
 import { lukemattomienMaara } from "./js/viestit.js";
+import { naytaTiedotteet } from "./js/tiedotteet.js";
 
 // Etusivu on Keskus kaikille käyttäjille. Ilman oikeuksia näkyy vain kirjautuminen.
 const etusivu = keskus;
@@ -119,7 +120,7 @@ const RYHMAT = [
   ["Valmennus", [
     ["Oma peli", "#/muistio/KPL/yleiskuva", "muistio", (p) => /^\/(muistio|huomio)/.test(p) && !onVastustaja(p)],
     ["Vastustajat", "#/muistio/vastustajat", "vastustajat", onVastustaja],
-    ["Pelikirja", "pelikirja.html?v=20261128-8", "pelikirja", () => false],
+    ["Pelikirja", "pelikirja.html?v=20261128-9", "pelikirja", () => false],
   ]],
   ["Analyysi", [
     ["Analyysi", "#/analyysi", "analyysi", (p) => p === "/analyysi"],
@@ -396,7 +397,8 @@ async function kaynnista() {
     }
   }, 0));
   window.addEventListener("hashchange", reititä);
-  reititä();
+  await reititä();
+  naytaTiedotteet().catch(() => {});   // 28.11.2026: uusien ominaisuuksien info-ikkuna kerran
 }
 
 kaynnista().catch((e) => { $("#sisalto").innerHTML = `<h1>Yhteys tietokantaan epäonnistui</h1><p class="ingressi">${esc(e.message)}</p>`; });

@@ -3172,3 +3172,7 @@ button.linkki:hover { color: var(--red); }
 .kv-ei { grid-column: 3 / span 2; font-size: 12px; color: var(--ink-3); font-style: italic; }
 .vh-murupolku { margin: 0 0 4px; font-size: 14px; }
 .vh-murupolku a { color: var(--cyan); }
+.tiedote-dialogi { width: min(640px, calc(100vw - 24px)); }
+.tiedote-teksti { max-height: 60vh; overflow: auto; line-height: 1.5; }
+.tiedote-teksti h4 { font-size: 15px; margin: 14px 0 4px; color: var(--kpl); }
+.tiedote-dialogi .tk-napit { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
